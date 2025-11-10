@@ -2,14 +2,17 @@ document.addEventListener('DOMContentLoaded',async ()=>{
    const r = await fetch('/login',{
     method: 'POST',
     body : JSON.stringify({
-        email: '1',password:'1'
-    })
+        email: 'example@example.com',password:'1'
+    }),
+    headers:{
+        "Content-Type": "application/json"
+    }
    })
    if(!r.ok){
-    console.error(await r.json())
-    console.log(r)
+    const responseError=await r.json()
+    document.getElementById("messages").innerHTML=responseError.html || "";
     return ;
     }
-    const response=await r.json();
-    console.log(response)
+    const response=await r.json(); 
+  
 });

@@ -6,6 +6,7 @@ use Core\Config;
 use Core\Logger;
 use Core\Response;
 use Core\Template;
+
 use Throwable;
 
 
@@ -43,25 +44,38 @@ class App
         $this->middleware = array_merge($this->middleware, $middlewares);
     }
 
-    public function get(callable $callback): void
+    public function get(callable $callback, array $middlewares = []): void
     {
-        $this->routes['GET'] = $callback;
+        $this->routes['GET'] = [
+            'callback' => $callback,
+            'middlewares' => $middlewares
+        ];
     }
 
-    public function post(callable $callback): void
+    public function post(callable $callback, array $middlewares = []): void
     {
-        $this->routes['POST'] = $callback;
+        $this->routes['POST'] = [
+            'callback' => $callback,
+            'middlewares' => $middlewares
+        ];
     }
 
-    public function put(callable $callback): void
+    public function put(callable $callback, array $middlewares = []): void
     {
-        $this->routes['PUT'] = $callback;
+        $this->routes['PUT'] = [
+            'callback' => $callback,
+            'middlewares' => $middlewares
+        ];
     }
 
-    public function delete(callable $callback): void
+    public function delete(callable $callback, array $middlewares = []): void
     {
-        $this->routes['DELETE'] = $callback;
+        $this->routes['DELETE'] = [
+            'callback' => $callback,
+            'middlewares' => $middlewares
+        ];
     }
+
 
     public function run(): void
     {
@@ -70,25 +84,43 @@ class App
     protected function dispatch(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $callback = $this->routes[$method] ?? null;
-        if (!is_callable($callback)) {
+        $route = $this->routes[$method] ?? null;
+
+        if (!is_array($route) || !is_callable($route['callback'])) {
             http_response_code(404);
             exit("404 Not Found");
         }
-        $req = $_REQUEST;
+
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
+        $data = [];
+
+        if (stripos($contentType, 'application/json') !== false) {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true) ?? [];
+        }
+
+        $req = array_merge($_GET, $_POST, $data, $_FILES);
+
         $res = new Response();
         if (!$this->security->runBeforeMiddlewares($req)) exit;
         foreach ($this->middleware['before'] as $fn) {
             if (is_callable($fn)) $fn($req, $res);
         }
 
-        $callback($req, $res);
+        foreach ($route['middlewares'] as $fn) {
+            if (is_callable($fn)) $fn($req, $res);
+        }
+
+        $route['callback']($req, $res);
+
         foreach ($this->middleware['after'] as $fn) {
             if (is_callable($fn)) $fn($req, $res);
         }
 
         exit;
     }
+
 
     public function render(string $template, array $context = [], ?string $path = null): void
     {

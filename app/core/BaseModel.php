@@ -48,22 +48,34 @@ class Field
 class ValidationException extends \Exception
 {
     public array|string|null $response;
-    public function __construct(array $errors, string $lang = "en", bool $jsonResponse)
+    public function __construct(array $errors,  string|null $lang = "en", bool $jsonResponse = true)
     {
 
         if ($jsonResponse) {
             $msg = "";
+            $html = <<<HTML
+<ul>
+HTML;
             $keys = array_keys($errors);
             $lastKey = end($keys);
             foreach ($errors as $key => $value) {
                 $separator = ($key === $lastKey) ? " ." : " , ";
                 $msg .= implode(" , ", $value) . $separator;
+                foreach ($value as $msg) {
+                    $html .= <<<HTML
+<li  class='text-red-500'><strong>$key:</strong> $msg</li>
+HTML;
+                }
             }
+            $html .= <<<HTML
+</ul>
+HTML;
 
             $this->response = Response::JSON([
                 "success" => false,
                 "error" => true,
-                "msg" => $msg,
+                "message" => $msg,
+                "html" => $html,
                 "errors" => $errors
             ], 400);
         } else {
@@ -73,7 +85,7 @@ HTML;
             foreach ($errors as $field => $messages) {
                 foreach ($messages as $msg) {
                     $html .= <<<HTML
-                    <li><strong class='text-red-500'>$field:</strong> $msg</li>
+                    <li class='text-red-500'><strong >$field:</strong> $msg</li>
 HTML;
                 }
             }
@@ -145,17 +157,43 @@ abstract class BaseModel
             'mac_address' => "El campo ':field' debe ser una dirección MAC válida",
             'json'     => "El campo ':field' debe ser una cadena JSON válida",
             'base64'   => "El campo ':field' debe ser una cadena Base64 válida",
-        ]
+        ],
+        'pt-br' => [
+            'required' => "O campo ':field' é obrigatório",
+            'length'   => "O campo ':field' deve ter exatamente :length caracteres",
+            'min_length' => "O campo ':field' deve ter pelo menos :min_length caracteres",
+            'max_length' => "O campo ':field' não deve exceder :max_length caracteres",
+            'min'      => "O campo ':field' deve ser no mínimo :min",
+            'max'      => "O campo ':field' não deve exceder :max",
+            'email'    => "O campo ':field' deve ser um endereço de e-mail válido",
+            'ip'       => "O campo ':field' deve ser um endereço IP válido",
+            'url'      => "O campo ':field' deve ser uma URL válida",
+            'uuid'     => "O campo ':field' deve ser um UUID válido",
+            'regex'    => "O campo ':field' não corresponde ao formato exigido",
+            'number'   => "O campo ':field' deve ser um número válido",
+            'integer'  => "O campo ':field' deve ser um número inteiro",
+            'float'    => "O campo ':field' deve ser um número decimal",
+            'boolean'  => "O campo ':field' deve ser verdadeiro ou falso",
+            'date'     => "O campo ':field' deve ser uma data válida",
+            'datetime' => "O campo ':field' deve ser uma data e hora válidas",
+            'alpha'    => "O campo ':field' só pode conter letras",
+            'alphanumeric' => "O campo ':field' só pode conter letras e números",
+            'numeric'  => "O campo ':field' só pode conter números",
+            'phone'    => "O campo ':field' deve ser um número de telefone válido",
+            'credit_card' => "O campo ':field' deve ser um número de cartão de crédito válido",
+            'domain'   => "O campo ':field' deve ser um nome de domínio válido",
+            'mac_address' => "O campo ':field' deve ser um endereço MAC válido",
+            'json'     => "O campo ':field' deve ser uma string JSON válida",
+            'base64'   => "O campo ':field' deve ser uma string Base64 válida",
+        ],
+
     ];
 
     private string $lang;
 
     public function __construct(array $data = [], string|null $lang = null, bool $jsonResponse = true)
     {
-        if ($lang == null) {
-            $session = Session::getInstance();
-            $this->lang = $session->get("lang", "en");
-        } else $this->lang = $lang;
+        $this->lang = $lang;
 
         $ref = new \ReflectionClass($this);
         $errors = [];
@@ -181,21 +219,21 @@ abstract class BaseModel
 
                 if (is_string($value)) {
                     $strlen = strlen($value);
-                    
+
                     if ($field->length !== null && $strlen !== $field->length) {
                         $errors[$name][] = $this->formatMessage('length', $field, [
                             ':field' => $name,
                             ':length' => $field->length
                         ]);
                     }
-                    
+
                     if ($field->min_length !== null && $strlen < $field->min_length) {
                         $errors[$name][] = $this->formatMessage('min_length', $field, [
                             ':field' => $name,
                             ':min_length' => $field->min_length
                         ]);
                     }
-                    
+
                     if ($field->max_length !== null && $strlen > $field->max_length) {
                         $errors[$name][] = $this->formatMessage('max_length', $field, [
                             ':field' => $name,
@@ -343,7 +381,7 @@ abstract class BaseModel
     private function formatMessage(string $key, Field $field, array $vars): string
     {
         $msg = $field->messages[$key] ?? static::$defaultMessages[$this->lang][$key] ?? $key;
-        foreach ($vars as $var => $val) { 
+        foreach ($vars as $var => $val) {
             $msg = str_replace($var, $val, $msg);
         }
         return $msg;
@@ -352,10 +390,10 @@ abstract class BaseModel
     private function validateCreditCard(string $number): bool
     {
         $number = preg_replace('/\D/', '', $number);
-        
+
         $sum = 0;
         $reverse = strrev($number);
-        
+
         for ($i = 0; $i < strlen($reverse); $i++) {
             $digit = (int)$reverse[$i];
             if ($i % 2 === 1) {
@@ -366,7 +404,7 @@ abstract class BaseModel
             }
             $sum += $digit;
         }
-        
+
         return $sum % 10 === 0;
     }
 }
