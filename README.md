@@ -1,2 +1,2 @@
 # LilaPHP
-LilaPHP
+ Lightweight PHP framework
