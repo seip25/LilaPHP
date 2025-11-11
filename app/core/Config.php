@@ -16,6 +16,8 @@ class Config
     private static string $SECRET_KEY;
     public static string $URL_PROJECT;
 
+    public static string $LANG;
+
     public static function load(): void
     {
         self::$DIR_PROJECT = dirname(__DIR__, 1);
@@ -25,25 +27,27 @@ class Config
         }
         self::$TITLE_PROJECT = $_ENV['TITLE_PROJECT'] ?? 'Seip PHP Framework';
         self::$VERSION_PROJECT = $_ENV['VERSION_PROJECT'] ?? '0.1';
-        self::$VERSION_API = (int)$_ENV['VERSION_API'] ?? 1;
+        self::$VERSION_API = (int) $_ENV['VERSION_API'] ?? 1;
         self::$DEBUG = ($_ENV['DEBUG'] ?? 'true') === 'true';
         self::$PATH_LOGS = self::normalizePath(env: 'PATH_LOGS', default: '/logs');
         self::$PATH_LOCALES = self::normalizePath(env: 'PATH_LOCALES', default: '/locales/');
         self::$SECRET_KEY = $_ENV['SECRET_KEY'] ?? bin2hex(random_bytes(32));
         self::$URL_PROJECT = self::getURLProject();
+        self::$LANG = $_ENV['LANG'] ?? 'eng';
     }
     public static function getAll(): array
     {
-        if (self::$DEBUG == false) return [];
+        if (self::$DEBUG == false)
+            return [];
         return [
-            "DIR_PROJECT"=>self::$DIR_PROJECT,
+            "DIR_PROJECT" => self::$DIR_PROJECT,
             "URL_PROJECT" => self::$URL_PROJECT,
             "PATH_LOCALES" => self::$PATH_LOCALES,
             "PATH_LOGS" => self::$PATH_LOGS,
             "DEBUG" => self::$DEBUG,
             "VERSION_PROJECT" => self::$VERSION_PROJECT,
             "TITLE_PROJECT" => self::$TITLE_PROJECT,
-            "VERSION_API" =>(int) self::$VERSION_API,
+            "VERSION_API" => (int) self::$VERSION_API,
 
         ];
     }
@@ -51,7 +55,7 @@ class Config
     public static function getURLProject()
     {
         if (!empty($_ENV['URL_PROJECT'])) {
-            return  rtrim($_ENV['URL_PROJECT'], '/') . '/';
+            return rtrim($_ENV['URL_PROJECT'], '/') . '/';
         }
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';

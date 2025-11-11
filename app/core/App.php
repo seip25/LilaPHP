@@ -6,6 +6,7 @@ use Core\Config;
 use Core\Logger;
 use Core\Response;
 use Core\Template;
+use Core\Session;
 
 use Throwable;
 
@@ -22,7 +23,7 @@ class App
     ];
     protected array $middlewares = [
         'before' => [],
-        'after'  => []
+        'after' => []
     ];
 
     public function __construct(array $options = ['security' => []])
@@ -37,6 +38,37 @@ class App
             'csrf' => false,
             'cors' => true
         ]));
+        Session::start();
+        if (Session::has('lang') == false) {
+            $newLang = Config::$LANG;
+            Session::set('lang', $newLang);
+        }
+
+    }
+
+    public function setSession(string $key, $value): void
+    {
+        Session::set($key, $value);
+    }
+
+    public function getSession(string $key, $default = null)
+    {
+        return Session::get($key, $default);
+    }
+
+    public function hasSession(string $key): bool
+    {
+        return Session::has($key);
+    }
+
+    public function removeSession(string $key): void
+    {
+        Session::remove($key);
+    }
+
+    public function destroySession(): void
+    {
+        Session::destroy();
     }
 
     public function addMiddlewares(array $middlewares): void
@@ -104,20 +136,24 @@ class App
         $req = array_merge($_GET, $_POST, $data, $_FILES);
 
         $res = new Response();
-        if (!$this->security->runBeforeMiddlewares($req)) exit;
+        if (!$this->security->runBeforeMiddlewares($req))
+            exit;
 
         foreach ($this->middlewares['before'] as $fn) {
-            if (is_callable($fn)) $fn($req, $res);
+            if (is_callable($fn))
+                $fn($req, $res);
         }
 
         foreach ($route['middlewares'] as $fn) {
-            if (is_callable($fn)) $fn($req, $res);
+            if (is_callable($fn))
+                $fn($req, $res);
         }
 
         $route['callback']($req, $res);
 
         foreach ($this->middlewares['after'] as $fn) {
-            if (is_callable($fn)) $fn($req, $res);
+            if (is_callable($fn))
+                $fn($req, $res);
         }
 
         exit;
