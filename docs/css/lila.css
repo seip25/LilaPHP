@@ -276,3 +276,8 @@ aside h4, aside h3,aside h2, aside h1, aside h5,aside h6 {padding: 0 1rem;margin
 @media (max-width: 640px) { .visible-sm { display: initial !important; } }
 @media (min-width: 641px) and (max-width: 1024px) { .visible-md { display: initial !important; } }
 @media (min-width: 1025px) { .visible-lg { display: initial !important; } }
+body {scroll-padding-top: 2rem;}
+.px-aside{
+      padding-left: 5rem;
+    padding-right: 5rem;
+}
