@@ -288,15 +288,15 @@ $app->run();
 
         <!-- Validation -->
         <section id="validation" class="mt-4">
-  <h2>Validation</h2>
-  <p>
-    LilaPHP provides a clean, declarative validation system using <strong>PHP 8 attributes</strong>
-    inside model classes that extend <code>BaseModel</code>.  
-    This allows request validation to stay organized, type-safe, and easy to read.
-  </p>
+          <h2>Validation</h2>
+          <p>
+            LilaPHP provides a clean, declarative validation system using <strong>PHP 8 attributes</strong>
+            inside model classes that extend <code>BaseModel</code>.
+            This allows request validation to stay organized, type-safe, and easy to read.
+          </p>
 
-  <h3>🧩 Example: Validating a Login Form</h3>
-  <pre><code class="language-php">
+          <h3>🧩 Example: Validating a Login Form</h3>
+          <pre><code class="language-php">
 // login/index.php
 use Core\BaseModel;
 use Core\Field;
@@ -319,31 +319,31 @@ $app->post(
 );
 </code></pre>
 
-  <p>
-    When this route receives a POST request, LilaPHP automatically validates the input data
-    using the attributes defined in the <code>LoginModel</code>.
-    If any validation fails, a structured JSON or HTML response is automatically returned with error details.
-  </p>
+          <p>
+            When this route receives a POST request, LilaPHP automatically validates the input data
+            using the attributes defined in the <code>LoginModel</code>.
+            If any validation fails, a structured JSON or HTML response is automatically returned with error details.
+          </p>
 
-  <h3>🌐 Multi-language Validation Support</h3>
-  <p>
-    The validation system supports multiple languages out of the box — including
-    <strong>English (eng)</strong>, <strong>Spanish (esp)</strong>,
-    <strong>Brazilian Portuguese (bra)</strong>, and <strong>Portuguese (por)</strong>.
-  </p>
+          <h3>🌐 Multi-language Validation Support</h3>
+          <p>
+            The validation system supports multiple languages out of the box — including
+            <strong>English (eng)</strong>, <strong>Spanish (esp)</strong>,
+            <strong>Brazilian Portuguese (bra)</strong>, and <strong>Portuguese (por)</strong>.
+          </p>
 
-  <p>
-    The active validation language is automatically detected from the framework context
-    (for example, user session or <code>.env</code> configuration), and defaults to English.
-  </p>
+          <p>
+            The active validation language is automatically detected from the framework context
+            (for example, user session or <code>.env</code> configuration), and defaults to English.
+          </p>
 
-  <p>
-    Each validation rule message is defined inside <code>BaseModel::$defaultMessages</code>,
-    containing localized error messages for every supported language.
-  </p>
+          <p>
+            Each validation rule message is defined inside <code>BaseModel::$defaultMessages</code>,
+            containing localized error messages for every supported language.
+          </p>
 
-  <h4>Example (English vs. Spanish)</h4>
-  <pre><code class="language-json">{
+          <h4>Example (English vs. Spanish)</h4>
+          <pre><code class="language-json">{
   "eng": {
     "required": "Field ':field' is required",
     "min_length": "Field ':field' must be at least :min_length characters long"
@@ -355,37 +355,39 @@ $app->post(
 }
 </code></pre>
 
-  <h3>🛠️ Custom Messages</h3>
-  <p>
-    You can override any default validation message directly in the attribute declaration
-    using the <code>messages</code> parameter:
-  </p>
+          <h3>🛠️ Custom Messages</h3>
+          <p>
+            You can override any default validation message directly in the attribute declaration
+            using the <code>messages</code> parameter:
+          </p>
 
-  <pre><code class="language-php">#[Field(required: true, messages: [
+          <pre><code class="language-php">#[Field(required: true, messages: [
   "required" => "Please enter your email address."
 ])]
 public string $email;</code></pre>
 
-  <h3>💡 Supported Validation Rules</h3>
-  <p>
-    LilaPHP currently supports a wide range of built-in validation rules:
-  </p>
+          <h3>💡 Supported Validation Rules</h3>
+          <p>
+            LilaPHP currently supports a wide range of built-in validation rules:
+          </p>
 
-  <ul class="list-disc pl-6">
-    <li><code>required</code> – Field must not be empty</li>
-    <li><code>min</code>, <code>max</code> – Numeric value limits</li>
-    <li><code>min_length</code>, <code>max_length</code>, <code>length</code> – String length limits</li>
-    <li><code>format</code> – Predefined format validation (<code>email</code>, <code>ip</code>, <code>url</code>, <code>uuid</code>, <code>number</code>, <code>date</code>, <code>boolean</code>, etc.)</li>
-    <li><code>pattern</code> – Custom regex pattern validation</li>
-  </ul>
+          <ul class="list-disc pl-6">
+            <li><code>required</code> – Field must not be empty</li>
+            <li><code>min</code>, <code>max</code> – Numeric value limits</li>
+            <li><code>min_length</code>, <code>max_length</code>, <code>length</code> – String length limits</li>
+            <li><code>format</code> – Predefined format validation (<code>email</code>, <code>ip</code>,
+              <code>url</code>, <code>uuid</code>, <code>number</code>, <code>date</code>, <code>boolean</code>, etc.)
+            </li>
+            <li><code>pattern</code> – Custom regex pattern validation</li>
+          </ul>
 
-  <p>
-    When a validation fails, a <code>ValidationException</code> is thrown and handled automatically
-    by the framework, returning an appropriate response with localized messages.
-  </p>
+          <p>
+            When a validation fails, a <code>ValidationException</code> is thrown and handled automatically
+            by the framework, returning an appropriate response with localized messages.
+          </p>
 
-  <h3>🧾 Example of Validation Error Response (JSON)</h3>
-  <pre><code class="language-json">{
+          <h3>🧾 Example of Validation Error Response (JSON)</h3>
+          <pre><code class="language-json">{
   "success": false,
   "error": true,
   "message": "Field 'email' must be a valid email address, Field 'password' must be at least 6 characters long.",
@@ -395,11 +397,11 @@ public string $email;</code></pre>
   }
 }</code></pre>
 
-  <p>
-    This makes the validation layer both <strong>declarative</strong> and <strong>localization-aware</strong>,
-    ensuring consistent, user-friendly feedback in any supported language.
-  </p>
-</section>
+          <p>
+            This makes the validation layer both <strong>declarative</strong> and <strong>localization-aware</strong>,
+            ensuring consistent, user-friendly feedback in any supported language.
+          </p>
+        </section>
 
 
         <!-- Sessions -->
@@ -413,22 +415,22 @@ $app->removeSession("user_id");
         </section>
 
         <!-- Localization -->
-      <section id="localization" class="mt-4">
-  <h2>🌍 Localization & Translations</h2>
-  <p>
-    LilaPHP includes native support for multi-language applications.  
-    The default language is defined in the <code>.env</code> file:
-  </p>
+        <section id="localization" class="mt-4">
+          <h2>🌍 Localization & Translations</h2>
+          <p>
+            LilaPHP includes native support for multi-language applications.
+            The default language is defined in the <code>.env</code> file:
+          </p>
 
-  <pre><code class="language-env">LANG_DEFAULT="esp"</code></pre>
+          <pre><code class="language-env">LANG_DEFAULT="esp"</code></pre>
 
-  <p>
-    However, it can be changed dynamically at runtime — for example, when the user
-    selects a different language from a menu or a query parameter.
-  </p>
+          <p>
+            However, it can be changed dynamically at runtime — for example, when the user
+            selects a different language from a menu or a query parameter.
+          </p>
 
-  <h3>🔁 Example: Changing the language dynamically</h3>
-  <pre><code class="language-php">&lt;?php
+          <h3>🔁 Example: Changing the language dynamically</h3>
+          <pre><code class="language-php">&lt;?php
 $app->get(callback: function($req, $res) use ($app) {
     $lang = $_GET['lang'] ?? $app->getLangDefault();
     $app->setSession("lang", $lang);
@@ -436,17 +438,17 @@ $app->get(callback: function($req, $res) use ($app) {
     $app->redirect($back);
 });</code></pre>
 
-  <p>
-    This route detects the <code>?lang=esp</code> or <code>?lang=eng</code> parameter,
-    stores it in the session, and redirects the user back to the previous page.
-  </p>
+          <p>
+            This route detects the <code>?lang=esp</code> or <code>?lang=eng</code> parameter,
+            stores it in the session, and redirects the user back to the previous page.
+          </p>
 
-  <h3>🗂 Translation files structure</h3>
-  <p>
-    Translations are stored inside <code>app/locales/</code>, one file per language:
-  </p>
+          <h3>🗂 Translation files structure</h3>
+          <p>
+            Translations are stored inside <code>app/locales/</code>, one file per language:
+          </p>
 
-  <pre><code class="language-bash">app/
+          <pre><code class="language-bash">app/
 ├── locales/
 │   ├── esp.php
 │   ├── eng.php
@@ -454,11 +456,11 @@ $app->get(callback: function($req, $res) use ($app) {
 │   └── por.php
 </code></pre>
 
-  <p>
-    Each file returns an associative array containing translation keys and values.
-  </p>
+          <p>
+            Each file returns an associative array containing translation keys and values.
+          </p>
 
-  <pre><code class="language-php">&lt;?php
+          <pre><code class="language-php">&lt;?php
 // app/locales/eng.php
 return [
   "welcome" => "Welcome!",
@@ -468,7 +470,7 @@ return [
   ]
 ];</code></pre>
 
-  <pre><code class="language-php">&lt;?php
+          <pre><code class="language-php">&lt;?php
 // app/locales/esp.php
 return [
   "welcome" => "¡Bienvenido!",
@@ -478,13 +480,13 @@ return [
   ]
 ];</code></pre>
 
-  <h3>🧩 Using translations in Twig templates</h3>
-  <p>
-    Inside your Twig templates located in <code>app/templates/</code>,  
-    you can use the global <code>translate()</code> function to display localized text:
-  </p>
+          <h3>🧩 Using translations in Twig templates</h3>
+          <p>
+            Inside your Twig templates located in <code>app/templates/</code>,
+            you can use the global <code>translate()</code> function to display localized text:
+          </p>
 
-  <pre><code class="language-twig">{# app/templates/index.twig #}
+          <pre><code class="language-twig">{# app/templates/index.twig #}
 &lt;h1 class="mb-2"&gt;{{ translate("welcome") }}&lt;/h1&gt;
 
 {# app/templates/login.twig #}
@@ -492,20 +494,20 @@ return [
 &lt;label&gt;{{ translate("login.email") }}&lt;/label&gt;
 </code></pre>
 
-  <p>
-    The system automatically detects the active language from the session
-    (<code>$_SESSION['lang']</code>), or falls back to the default language defined in
-    <code>.env</code>.  
-    You can also force a specific language programmatically if needed.
-  </p>
+          <p>
+            The system automatically detects the active language from the session
+            (<code>$_SESSION['lang']</code>), or falls back to the default language defined in
+            <code>.env</code>.
+            You can also force a specific language programmatically if needed.
+          </p>
 
-  <hr class="my-4 border-gray-300" />
-  <p class="text-secondary">
-    🌐 Currently supported languages:
-    <strong>Spanish (esp)</strong>, <strong>English (eng)</strong>,
-    <strong>Brazilian Portuguese (bra)</strong>, and <strong>Portuguese (por)</strong>.
-  </p>
-</section>
+          <hr class="my-4 border-gray-300" />
+          <p class="text-secondary">
+            🌐 Currently supported languages:
+            <strong>Spanish (esp)</strong>, <strong>English (eng)</strong>,
+            <strong>Brazilian Portuguese (bra)</strong>, and <strong>Portuguese (por)</strong>.
+          </p>
+        </section>
 
 
         <!-- Config -->
@@ -533,56 +535,260 @@ LANG="eng"</code></pre>
 
         <!-- Security -->
         <section id="security" class="mt-4">
-          <h2>Security & CSRF</h2>
+          <h2>Security & CSRF Protection</h2>
           <p>
-            CSRF tokens are automatically generated and validated when <code>csrf: true</code> is passed to
-            <code>$app->post()</code>, <code>$app->put()</code>, or <code>$app->delete()</code>.
+            LilaPHP includes built-in mechanisms for security, input sanitization, and protection against
+            cross-site request forgery (CSRF).
+            When you define a route with <code>$app->post()</code>, <code>$app->put()</code>, or
+            <code>$app->delete()</code>,
+            you can simply pass <code>csrf: true</code> to enable CSRF validation automatically.
           </p>
 
-          <pre><code class="language-html">{{ csrf_input() }}</code></pre>
+          <pre><code class="language-php">
+$app->post(
+    callback: fn($req, $res) => $app->jsonResponse(["success" => true]),
+    middlewares: [fn($req, $res) => new LoginModel(data: $req)],
+    csrf: true
+);
+</code></pre>
 
           <p>
-            The token is verified through a secure middleware in <code>Security</code>, ensuring protection
-            against cross-site request forgery on form submissions and JSON requests.
+            When <code>csrf: true</code> is set, LilaPHP automatically:
           </p>
-          <ul>
-            <li>Automatic sanitization of all inputs</li>
-            <li>Secure session handling</li>
-            <li>Optional CORS enforcement</li>
-            <li>Error logging with timestamp and file context</li>
+
+          <ul class="list-disc pl-6">
+            <li>Generates a unique CSRF token and stores it in the session</li>
+            <li>Provides a Twig helper <code>{{ csrf_input() }}</code> to include the hidden token in forms</li>
+            <li>Validates the token on every POST, PUT, or DELETE request</li>
+            <li>Rejects requests with invalid or missing tokens, returning a JSON or HTML error response</li>
           </ul>
+
+          <h3>🧩 Example: Secure Login Form</h3>
+          <p>
+            In your Twig template, simply include the CSRF token using the <code>csrf_input()</code> helper.
+            You can also use <code>translate()</code> or <code>image()</code> helpers for localized text and optimized
+            images.
+          </p>
+
+          <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
+    &lt;link rel="icon" href="{{ image('img/lila.png', 40, 0, 70, 'ico') }}" /&gt;
+    &lt;title&gt;{{ title }}&lt;/title&gt;
+    &lt;link rel="stylesheet" href="{{ asset('css/lila.css') }}" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;main class="container"&gt;
+      &lt;article class="w-mx-400-px mt-4"&gt;
+        &lt;h1&gt;{{ translate("login") }}&lt;/h1&gt;
+
+        &lt;form onsubmit="Login(event)" method="POST"&gt;
+          {{ csrf_input() }}
+          &lt;div&gt;
+            &lt;label&gt;Email&lt;/label&gt;
+            &lt;input type="email" name="email" required /&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label&gt;Password&lt;/label&gt;
+            &lt;input type="password" name="password" required /&gt;
+          &lt;/div&gt;
+          &lt;button type="submit" class="w-full"&gt;Login&lt;/button&gt;
+        &lt;/form&gt;
+
+        &lt;div id="messages" class="mt-4"&gt;&lt;/div&gt;
+      &lt;/article&gt;
+
+      &lt;div class="mt-4 flex justify-between gap-4"&gt;
+        &lt;a href="/set-lang/?lang=eng"&gt;English&lt;/a&gt;
+        &lt;a href="/set-lang/?lang=esp"&gt;Español&lt;/a&gt;
+        &lt;a href="/set-lang/?lang=br"&gt;Portuguese&lt;/a&gt;
+      &lt;/div&gt;
+    &lt;/main&gt;
+
+    &lt;script&gt;
+      async function Login(event) {
+        event.preventDefault();
+        const body = Object.fromEntries(new FormData(event.target));
+        const r = await fetch("/login", {
+          method: "POST",
+          body: JSON.stringify(body),
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": body._csrf,
+          },
+          credentials: "include",
+        });
+
+        const response = await r.json();
+        document.getElementById("messages").innerHTML =
+          response.html || response.message || "";
+      }
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+          <p>
+            The <code>X-CSRF-Token</code> header ensures that the token is validated even for JSON-based requests,
+            offering protection beyond standard form submissions.
+          </p>
+
+          <h3>🧱 Example: Endpoint Definition</h3>
+          <pre><code class="language-php">&lt;?php
+include_once "../app/index.php";
+
+use Core\BaseModel;
+use Core\Field;
+
+class LoginModel extends BaseModel
+{
+    #[Field(required: true, format: "email")]
+    public string $email;
+
+    #[Field(required: true, min_length: 6)]
+    public string $password;
+}
+
+$lang = $app->getSession(key: "lang", default: "es");
+
+$app->get(callback: fn($req, $res) => $app->render("login"));
+
+$app->post(
+    callback: fn($req, $res) => $app->jsonResponse([
+        "success" => true,
+        "login" => false,
+        "session" => $app->getSession("lang")
+    ]),
+    middlewares: [fn($req, $res) => new LoginModel(data: $req, lang: $lang)],
+    csrf: true
+);
+
+$app->addMiddlewares(middlewares: [
+    "before" => [fn($req, $res) => error_log("Custom before route")],
+    "after" => [fn($req, $res) => error_log("Custom after route")]
+]);
+
+$app->run();
+</code></pre>
+
+          <h3>🔐 Behind the Scenes</h3>
+          <p>
+            The <code>Security</code> core class is responsible for:
+          </p>
+
+          <ul class="list-disc pl-6">
+            <li><strong>CSRF Token Generation:</strong> Tokens are cryptographically secure and stored in the session.
+            </li>
+            <li><strong>Automatic Token Injection:</strong> The <code>{{ csrf_input() }}</code> helper inserts the
+              hidden field with the current token.</li>
+            <li><strong>Server-side Validation:</strong> Each POST, PUT, or DELETE request is checked against the stored
+              token.</li>
+            <li><strong>Automatic Sanitization:</strong> All input data is sanitized before use.</li>
+            <li><strong>Session Management:</strong> Sessions are securely configured using
+              <code>session_set_cookie_params</code> with proper path, domain, and HTTP-only flags.
+            </li>
+            <li><strong>Error Logging:</strong> Security-related errors are logged with timestamps and file context for
+              debugging.</li>
+            <li><strong>CORS Support:</strong> Cross-Origin Resource Sharing can be enforced or disabled through
+              configuration.</li>
+          </ul>
+
+          <p>
+            This integrated security layer ensures that all requests in LilaPHP are verified, isolated, and safe by
+            default.
+          </p>
         </section>
+
 
         <!-- Twig Template Functions -->
         <section id="templates" class="mt-4">
           <h2>Twig Template Functions</h2>
-          <p>LilaPHP extends Twig with powerful helper functions for better developer experience and SEO.</p>
+          <p>
+            LilaPHP extends Twig with built-in helper functions that enhance performance,
+            SEO, and developer productivity. These helpers are globally available inside
+            all templates without any additional configuration.
+          </p>
 
           <ul>
-            <li><strong>asset(file)</strong> — Returns a versioned and minified file URL (CSS/JS).</li>
-            <li><strong>image(file, width, height, quality, type)</strong> — Generates optimized WebP or ICO images for
-              faster loading.</li>
-            <li><strong>url(path)</strong> — Returns the full absolute project URL.</li>
-            <li><strong>csrf_input()</strong> — Prints the hidden CSRF input field.</li>
-            <li><strong>translate(key)</strong> or <strong>__(key)</strong> — Returns translated strings from locale
-              files.</li>
+            <li>
+              <strong>asset(file)</strong> — Returns a versioned and minified URL for
+              static assets like CSS or JS. This ensures cache-busting and automatic
+              compression for optimal performance.
+            </li>
+            <li>
+              <strong>image(file, width, height, quality, type)</strong> — Dynamically
+              generates optimized images (WebP or ICO) for faster loading and improved SEO.
+              You can specify width, height, compression quality, and output type.
+            </li>
+            <li>
+              <strong>url(path)</strong> — Returns the full absolute project URL. Useful
+              for canonical links, Open Graph metadata, or redirects.
+            </li>
+            <li>
+              <strong>csrf_input()</strong> — Outputs the hidden CSRF token input field
+              automatically for secure POST, PUT, or DELETE requests.
+            </li>
+            <li>
+              <strong>translate(key)</strong> or <strong>__(key)</strong> — Returns
+              translated strings from your locale files based on the current session
+              language.
+            </li>
           </ul>
 
           <p>
-            These functions are automatically registered on boot and help optimize performance and SEO by reducing
-            file size and improving caching.
+            These helpers are automatically registered during boot and work seamlessly with
+            LilaPHP’s caching system. They reduce file size, improve caching efficiency,
+            and enhance SEO through minified assets and optimized metadata generation.
           </p>
-        </section>
 
+          <h3 class="mt-4">Examples</h3>
+          <pre><code class="language-html">&lt;link
+  rel="icon"
+  type="image/png"
+  href="{{ image('img/lila.png', 40, 0, 70, 'ico') }}"
+/&gt;
+
+&lt;link rel="stylesheet" href="{{ asset('css/lila.css') }}" /&gt;
+
+&lt;img src="{{ image('img/lila.png', 200) }}" width="200" alt="LilaPHP" /&gt;
+</code></pre>
+        </section>
         <!-- SEO -->
         <section id="seo" class="mt-4">
           <h2>SEO Optimization</h2>
           <p>
-            Twig templates can dynamically include metadata, Open Graph, and favicon tags for improved search
-            visibility.
-            Use <code>image()</code> to generate WebP icons automatically.
+            LilaPHP’s template system automatically handles SEO-friendly optimizations.
+            Twig templates can dynamically include meta tags, Open Graph data, and favicon
+            links. Use the <code>image()</code> helper to generate lightweight WebP icons
+            automatically.
           </p>
+
+          <p>
+            When <code>DEBUG=false</code> is set in your <code>.env</code> file, LilaPHP
+            automatically compiles and caches minified <code>.js</code>, <code>.css</code>,
+            and image files into <code>public/cache</code>. This process is executed once,
+            ensuring top performance and improved SEO.
+          </p>
+
+          <p>
+            All rendered HTML is also minified by default to reduce file size and protect
+            against injection attacks. Twig template caching further boosts speed and
+            security by storing compiled templates for faster rendering.
+          </p>
+
+          <ul>
+            <li>Automatic HTML, JS, and CSS minification</li>
+            <li>Optimized WebP image generation</li>
+            <li>CSRF protection and secure escaping</li>
+            <li>Built-in template caching for maximum performance</li>
+          </ul>
         </section>
+
+
+
+
 
         <!-- Performance -->
         <section id="performance" class="mt-4">
