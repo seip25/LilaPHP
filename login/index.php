@@ -4,6 +4,7 @@ include_once "../app/index.php";
 use Core\BaseModel;
 use Core\Field;
 
+
 class LoginModel extends BaseModel
 {
     #[Field(required: true, format: "email")]
@@ -13,25 +14,28 @@ class LoginModel extends BaseModel
     public string $password;
 }
 
-$app->get(function ($req, $res) use ($app) {
+$lang = $app->getSession(key: "lang", default: "es");
+
+$app->get(callback: function ($req, $res) use ($app) {
     return $app->render("login");
 });
 
-$app->post(function ($req, $res) use ($app) {
-    return $app->jsonResponse(["success" => true, "login" => false]);
-}, [
-    fn($req, $res) => new LoginModel($req, "es"),
-]);
+$app->post(callback: function ($req, $res) use ($app) {
+    global $lang;
+    return $app->jsonResponse(["success" => true, "login" => false,"session"=>$lang]);
+ }, 
+middlewares: [
+    fn($req, $res) => new LoginModel(data: $req, lang: $lang),
+]
+);
 
-$app->addMiddlewares([
+$app->addMiddlewares(middlewares: [
     'before' => [
-        fn($req, $res) => error_log("Custom before route")
+        fn($req, $res) => error_log(message: "Custom before route")
     ],
     'after' => [
-        fn($req, $res) => error_log("Custom after route")
+        fn($req, $res) => error_log(message: "Custom after route")
     ]
-
-
 ]);
 
 $app->run();

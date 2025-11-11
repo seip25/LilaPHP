@@ -48,7 +48,7 @@ class Field
 class ValidationException extends \Exception
 {
     public array|string|null $response;
-    public function __construct(array $errors,  string|null $lang = "en", bool $jsonResponse = true)
+    public function __construct(array $errors, string|null $lang = "en", bool $jsonResponse = true)
     {
 
         if ($jsonResponse) {
@@ -71,13 +71,13 @@ HTML;
 </ul>
 HTML;
 
-            $this->response = Response::JSON([
+            $this->response = Response::JSON(data: [
                 "success" => false,
                 "error" => true,
                 "message" => $msg,
                 "html" => $html,
                 "errors" => $errors
-            ], 400);
+            ], status: 400);
         } else {
             $html = <<<HTML
              <ul>
@@ -92,7 +92,7 @@ HTML;
             $html .= <<<HTML
             </ul>
 HTML;
-            $this->response = Response::HTML($html, 400);
+            $this->response = Response::HTML(html: $html, status: 400);
         }
         exit();
     }
@@ -102,89 +102,117 @@ abstract class BaseModel
 {
 
     protected static array $defaultMessages = [
-        'en' => [
+        'eng' => [
             'required' => "Field ':field' is required",
-            'length'   => "Field ':field' must be exactly :length characters long",
+            'length' => "Field ':field' must be exactly :length characters long",
             'min_length' => "Field ':field' must be at least :min_length characters long",
             'max_length' => "Field ':field' must not exceed :max_length characters",
-            'min'      => "Field ':field' must be at least :min",
-            'max'      => "Field ':field' must not exceed :max",
-            'email'    => "Field ':field' must be a valid email address",
-            'ip'       => "Field ':field' must be a valid IP address",
-            'url'      => "Field ':field' must be a valid URL",
-            'uuid'     => "Field ':field' must be a valid UUID",
-            'regex'    => "Field ':field' does not match the required format",
-            'number'   => "Field ':field' must be a valid number",
-            'integer'  => "Field ':field' must be a whole number",
-            'float'    => "Field ':field' must be a decimal number",
-            'boolean'  => "Field ':field' must be true or false",
-            'date'     => "Field ':field' must be a valid date",
+            'min' => "Field ':field' must be at least :min",
+            'max' => "Field ':field' must not exceed :max",
+            'email' => "Field ':field' must be a valid email address",
+            'ip' => "Field ':field' must be a valid IP address",
+            'url' => "Field ':field' must be a valid URL",
+            'uuid' => "Field ':field' must be a valid UUID",
+            'regex' => "Field ':field' does not match the required format",
+            'number' => "Field ':field' must be a valid number",
+            'integer' => "Field ':field' must be a whole number",
+            'float' => "Field ':field' must be a decimal number",
+            'boolean' => "Field ':field' must be true or false",
+            'date' => "Field ':field' must be a valid date",
             'datetime' => "Field ':field' must be a valid date and time",
-            'alpha'    => "Field ':field' can only contain letters",
+            'alpha' => "Field ':field' can only contain letters",
             'alphanumeric' => "Field ':field' can only contain letters and numbers",
-            'numeric'  => "Field ':field' can only contain numbers",
-            'phone'    => "Field ':field' must be a valid phone number",
+            'numeric' => "Field ':field' can only contain numbers",
+            'phone' => "Field ':field' must be a valid phone number",
             'credit_card' => "Field ':field' must be a valid credit card number",
-            'domain'   => "Field ':field' must be a valid domain name",
+            'domain' => "Field ':field' must be a valid domain name",
             'mac_address' => "Field ':field' must be a valid MAC address",
-            'json'     => "Field ':field' must be a valid JSON string",
-            'base64'   => "Field ':field' must be a valid Base64 string",
+            'json' => "Field ':field' must be a valid JSON string",
+            'base64' => "Field ':field' must be a valid Base64 string",
         ],
-        'es' => [
+        'esp' => [
             'required' => "El campo ':field' es obligatorio",
-            'length'   => "El campo ':field' debe tener exactamente :length caracteres",
+            'length' => "El campo ':field' debe tener exactamente :length caracteres",
             'min_length' => "El campo ':field' debe tener al menos :min_length caracteres",
             'max_length' => "El campo ':field' no debe exceder :max_length caracteres",
-            'min'      => "El campo ':field' debe ser como mínimo :min",
-            'max'      => "El campo ':field' no debe exceder :max",
-            'email'    => "El campo ':field' debe ser una dirección de correo válida",
-            'ip'       => "El campo ':field' debe ser una dirección IP válida",
-            'url'      => "El campo ':field' debe ser una URL válida",
-            'uuid'     => "El campo ':field' debe ser un UUID válido",
-            'regex'    => "El campo ':field' no cumple con el formato requerido",
-            'number'   => "El campo ':field' debe ser un número válido",
-            'integer'  => "El campo ':field' debe ser un número entero",
-            'float'    => "El campo ':field' debe ser un número decimal",
-            'boolean'  => "El campo ':field' debe ser verdadero o falso",
-            'date'     => "El campo ':field' debe ser una fecha válida",
+            'min' => "El campo ':field' debe ser como mínimo :min",
+            'max' => "El campo ':field' no debe exceder :max",
+            'email' => "El campo ':field' debe ser una dirección de correo válida",
+            'ip' => "El campo ':field' debe ser una dirección IP válida",
+            'url' => "El campo ':field' debe ser una URL válida",
+            'uuid' => "El campo ':field' debe ser un UUID válido",
+            'regex' => "El campo ':field' no cumple con el formato requerido",
+            'number' => "El campo ':field' debe ser un número válido",
+            'integer' => "El campo ':field' debe ser un número entero",
+            'float' => "El campo ':field' debe ser un número decimal",
+            'boolean' => "El campo ':field' debe ser verdadero o falso",
+            'date' => "El campo ':field' debe ser una fecha válida",
             'datetime' => "El campo ':field' debe ser una fecha y hora válidas",
-            'alpha'    => "El campo ':field' solo puede contener letras",
+            'alpha' => "El campo ':field' solo puede contener letras",
             'alphanumeric' => "El campo ':field' solo puede contener letras y números",
-            'numeric'  => "El campo ':field' solo puede contener números",
-            'phone'    => "El campo ':field' debe ser un número de teléfono válido",
+            'numeric' => "El campo ':field' solo puede contener números",
+            'phone' => "El campo ':field' debe ser un número de teléfono válido",
             'credit_card' => "El campo ':field' debe ser un número de tarjeta de crédito válido",
-            'domain'   => "El campo ':field' debe ser un nombre de dominio válido",
+            'domain' => "El campo ':field' debe ser un nombre de dominio válido",
             'mac_address' => "El campo ':field' debe ser una dirección MAC válida",
-            'json'     => "El campo ':field' debe ser una cadena JSON válida",
-            'base64'   => "El campo ':field' debe ser una cadena Base64 válida",
+            'json' => "El campo ':field' debe ser una cadena JSON válida",
+            'base64' => "El campo ':field' debe ser una cadena Base64 válida",
         ],
-        'pt-br' => [
+        'bra' => [
             'required' => "O campo ':field' é obrigatório",
-            'length'   => "O campo ':field' deve ter exatamente :length caracteres",
+            'length' => "O campo ':field' deve ter exatamente :length caracteres",
             'min_length' => "O campo ':field' deve ter pelo menos :min_length caracteres",
             'max_length' => "O campo ':field' não deve exceder :max_length caracteres",
-            'min'      => "O campo ':field' deve ser no mínimo :min",
-            'max'      => "O campo ':field' não deve exceder :max",
-            'email'    => "O campo ':field' deve ser um endereço de e-mail válido",
-            'ip'       => "O campo ':field' deve ser um endereço IP válido",
-            'url'      => "O campo ':field' deve ser uma URL válida",
-            'uuid'     => "O campo ':field' deve ser um UUID válido",
-            'regex'    => "O campo ':field' não corresponde ao formato exigido",
-            'number'   => "O campo ':field' deve ser um número válido",
-            'integer'  => "O campo ':field' deve ser um número inteiro",
-            'float'    => "O campo ':field' deve ser um número decimal",
-            'boolean'  => "O campo ':field' deve ser verdadeiro ou falso",
-            'date'     => "O campo ':field' deve ser uma data válida",
+            'min' => "O campo ':field' deve ser no mínimo :min",
+            'max' => "O campo ':field' não deve exceder :max",
+            'email' => "O campo ':field' deve ser um endereço de e-mail válido",
+            'ip' => "O campo ':field' deve ser um endereço IP válido",
+            'url' => "O campo ':field' deve ser uma URL válida",
+            'uuid' => "O campo ':field' deve ser um UUID válido",
+            'regex' => "O campo ':field' não corresponde ao formato exigido",
+            'number' => "O campo ':field' deve ser um número válido",
+            'integer' => "O campo ':field' deve ser um número inteiro",
+            'float' => "O campo ':field' deve ser um número decimal",
+            'boolean' => "O campo ':field' deve ser verdadeiro ou falso",
+            'date' => "O campo ':field' deve ser uma data válida",
             'datetime' => "O campo ':field' deve ser uma data e hora válidas",
-            'alpha'    => "O campo ':field' só pode conter letras",
+            'alpha' => "O campo ':field' só pode conter letras",
             'alphanumeric' => "O campo ':field' só pode conter letras e números",
-            'numeric'  => "O campo ':field' só pode conter números",
-            'phone'    => "O campo ':field' deve ser um número de telefone válido",
+            'numeric' => "O campo ':field' só pode conter números",
+            'phone' => "O campo ':field' deve ser um número de telefone válido",
             'credit_card' => "O campo ':field' deve ser um número de cartão de crédito válido",
-            'domain'   => "O campo ':field' deve ser um nome de domínio válido",
+            'domain' => "O campo ':field' deve ser um nome de domínio válido",
             'mac_address' => "O campo ':field' deve ser um endereço MAC válido",
-            'json'     => "O campo ':field' deve ser uma string JSON válida",
-            'base64'   => "O campo ':field' deve ser uma string Base64 válida",
+            'json' => "O campo ':field' deve ser uma string JSON válida",
+            'base64' => "O campo ':field' deve ser uma string Base64 válida",
+        ],
+        'por' => [
+            'required' => "O campo ':field' é obrigatório",
+            'length' => "O campo ':field' deve ter exatamente :length caracteres",
+            'min_length' => "O campo ':field' deve ter pelo menos :min_length caracteres",
+            'max_length' => "O campo ':field' não deve exceder :max_length caracteres",
+            'min' => "O campo ':field' deve ser no mínimo :min",
+            'max' => "O campo ':field' não deve exceder :max",
+            'email' => "O campo ':field' deve ser um endereço de e-mail válido",
+            'ip' => "O campo ':field' deve ser um endereço IP válido",
+            'url' => "O campo ':field' deve ser uma URL válida",
+            'uuid' => "O campo ':field' deve ser um UUID válido",
+            'regex' => "O campo ':field' não corresponde ao formato exigido",
+            'number' => "O campo ':field' deve ser um número válido",
+            'integer' => "O campo ':field' deve ser um número inteiro",
+            'float' => "O campo ':field' deve ser um número decimal",
+            'boolean' => "O campo ':field' deve ser verdadeiro ou falso",
+            'date' => "O campo ':field' deve ser uma data válida",
+            'datetime' => "O campo ':field' deve ser uma data e hora válidas",
+            'alpha' => "O campo ':field' só pode conter letras",
+            'alphanumeric' => "O campo ':field' só pode conter letras e números",
+            'numeric' => "O campo ':field' só pode conter números",
+            'phone' => "O campo ':field' deve ser um número de telefone válido",
+            'credit_card' => "O campo ':field' deve ser um número de cartão de crédito válido",
+            'domain' => "O campo ':field' deve ser um nome de domínio válido",
+            'mac_address' => "O campo ':field' deve ser um endereço MAC válido",
+            'json' => "O campo ':field' deve ser uma string JSON válida",
+            'base64' => "O campo ':field' deve ser uma string Base64 válida",
         ],
 
     ];
@@ -193,7 +221,8 @@ abstract class BaseModel
 
     public function __construct(array $data = [], string|null $lang = null, bool $jsonResponse = true)
     {
-        $this->lang = $lang;
+
+        $this->lang = in_array(needle: $lang, haystack: array_keys(self::$defaultMessages)) ? $lang : "eng";
 
         $ref = new \ReflectionClass($this);
         $errors = [];
@@ -275,10 +304,12 @@ abstract class BaseModel
                             }
                             break;
                         case 'uuid':
-                            if (!preg_match(
-                                '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
-                                $value
-                            )) {
+                            if (
+                                !preg_match(
+                                    '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+                                    $value
+                                )
+                            ) {
                                 $errors[$name][] = $this->formatMessage('uuid', $field, [':field' => $name]);
                             }
                             break;
@@ -395,7 +426,7 @@ abstract class BaseModel
         $reverse = strrev($number);
 
         for ($i = 0; $i < strlen($reverse); $i++) {
-            $digit = (int)$reverse[$i];
+            $digit = (int) $reverse[$i];
             if ($i % 2 === 1) {
                 $digit *= 2;
                 if ($digit > 9) {

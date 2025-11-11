@@ -37,9 +37,9 @@ class Template
             return rtrim(Config::$URL_PROJECT, '/') . '/' . ltrim($path, '/');
         }));
 
-        // self::$twig->addFunction(new TwigFunction('csrf_token', function (): string {
-        //     return Security::generateCsrfToken();
-        // }));
+        self::$twig->addFunction(new TwigFunction('csrf_token', function (): string {
+            return Security::generateCsrfToken();
+        }));
     }
 
     private static function getBaseContext(array $extra = []): array
@@ -61,7 +61,7 @@ class Template
     {
         try {
             $twig = self::loadTwig($path ? Config::$DIR_PROJECT . $path : Config::$DIR_PROJECT . "/templates");
-            $fullContext = self::getBaseContext($context);
+            $fullContext = self::getBaseContext(extra: $context);
             $html = $twig->render("$template.twig", $fullContext);
             $html = self::minifyHtml($html);
 

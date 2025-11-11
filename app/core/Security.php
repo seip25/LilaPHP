@@ -9,27 +9,32 @@ class Security
     public function __construct(array $options = [])
     {
         $this->options = array_merge([
-            'logger'        => true,
-            'rateLimit'     => true,
-            'sanitize'      => true,
-            'csrf'          => true,
-            'cors'          => [
+            'logger' => true,
+            'rateLimit' => true,
+            'sanitize' => true,
+            'csrf' => true,
+            'cors' => [
                 'enabled' => true,
                 'origins' => ['*'],
                 'methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
                 'headers' => ['Content-Type', 'Authorization', 'X-CSRF-Token'],
                 'credentials' => false
             ],
-            'payloadCheck'  => true
+            'payloadCheck' => true
         ], $options);
     }
     public function runBeforeMiddlewares(array &$req): bool
     {
-        if ($this->options['logger'])       if (!$this->loggerMiddleware($req)) return false;
-        if ($this->options['cors'])         $this->corsHeaders();
-        if ($this->options['csrf'])         $this->validateCsrfToken();
-        if ($this->options['sanitize'])     $this->sanitizeRequest($req);
-        if ($this->options['payloadCheck']) if (!$this->payloadCheck($req)) return false;
+        if ($this->options['logger']) if (!$this->loggerMiddleware($req))
+            return false;
+        if ($this->options['cors'])
+            $this->corsHeaders();
+        if ($this->options['csrf'])
+            $this->validateCsrfToken();
+        if ($this->options['sanitize'])
+            $this->sanitizeRequest($req);
+        if ($this->options['payloadCheck']) if (!$this->payloadCheck($req))
+            return false;
 
         header("X-Powered-By: Lila Framework");
         return true;
@@ -39,8 +44,8 @@ class Security
     protected function loggerMiddleware(array $req): bool
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? '';
-        $uri    = $_SERVER['REQUEST_URI'] ?? '';
-        $ip     = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         Logger::info("{$method} {$uri} | IP={$ip} | Params=" . json_encode($req));
         return true;
     }
@@ -69,7 +74,8 @@ class Security
     protected function corsHeaders(): void
     {
         $cors = $this->options['cors'];
-        if (empty($cors['enabled'])) return;
+        if (empty($cors['enabled']))
+            return;
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
         $allowedOrigins = $cors['origins'] ?? ['*'];
         if (in_array('*', $allowedOrigins) || in_array($origin, $allowedOrigins)) {
@@ -89,23 +95,26 @@ class Security
 
     public static function generateCsrfToken(): string
     {
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        Session::start();
         $token = bin2hex(random_bytes(32));
-        $_SESSION['_csrf'] = $token;
+        Session::set('_csrf', $token);
         return $token;
     }
 
     protected function validateCsrfToken(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') return;
+        if ($_SERVER['REQUEST_METHOD'] === 'GET')
+            return;
 
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['_csrf'] ?? '');
-        $sessionToken = $_SESSION['_csrf'] ?? '';
+        Session::start();
 
-        if (!$headerToken || $headerToken !== $sessionToken) {
+        $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_REQUEST['_csrf'] ?? '');
+        $sessionToken = Session::get('_csrf');
+
+        if (!$headerToken || !$sessionToken || !hash_equals($sessionToken, $headerToken)) {
             Response::JSON(['error' => 'Invalid CSRF token'], 403);
             exit;
         }
     }
+
 }

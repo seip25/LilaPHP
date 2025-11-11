@@ -160,10 +160,10 @@ class App
     }
 
 
-    public function render(string $template, array $context = [], ?string $path = null): void
+    public function render(string $template, array $context = [], ?string $path = null ): void
     {
         try {
-            $html = Template::render($template, $context, $path);
+            $html = Template::render(template: $template, context: $context, path: $path, );
             echo $html;
         } catch (Throwable $e) {
             $this->handleRenderException($e);
