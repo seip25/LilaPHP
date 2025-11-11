@@ -90,6 +90,7 @@
         <a href="#seo">SEO</a>
         <a href="#performance">Performance</a>
         <a href="#coreapp">The App Core</a>
+        <a href="#production">Production</a>
       </aside>
 
       <div class="grid gap-4 visible-sm">
@@ -106,6 +107,7 @@
         <div><a href="#seo" class="text-gray-500">SEO</a></div>
         <div><a href="#performance" class="text-gray-500">Performance</a></div>
         <div><a href="#coreapp" class="text-gray-500">App Core</a></div>
+        <div> <a href="#production" class="text-gray-500">Production</a></div>
       </div>
 
       <div>
@@ -133,7 +135,133 @@
               ⭐ View LilaPHP on GitHub
             </a>
           </footer>
+
+          <!-- Why Choose LilaPHP -->
+          <!-- Why Choose LilaPHP -->
+<section id="why-lilaphp" class="mt-4">
+  <article class="bg-surface border-none">
+    <h2 class="text-indigo-500">Why Choose LilaPHP?</h2>
+
+    <p>
+      <strong>LilaPHP</strong> was designed with one clear purpose — to give
+      developers full control, performance, and simplicity without the
+      unnecessary overhead of large, opinionated frameworks.
+    </p>
+
+    <p>
+      Its modular architecture allows every <strong>endpoint</strong>,
+      <strong>view</strong>, or <strong>micro-app</strong> to be completely
+      independent and configurable. You can have one route using CORS,
+      sessions, and translations — and another one running without any of them.
+      This flexibility is what makes LilaPHP both <strong>powerful</strong> and
+      <strong>lightweight</strong>.
+    </p>
+
+    <p>
+      In traditional frameworks, most configurations are global and apply to the
+      entire project. In contrast, LilaPHP loads only what each request needs.
+      This means lower memory usage, faster execution, and cleaner architecture.
+    </p>
+
+    <h3>Example: Different Configurations per Entry Point</h3>
+
+    <p>
+      Each entry file can instantiate the framework with its own configuration,
+      giving you complete control over security, middleware, and session
+      behavior.
+    </p>
+
+    <pre><code class="language-php">// app/index.php
+namespace App;
+
+require_once __DIR__ . "/vendor/autoload.php";
+
+use Core\App;
+
+$app = new App(); // Default configuration (security, sessions, translations, etc.)
+</code></pre>
+
+    <pre><code class="language-php">// app/newApp.php
+namespace App;
+
+require_once __DIR__ . "/vendor/autoload.php";
+
+use Core\App;
+
+// Custom configuration - CORS disabled, no sanitization, no session
+$app = new App([
+    'security' => [
+        'cors' => false,
+        'sanitize' => false,
+        'logger' => true
+    ]
+]);
+
+// From here you can register custom routes, templates, or middlewares
+$app->get(callback: fn($req, $res) => $app->render("newApp"));
+$app->run();
+</code></pre>
+
+    <p>
+      Thanks to this modularity, each mini-application can behave differently —
+      one can serve public APIs, another can manage admin panels, and another
+      can handle localized front-end pages — all within the same project folder.
+    </p>
+
+    <ul class="list-disc pl-6 mt-2">
+      <li>
+        ⚡ <strong>Lightweight core:</strong> Loads only what’s needed for each
+        request — no redundant processing or duplicate execution.
+      </li>
+      <li>
+        🧩 <strong>Modular structure:</strong> Each app, route, or endpoint can
+        define its own configuration, middlewares, and translations.
+      </li>
+      <li>
+        🔒 <strong>Secure by default:</strong> Built-in CSRF protection, input
+        sanitization, isolated session handling, and configurable CORS.
+      </li>
+      <li>
+        🪶 <strong>SEO-friendly:</strong> Clean URLs, optimized image helpers,
+        and auto-generated metadata.
+      </li>
+      <li>
+        🖥️ <strong>Universal compatibility:</strong> Works seamlessly on
+        <strong>NGINX</strong>, <strong>Apache</strong>,
+        <strong>FrankenPHP</strong>, <strong>Swoole</strong>,
+        <strong>VPS</strong>, <strong>local network</strong>, or
+        <strong>shared hosting</strong>.
+      </li>
+      <li>
+        🧠 <strong>Developer experience first:</strong> Instant setup, clear
+        routing, localized validation, and intuitive Twig integration.
+      </li>
+      <li>
+        🚀 <strong>Performance oriented:</strong> Minimal I/O, cached helpers,
+        and pre-optimized rendering for production.
+      </li>
+    </ul>
+
+    <p class="mt-4">
+      With <strong>DEBUG=false</strong> in production,
+      <strong>LilaPHP</strong> automatically switches to optimized mode,
+      generating minified HTML, caching Twig templates, and loading only what’s
+      necessary per route.
+    </p>
+
+    <p class="text-secondary mt-2">
+      Each request remains lightweight, secure, and fully isolated — resulting
+      in <strong>extreme performance</strong> with <strong>minimal CPU and
+      memory usage</strong>.
+    </p>
+  </article>
+</section>
+
+
         </section>
+
+
+
 
         <!-- Installation -->
         <section id="install" class="mt-4">
@@ -819,6 +947,105 @@ $app->run();
 $app->jsonResponse(['ok' => true]);
 $app->render('home');</code></pre>
         </section>
+        <!-- Production -->
+        <section id="production" class="mt-4">
+          <h2>Production Environment</h2>
+          <p>
+            LilaPHP is built to run efficiently and securely in any production setup —
+            whether you’re using <strong>NGINX</strong>, <strong>Apache</strong>,
+            <strong>FrankenPHP</strong>, <strong>Swoole</strong>, a
+            <strong>VPS</strong>, or even a <strong>shared hosting environment</strong>.
+          </p>
+
+          <h3>🔒 Restricting Sensitive Directories</h3>
+          <p>
+            For security reasons, access to the <code>/app</code> directory must be
+            denied in production. This directory contains the framework core, templates,
+            environment files, and other internal components that should never be served
+            publicly.
+          </p>
+
+          <h4>➡️ NGINX Configuration</h4>
+          <pre><code class="language-nginx">server {
+    listen 80;
+    server_name example.com;
+    root /var/www/LilaPHP/;
+
+    index index.php;
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # Deny access to core app directory
+    location /app {
+        deny all;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+    }
+
+    error_log /var/log/nginx/lilaphp_error.log;
+    access_log /var/log/nginx/lilaphp_access.log;
+}</code></pre>
+
+          <h4>➡️ Apache (.htaccess)</h4>
+          <p>
+            In Apache, the <code>.htaccess</code> file already protects <code>/app</code>
+            automatically. Ensure you include this rule in your root folder:
+          </p>
+
+          <pre><code class="language-apache">&lt;IfModule mod_rewrite.c&gt;
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.php [L]
+&lt;/IfModule&gt;
+
+# Deny direct access to /app
+&lt;Directory "app"&gt;
+  Order allow,deny
+  Deny from all
+&lt;/Directory&gt;</code></pre>
+
+          <h3>⚙️ Environment Configuration</h3>
+          <p>
+            Your <code>.env</code> file should set <strong>DEBUG=false</strong> in
+            production to disable error traces and enable optimized performance:
+          </p>
+
+          <pre><code class="language-ini">DEBUG=false</code></pre>
+
+          <p>
+            LilaPHP automatically detects this setting and loads only the required
+            components for each route, avoiding unnecessary overhead.
+          </p>
+
+          <h3>🚀 Optimized Loading</h3>
+          <p>
+            Unlike heavier frameworks that bootstrap the entire stack for every request,
+            LilaPHP only loads what each endpoint needs — templates, routes, or
+            middleware — ensuring minimal memory footprint and top performance.
+          </p>
+
+          <p>
+            With this setup, your application runs cleanly and securely across any PHP
+            runtime — whether you’re deploying on:
+          </p>
+
+          <ul class="list-disc pl-6">
+            <li>💻 Local network or shared hosting</li>
+            <li>⚙️ VPS or cloud instance (NGINX, Apache)</li>
+            <li>🧩 Modern runtimes like FrankenPHP or Swoole</li>
+          </ul>
+
+          <p class="text-secondary mt-4">
+            ✅ Ready for production — LilaPHP handles routing, caching, and security
+            with zero configuration once <code>DEBUG=false</code>.
+          </p>
+        </section>
+
 
       </div>
     </div>
