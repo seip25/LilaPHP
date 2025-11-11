@@ -37,12 +37,23 @@ class Template
             return rtrim(Config::$URL_PROJECT, '/') . '/' . ltrim($path, '/');
         }));
 
-        
+
         self::$twig->addFunction(new TwigFunction('csrf_input', function (): string {
             $token = Security::generateCsrfToken();
             return '<input type="hidden" name="_csrf" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
         }, ['is_safe' => ['html']]));
 
+        self::$twig->addFunction(new TwigFunction('image', function (string $file, int $width = 800, int $height = 0, int $quality = 70, string $type = 'webp'): string {
+            $url = ImageOptimizer::getOptimized($file, $type, $width, $height, $quality);
+            return $url ?? (rtrim(Config::$URL_PROJECT, '/') . '/public/' . ltrim($file, '/'));
+        }));
+        self::$twig->addFunction(new TwigFunction('translate', function (string $key): string {
+            return Translate::t($key);
+        }));
+
+         self::$twig->addFunction(new TwigFunction('__', function (string $key): string {
+            return Translate::t($key);
+        }));
     }
 
     private static function getBaseContext(array $extra = []): array
@@ -67,6 +78,7 @@ class Template
             $fullContext = self::getBaseContext(extra: $context);
             $html = $twig->render("$template.twig", $fullContext);
             $html = self::minifyHtml($html);
+            header('Cache-Control: public, max-age=604800, immutable');
 
             if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
                 header('Content-Encoding: gzip');

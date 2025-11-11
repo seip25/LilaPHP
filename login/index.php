@@ -2,8 +2,7 @@
 include_once "../app/index.php";
 
 use Core\BaseModel;
-use Core\Field;
-use Core\Security;
+use Core\Field; 
 
 
 class LoginModel extends BaseModel

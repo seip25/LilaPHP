@@ -2,11 +2,11 @@
 include_once "./app/index.php";
 
 
-$app->get(function($req, $res) use ($app) {
+$app->get(callback: function($req, $res) use ($app): mixed {
     return $app->render("index");
 });
 
-$app->post(function($req, $res) use ($app) {
+$app->post(callback: function($req, $res) use ($app): mixed {
     return $app->jsonResponse(["success" => true]);
 });
 

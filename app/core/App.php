@@ -38,11 +38,21 @@ class App
             'cors' => true
         ]));
         Session::start();
-        if (Session::has('lang') == false) {
+        if (Session::has(key: 'lang') == false) { 
             $newLang = Config::$LANG;
-            Session::set('lang', $newLang);
+            Session::set(key: 'lang', value: $newLang);
         }
+        Translate::load();
+         
 
+    }
+    public function getLangDefault(): string
+    {
+        return Config::$LANG;
+    }
+    public function redirect(string $url): void{
+        header(header: "Location: $url");
+      
     }
 
     public function setSession(string $key, $value): void
