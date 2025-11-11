@@ -72,12 +72,27 @@ class Template
                 echo $html;
             }
         } catch (\Throwable $e) {
-            Logger::error("Template render error: " . $e->getMessage());
-            if (Config::$DEBUG) {
-                Response::HTML("<pre>{$e->getMessage()}</pre>", 500);
+              $error = Config::$DEBUG ? $e->getMessage() : "General error";
+            if ($template != "500") {
+                Logger::error("Template render error: " . $e->getMessage());
+                $context = ["error" => $error];
+                self::render("500", $context, $path);
             } else {
-                Response::HTML("<h1>Error rendering template</h1>", 500);
+                $html = <<<HTML
+<main style="min-height: 100vh; display: flex; flex-direction: column; background-color: #f9fafb;">
+    <div style="display: flex; justify-content: center;">
+        <article style="max-width: 600px; margin-top: 2rem; padding: 2rem; background-color: #fef2f2; border-radius: 8px;">
+            <p style="color: #ef4444; font-family: sans-serif; font-size: 1rem; text-align: center;">
+                $error
+            </p>
+        </article>
+    </div>
+</main>
+HTML;
+                Response::HTML($html, 500);
+                
             }
+            exit;
         }
     }
 }

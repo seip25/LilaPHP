@@ -20,7 +20,7 @@ class App
         'PUT' => null,
         'DELETE' => null
     ];
-    protected array $middleware = [
+    protected array $middlewares = [
         'before' => [],
         'after'  => []
     ];
@@ -39,10 +39,11 @@ class App
         ]));
     }
 
-    public function middleware(array $middlewares): void
+    public function addMiddlewares(array $middlewares): void
     {
-        $this->middleware = array_merge($this->middleware, $middlewares);
+        $this->middlewares = array_merge($this->middlewares, $middlewares);
     }
+
 
     public function get(callable $callback, array $middlewares = []): void
     {
@@ -104,7 +105,8 @@ class App
 
         $res = new Response();
         if (!$this->security->runBeforeMiddlewares($req)) exit;
-        foreach ($this->middleware['before'] as $fn) {
+
+        foreach ($this->middlewares['before'] as $fn) {
             if (is_callable($fn)) $fn($req, $res);
         }
 
@@ -114,7 +116,7 @@ class App
 
         $route['callback']($req, $res);
 
-        foreach ($this->middleware['after'] as $fn) {
+        foreach ($this->middlewares['after'] as $fn) {
             if (is_callable($fn)) $fn($req, $res);
         }
 

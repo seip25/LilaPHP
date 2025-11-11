@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ asset('css/lila.css') }}" />
+    <script src="{{ asset('js/index.js') }}"></script>
+  </head>
+  <body>
+    <main class="min-h-screen flex flex-col bg-surface">
+      <div class="container flex justify-center">
+        <article class="w-mx-600-px  mt-8 py-8 bg-red-50">
+          <p class="text-red-500">{{ error }}</p>
+        </article>
+      </div>
+    </main>
+  </body>
+</html>

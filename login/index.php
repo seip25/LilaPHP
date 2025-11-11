@@ -23,13 +23,15 @@ $app->post(function ($req, $res) use ($app) {
     fn($req, $res) => new LoginModel($req, "es"),
 ]);
 
-$app->middleware([
+$app->addMiddlewares([
     'before' => [
         fn($req, $res) => error_log("Custom before route")
     ],
     'after' => [
         fn($req, $res) => error_log("Custom after route")
     ]
+
+
 ]);
 
 $app->run();
