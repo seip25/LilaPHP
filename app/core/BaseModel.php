@@ -59,6 +59,7 @@ HTML;
             $keys = array_keys($errors);
             $lastKey = end($keys);
             foreach ($errors as $key => $value) {
+                $key = ucfirst(string :$key);
                 $separator = ($key === $lastKey) ? " ." : " , ";
                 $msg .= implode(" , ", $value) . $separator;
                 foreach ($value as $msg) {
@@ -83,6 +84,7 @@ HTML;
              <ul>
 HTML;
             foreach ($errors as $field => $messages) {
+                $field = ucfirst(string: $field);
                 foreach ($messages as $msg) {
                     $html .= <<<HTML
                     <li class='text-red-500'><strong >$field:</strong> $msg</li>

@@ -34,8 +34,7 @@ class App
         $this->registerExceptionHandler();
         $this->security = new Security(array_merge($options['security'], [
             'logger' => true,
-            'sanitize' => true,
-            'csrf' => false,
+            'sanitize' => true, 
             'cors' => true
         ]));
         Session::start();
@@ -85,27 +84,30 @@ class App
         ];
     }
 
-    public function post(callable $callback, array $middlewares = []): void
+    public function post(callable $callback, array $middlewares = [], bool $csrf = false): void
     {
         $this->routes['POST'] = [
             'callback' => $callback,
-            'middlewares' => $middlewares
+            'middlewares' => $middlewares,
+            'csrf' => $csrf
         ];
     }
 
-    public function put(callable $callback, array $middlewares = []): void
+    public function put(callable $callback, array $middlewares = [], bool $csrf = false): void
     {
         $this->routes['PUT'] = [
             'callback' => $callback,
-            'middlewares' => $middlewares
+            'middlewares' => $middlewares,
+            'csrf' => $csrf
         ];
     }
 
-    public function delete(callable $callback, array $middlewares = []): void
+    public function delete(callable $callback, array $middlewares = [], bool $csrf = false): void
     {
         $this->routes['DELETE'] = [
             'callback' => $callback,
-            'middlewares' => $middlewares
+            'middlewares' => $middlewares,
+            'csrf' => $csrf
         ];
     }
 
@@ -148,6 +150,9 @@ class App
             if (is_callable($fn))
                 $fn($req, $res);
         }
+        if (in_array(needle: strtolower(string: $method), haystack: ['post', 'put', 'delete']) && (isset($route['csrf']) && $route['csrf'])) {
+            Security::validateCsrfToken(request: $req);
+        }
 
         $route['callback']($req, $res);
 
@@ -159,8 +164,7 @@ class App
         exit;
     }
 
-
-    public function render(string $template, array $context = [], ?string $path = null ): void
+    public function render(string $template, array $context = [], ?string $path = null): void
     {
         try {
             $html = Template::render(template: $template, context: $context, path: $path, );

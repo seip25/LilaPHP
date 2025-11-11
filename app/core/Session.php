@@ -13,8 +13,7 @@ class Session
         $secure = Config::$DEBUG == false || isset($_SERVER['HTTPS']) ? true : false;
         session_set_cookie_params([
             'lifetime' => 0,
-            'path' => '/',
-            'domain' => $_SERVER['HTTP_HOST'] ?? '',
+            'path' => '/', 
             'secure' => $secure,
             'httponly' => true,
             'samesite' => 'Strict'

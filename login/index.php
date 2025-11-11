@@ -3,6 +3,7 @@ include_once "../app/index.php";
 
 use Core\BaseModel;
 use Core\Field;
+use Core\Security;
 
 
 class LoginModel extends BaseModel
@@ -20,13 +21,15 @@ $app->get(callback: function ($req, $res) use ($app) {
     return $app->render("login");
 });
 
-$app->post(callback: function ($req, $res) use ($app) {
-    global $lang;
-    return $app->jsonResponse(["success" => true, "login" => false,"session"=>$lang]);
- }, 
-middlewares: [
-    fn($req, $res) => new LoginModel(data: $req, lang: $lang),
-]
+$app->post(
+    callback: function ($req, $res) use ($app) {
+        global $lang;
+        return $app->jsonResponse(["success" => true, "login" => false, "session" => $lang]);
+    },
+    middlewares: [
+        fn($req, $res) => new LoginModel(data: $req, lang: $lang),
+    ],
+    csrf: true
 );
 
 $app->addMiddlewares(middlewares: [

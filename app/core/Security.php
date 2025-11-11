@@ -12,7 +12,6 @@ class Security
             'logger' => true,
             'rateLimit' => true,
             'sanitize' => true,
-            'csrf' => true,
             'cors' => [
                 'enabled' => true,
                 'origins' => ['*'],
@@ -29,8 +28,6 @@ class Security
             return false;
         if ($this->options['cors'])
             $this->corsHeaders();
-        if ($this->options['csrf'])
-            $this->validateCsrfToken();
         if ($this->options['sanitize'])
             $this->sanitizeRequest($req);
         if ($this->options['payloadCheck']) if (!$this->payloadCheck($req))
@@ -95,24 +92,37 @@ class Security
 
     public static function generateCsrfToken(): string
     {
-        Session::start();
-        $token = bin2hex(random_bytes(32));
-        Session::set('_csrf', $token);
+        if (session_status() === PHP_SESSION_ACTIVE)
+            Session::start();
+        if (Session::has(key: '_csrf'))
+            return Session::get(key: '_csrf');
+
+        $token = bin2hex(string: random_bytes(length: 32));
+        Session::set(key: '_csrf', value: $token);
         return $token;
     }
 
-    protected function validateCsrfToken(): void
+    public static function validateCsrfToken(array $request): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET')
             return;
+        if (session_status() === PHP_SESSION_ACTIVE)
+            Session::start();
+        $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($request['_csrf'] ?? '');
+        $sessionToken = Session::get(key: '_csrf');
 
-        Session::start();
-
-        $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_REQUEST['_csrf'] ?? '');
-        $sessionToken = Session::get('_csrf');
-
-        if (!$headerToken || !$sessionToken || !hash_equals($sessionToken, $headerToken)) {
-            Response::JSON(['error' => 'Invalid CSRF token'], 403);
+        if (!$headerToken || !$sessionToken || !hash_equals(known_string: $sessionToken, user_string: $headerToken)) {
+            $data = Config::$DEBUG ? [
+                "error" => true,
+                "message" => "<p class='text-red-500 mt-4 text-center'>Invalid CSRF token</p>",
+                "session" => $sessionToken,
+                "request" => $request,
+                "_SESSION" => $_SESSION
+            ] : [
+                "error" => true,
+                "message" => "<p class='text-red-500 mt-4 text-center'>Session error</p>",
+            ];
+            Response::JSON(data: $data, status: 403);
             exit;
         }
     }

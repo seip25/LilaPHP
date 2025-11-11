@@ -37,9 +37,12 @@ class Template
             return rtrim(Config::$URL_PROJECT, '/') . '/' . ltrim($path, '/');
         }));
 
-        self::$twig->addFunction(new TwigFunction('csrf_token', function (): string {
-            return Security::generateCsrfToken();
-        }));
+        
+        self::$twig->addFunction(new TwigFunction('csrf_input', function (): string {
+            $token = Security::generateCsrfToken();
+            return '<input type="hidden" name="_csrf" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
+        }, ['is_safe' => ['html']]));
+
     }
 
     private static function getBaseContext(array $extra = []): array
@@ -72,7 +75,7 @@ class Template
                 echo $html;
             }
         } catch (\Throwable $e) {
-              $error = Config::$DEBUG ? $e->getMessage() : "General error";
+            $error = Config::$DEBUG ? $e->getMessage() : "General error";
             if ($template != "500") {
                 Logger::error("Template render error: " . $e->getMessage());
                 $context = ["error" => $error];
@@ -90,7 +93,7 @@ class Template
 </main>
 HTML;
                 Response::HTML($html, 500);
-                
+
             }
             exit;
         }
