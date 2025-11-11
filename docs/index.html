@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security. It includes clean routing, middleware, Twig templates, and Dotenv configuration for building fast, maintainable web applications." />
+    <meta name="keywords"
+        content="LilaPHP, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware, Lila, seip25" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/lila.png" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/lila.css" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://seip25.github.io/LilaPHP/" />
+    <meta property="og:title" content="LilaPHP — Lightweight Modern PHP Framework" />
+    <meta property="og:description"
+        content="LilaPHP is a lightweight and modular PHP framework built for simplicity, flexibility, and performance. Clean routing, middleware, Twig, and more." />
+    <meta property="og:image" content="https://seip25.github.io/LilaPHP/img/lila.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="LilaPHP — Lightweight Modern PHP Framework" />
+    <meta property="twitter:description"
+        content="Modern lightweight PHP framework for developers who love simplicity and power. Includes routing, Twig templates, and Dotenv." />
+    <meta property="twitter:image" content="https://seip25.github.io/LilaPHP/img/lila.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "LilaPHP",
+        "operatingSystem": "Cross-platform",
+        "applicationCategory": "WebApplicationFramework",
+        "description": "LilaPHP is a lightweight, modular PHP framework focused on simplicity, flexibility, and performance. Includes routing, Twig, and Dotenv integration.",
+        "url": "https://seip25.github.io/LilaPHP/",
+        "softwareVersion": "1.0.0",
+        "author": {
+          "@type": "Person",
+          "name": "Andrés Paiva"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "LilaPHP Project"
+        },
+        "image": "https://seip25.github.io/LilaPHP/img/lila.png"
+      }
+    </script>
+    <style>
+        body {
+            scroll-padding-top: 2rem;
+        }
+    </style>
+</head>
+
+
+<body>
+    <header class="container">
+        <nav>
+            <h2 class="text-indigo-500">Lila PHP</h2>
+        </nav>
+    </header>
+  <main class="mt-4 px-4">
+  <div class="flex gap-4">
+    <aside class="docs-nav hidden-sm px-4">
+      <h4>Core</h4>
+      <a href="#introduction">Introduction</a>
+      <a href="#install">Install</a>
+      <a href="#structure">Structure</a>
+      <a href="#routing">Routing</a>
+      <a href="#validation">Validation</a>
+      <a href="#sessions">Sessions</a>
+      <a href="#localization">Translations</a>
+      <a href="#config">Configuration</a>
+      <a href="#security">Security</a>
+      <a href="#seo">SEO</a>
+      <a href="#performance">Performance</a>
+    </aside>
+
+    <div class="grid gap-4 visible-sm">
+      <div><a href="#introduction" class="text-gray-500">Introduction</a></div>
+      <div><a href="#install" class="text-gray-500">Install</a></div>
+      <div><a href="#structure" class="text-gray-500">Structure</a></div>
+      <div><a href="#routing" class="text-gray-500">Routing</a></div>
+      <div><a href="#validation" class="text-gray-500">Validation</a></div>
+      <div><a href="#sessions" class="text-gray-500">Sessions</a></div>
+      <div><a href="#localization" class="text-gray-500">Translations</a></div>
+      <div><a href="#config" class="text-gray-500">Configuration</a></div>
+      <div><a href="#security" class="text-gray-500">Security</a></div>
+      <div><a href="#seo" class="text-gray-500">SEO</a></div>
+      <div><a href="#performance" class="text-gray-500">Performance</a></div>
+    </div>
+
+    <div>
+
+      <!-- Introduction -->
+      <section id="introduction" class="mt-4">
+        <article class="bg-surface border-none">
+          <h1 class="text-indigo-500">LilaPHP Framework</h1>
+          <p class="text-secondary">
+            <strong>LilaPHP</strong> is a lightweight and modular PHP micro-framework focused on
+            simplicity, flexibility, and security.
+          </p>
+          <p>
+            Build fast and independent web apps using <strong>clean routing</strong>,
+            <strong>middleware</strong>, <strong>Twig templates</strong>,
+            <strong>Dotenv</strong> configuration, <strong>auto-validation</strong>,
+            and <strong>language management</strong>.
+          </p>
+        </article>
+        <footer>
+          <a href="https://github.com/seip25/LilaPHP" target="_blank" class="text-indigo-500">
+            ⭐ View LilaPHP on GitHub
+          </a>
+        </footer>
+      </section>
+
+      <!-- Installation -->
+      <section id="install" class="mt-4">
+        <h2>Installation</h2>
+        <ol>
+          <li>Clone the repository:</li>
+          <pre><code class="language-bash">git clone https://github.com/seip25/LilaPHP.git</code></pre>
+          <li>Navigate to <code>app</code> directory and install dependencies:</li>
+          <pre><code class="language-bash">cd app && composer install</code></pre>
+          <li>Create your environment file:</li>
+          <pre><code class="language-bash">cp .env.example .env</code></pre>
+          <li>Run locally:</li>
+          <pre><code class="language-bash">php -S localhost:8000</code></pre>
+        </ol>
+      </section>
+
+      <!-- Structure -->
+      <section id="structure" class="mt-4">
+        <h2>Project Structure</h2>
+        <pre><code class="language-bash">LilaPHP/
+├── app/
+│   ├── core/          # Core framework files (router, response, validator)
+│   ├── templates/     # Twig templates
+│   ├── locales/       # Language files
+│   ├── vendor/        # Composer dependencies
+│   ├── .env           # Environment configuration
+│   └── index.php      # Framework bootstrap
+│
+├── public/            # Public assets (CSS, JS, images)
+├── index.php          # Main entry point or micro-app
+├── login/             # Independent app
+│   └── index.php
+├── set-lang/          # Language switcher
+│   └── index.php
+└── .htaccess          # Deny access to /app and route all requests
+</code></pre>
+      </section>
+
+      <!-- Routing -->
+      <section id="routing" class="mt-4">
+        <h2>Routing</h2>
+        <p>
+          LilaPHP supports minimal, clean routing. You can define routes in any
+          <code>index.php</code> at the root or within subdirectories.
+        </p>
+
+<pre><code class="language-php">&lt;?php
+include_once "./app/index.php";
+
+$app->get(callback: function($req, $res) use ($app): mixed {
+    return $app->render("index");
+});
+
+$app->post(callback: function($req, $res) use ($app): mixed {
+    return $app->jsonResponse(["success" => true]);
+});
+
+$app->run();
+</code></pre>
+      </section>
+
+      <!-- Example 2 -->
+      <section id="language" class="mt-4">
+        <h2>Language Switching</h2>
+<pre><code class="language-php">&lt;?php
+include_once "../app/index.php";
+
+$app->get(callback: function ($req, $res) use ($app) {
+    $newLang = $_GET["lang"] ?? $app->getLangDefault();
+    $app->setSession(key: "lang", value: $newLang);
+    $back = $_SERVER['HTTP_REFERER'] ?? '/';
+    $app->redirect($back);
+});
+
+$app->run();
+</code></pre>
+      </section>
+
+      <!-- Validation -->
+      <section id="validation" class="mt-4">
+        <h2>Validation Example</h2>
+        <p>
+          LilaPHP provides automatic validation through PHP 8 attributes using the <code>#[Field]</code> annotation.
+        </p>
+
+<pre><code class="language-php">&lt;?php
+include_once "../app/index.php";
+
+use Core\BaseModel;
+use Core\Field; 
+
+class LoginModel extends BaseModel
+{
+    #[Field(required: true, format: "email")]
+    public string $email;
+
+    #[Field(required: true, min_length: 6)]
+    public string $password;
+}
+
+$lang = $app->getSession(key: "lang", default: "es");
+
+$app->get(callback: fn($req, $res) => $app->render("login"));
+
+$app->post(
+    callback: function ($req, $res) use ($app, $lang) {
+        return $app->jsonResponse(["success" => true, "session" => $lang]);
+    },
+    middlewares: [
+        fn($req, $res) => new LoginModel(data: $req, lang: $lang),
+    ],
+    csrf: true
+);
+
+$app->run();
+</code></pre>
+      </section>
+
+      <!-- Sessions -->
+      <section id="sessions" class="mt-4">
+        <h2>Sessions</h2>
+        <p>
+          Session handling is simple and secure. LilaPHP manages cookies with proper domain isolation and expiration.
+        </p>
+<pre><code class="language-php">$app->setSession("user_id", 15);
+$user = $app->getSession("user_id");</code></pre>
+      </section>
+
+      <!-- Localization -->
+      <section id="localization" class="mt-4">
+        <h2>Translations</h2>
+        <p>
+          Store your translations in <code>app/locales/</code> as JSON or PHP arrays.
+        </p>
+<pre><code class="language-json">{
+  "login": {
+    "title": "Iniciar sesión",
+    "email": "Correo electrónico"
+  }
+}
+</code></pre>
+<pre><code class="language-php">$app->t("login.title"); // Returns "Iniciar sesión"
+</code></pre>
+      </section>
+
+      <!-- Config -->
+      <section id="config" class="mt-4">
+        <h2>Configuration (.env)</h2>
+<pre><code class="language-ini">APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://lilaphp.dev
+APP_LANG=es
+APP_TIMEZONE=America/Montevideo
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=
+DB_NAME=lila</code></pre>
+      </section>
+
+      <!-- SEO -->
+      <section id="seo" class="mt-4">
+        <h2>SEO Optimization</h2>
+        <p>
+          LilaPHP automatically sets meta tags, Open Graph, and Twitter data from
+          your configuration and template variables. It also supports dynamic images for link previews.
+        </p>
+      </section>
+
+      <!-- Performance -->
+      <section id="performance" class="mt-4">
+        <h2>Performance & Minification</h2>
+        <p>
+          In production mode (<code>APP_ENV=production</code>), HTML, JS, and CSS output
+          are automatically minified to improve performance.
+        </p>
+      </section>
+
+      <!-- Security -->
+      <section id="security" class="mt-4">
+        <h2>Automatic Security</h2>
+        <ul>
+          <li>CSRF protection on POST requests.</li>
+          <li>Session and cookie isolation per domain.</li>
+          <li>Automatic input sanitization.</li>
+          <li>Strict Content-Security headers.</li>
+          <li><code>/app</code> directory blocked by default.</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+</body>
+
+</html>
