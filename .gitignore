@@ -8,3 +8,4 @@
 .phpunit.result.cache
 app/composer.lock
 *.log
+/public/cache

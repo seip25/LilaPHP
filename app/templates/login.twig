@@ -11,17 +11,13 @@
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ asset('css/lila.css') }}" />
   </head>
-  <body>
+  <body> 
     <main class="container">
       <div class="flex justify-center mt-4">
         <article class="w-mx-400-px">
-          {{ translate("welcome") }}
-          <h1>Login</h1>
-          <img
-            src="{{ image('img/lila.png', 200) }}"
-            width="200"
-            alt="Img webp"
-          />
+        
+          <h1>  {{ translate("login") }}</h1>
+          
 
           <form onsubmit="Login(event)" method="POST">
             {{ csrf_input() }}

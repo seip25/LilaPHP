@@ -6,9 +6,26 @@
     <link rel="icon" type="image/png" href="{{ asset('img/lila.png') }}" />
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ asset('css/lila.css') }}" />
-    <script src="{{ asset('js/index.js') }}"></script>
   </head>
   <body>
-    <h1>Hola</h1>
+    <main class="container">
+      <h1 class="text-center mt-4 mb-4">
+        {{ translate("welcome") }}
+      </h1>
+
+      <div class="flex justify-center">
+        <img
+          src="{{ image('img/lila.png', 200) }}"
+          width="200"
+          alt="Img webp"
+        />
+      </div>
+
+      <div class="mt-4 flex justify-between gap-4 container">
+        <a href="/set-lang/?lang=eng">English</a>
+        <a href="/set-lang/?lang=esp">Español</a>
+        <a href="/set-lang/?lang=br">Portuguese</a>
+      </div>
+    </main>
   </body>
 </html>
