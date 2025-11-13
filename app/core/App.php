@@ -7,7 +7,7 @@ use Core\Logger;
 use Core\Response;
 use Core\Template;
 use Core\Session;
-
+use PDO;
 use Throwable;
 
 
@@ -26,7 +26,7 @@ class App
         'after' => []
     ];
 
-    public function __construct(array $options = ['security' => []])
+    public function __construct(array $options = ['security' => [], 'translate' => true])
     {
         $this->options = $options;
         Config::load();
@@ -34,25 +34,60 @@ class App
         $this->registerExceptionHandler();
         $this->security = new Security(array_merge($options['security'], [
             'logger' => true,
-            'sanitize' => true, 
+            'sanitize' => true,
             'cors' => true
         ]));
         Session::start();
-        if (Session::has(key: 'lang') == false) { 
+        if (Session::has(key: 'lang') == false) {
             $newLang = Config::$LANG;
             Session::set(key: 'lang', value: $newLang);
         }
-        Translate::load();
-         
+        if ($options['translate'])
+            Translate::load();
+
 
     }
+
+    public function getEnv(string $key): string|null
+    {
+        return Config::Env(key: $key);
+    }
+    /** @return \PDO */
+    public function getDatabaseConnection(
+        ?string $provider = null,
+        ?string $host = null,
+        ?string $dbUser = null,
+        ?string $dbPassword = null,
+        ?string $dbName = null,
+        ?int $port = null
+    ): ?PDO {
+        $provider = $provider ?? Config::Env(key: "DB_PROVIDER");
+        $host = $host ?? Config::Env(key: "DB_HOST");
+        $dbUser = $dbUser ?? Config::Env(key: "DB_USER");
+        $dbPassword = $dbPassword ?? Config::Env(key: "DB_PASSWORD");
+        $dbName = $dbName ?? Config::Env(key: "DB_NAME");
+        $port = $port ?? (int) Config::Env(key: "DB_PORT");
+
+        $db = new \Core\Database(
+            provider: $provider,
+            host: $host,
+            dbUser: $dbUser,
+            dbPassword: $dbPassword,
+            dbName: $dbName,
+            port: $port
+        );
+
+        return $db->getConnection();
+    }    
+    
     public function getLangDefault(): string
     {
         return Config::$LANG;
     }
-    public function redirect(string $url): void{
+    public function redirect(string $url): void
+    {
         header(header: "Location: $url");
-      
+
     }
 
     public function setSession(string $key, $value): void

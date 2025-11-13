@@ -64,6 +64,11 @@ class Config
         $url = str_replace("\/", "/", "$protocol://$host$base/");
         return $url;
     }
+    public static function Env(string $key): string|null
+    {
+        $val = $_ENV[$key] ?? null;
+        return is_null(value: $val) ? null : trim(string: $val);
+    }
     public static function normalizePath(string $env, string $default)
     {
         return isset($_ENV[$env]) ? self::$DIR_PROJECT . '/' . $_ENV[$env] : self::$DIR_PROJECT . '' . $default;

@@ -12,4 +12,8 @@ return [
   "feature_compatibility" => "Funciona em hospedagem compartilhada, VPS ou servidor local com PHP.",
   "support_title" => "Apoie o projeto",
   "support_text" => "Se você gosta do LilaPHP, deixe uma ⭐ no GitHub para apoiar o projeto.",
+  "login"=> "Conecte-se",
+  "email"=> "Email",
+  "password"=>"Senha",
+  "send"=> "Enviar"
 ];

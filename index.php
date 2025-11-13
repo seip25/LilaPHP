@@ -1,4 +1,5 @@
 <?php
+/** @var \Core\App $app */
 include_once "./app/index.php";
 
 

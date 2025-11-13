@@ -1,5 +1,5 @@
 <?php
- 
+ /** @var \Core\App $app */
 include_once "../app/index.php";
 
 $app->get(callback: function ($req, $res) use ($app) {
