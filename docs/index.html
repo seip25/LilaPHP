@@ -86,6 +86,7 @@
         <a href="#config">Environment</a>
         <a href="#security">Security</a>
         <a href="#templates">Twig Functions</a>
+        <a href="#database" >Database (PDO)</a>
         <a href="#seo">SEO</a>
         <a href="#performance">Performance</a>
         <a href="#coreapp">The App Core</a>
@@ -106,6 +107,7 @@
         <div><a href="#security" class="text-gray-500">Security</a></div>
         <div><a href="#templates" class="text-gray-500">Twig Functions</a></div>
         <div><a href="#seo" class="text-gray-500">SEO</a></div>
+        <div><a href="#database" class="text-gray-500">Database (PDO)</a></div>
         <div><a href="#performance" class="text-gray-500">Performance</a></div>
         <div><a href="#coreapp" class="text-gray-500">App Core</a></div>
         <div> <a href="#production" class="text-gray-500">Production</a></div>
@@ -911,6 +913,199 @@ $app->run();
             <li>Built-in template caching for maximum performance</li>
           </ul>
         </section>
+
+
+        <!-- Database -->
+<section id="database" class="mt-4">
+  <h2>Database</h2>
+  <p>
+    LilaPHP provides a unified and resilient database connection layer built on top of
+    <strong>PDO (PHP Data Objects)</strong>.  
+    It includes an automatic <strong>retry system</strong> for connection failures, improving reliability and scalability
+    for production environments.
+  </p>
+
+  <p>
+    Thanks to PDO, the database layer is fully <strong>portable</strong> across
+    multiple database systems such as <strong>MySQL</strong>, <strong>PostgreSQL</strong>,
+    and <strong>SQLite</strong>, without requiring any code changes in your application.
+  </p>
+
+  <h3>⚙️ Environment Configuration</h3>
+  <p>
+    Connection parameters are defined inside your <code>.env</code> file and automatically loaded
+    through the framework’s configuration layer.
+  </p>
+
+  <pre><code class="language-ini"># .env
+DB_PROVIDER="mysql"
+DB_HOST="localhost"
+DB_USER="root"
+DB_PASSWORD=""
+DB_NAME="db_test"
+DB_PORT="3306"
+</code></pre>
+
+  <p>
+    The <code>DB_PROVIDER</code> key defines the driver to use.
+    Supported values are:
+  </p>
+  <ul class="list-disc pl-6">
+    <li><code>mysql</code></li>
+    <li><code>pgsql</code></li>
+    <li><code>sqlite</code></li>
+  </ul>
+
+  <h3>🧠 Automatic Retry System</h3>
+  <p>
+    When the database connection fails (for example, due to temporary network issues),
+    LilaPHP automatically retries the connection multiple times before giving up.
+  </p>
+  <p>
+    This behavior is handled by the <code>Database</code> class, which manages up to
+    <code>$maxAttempts</code> attempts, waiting a few seconds between retries.
+  </p>
+
+  <pre><code class="language-php">
+// /core/Database.php
+namespace Core;
+
+use PDO;
+use PDOException;
+
+class Database
+{
+    private ?PDO $db = null;
+
+    public function __construct(
+        string $provider,
+        string $host,
+        string $dbUser,
+        string $dbPassword,
+        string $dbName,
+        int $port = 3306,
+        int $maxAttempts = 5
+    ) {
+        $this->db = $this->connectWithRetry(
+            provider: $provider,
+            host: $host,
+            dbUser: $dbUser,
+            dbPassword: $dbPassword,
+            dbName: $dbName,
+            port: $port,
+            maxAttempts: $maxAttempts
+        );
+    }
+
+    public function getConnection(): ?PDO
+    {
+        return $this->db;
+    }
+
+    private function connectWithRetry(...$args): ?PDO
+    {
+        // internal retry logic with exponential backoff
+    }
+}
+</code></pre>
+
+  <h3>🚀 Getting a Connection</h3>
+  <p>
+    To obtain a database connection, simply call
+    <code>$app->getDatabaseConnection()</code> anywhere in your endpoint or controller.
+  </p>
+
+  <pre><code class="language-php">
+// endpoint/index.php
+$app->get(callback: function ($req, $res) use ($app) {
+    $db = $app->getDatabaseConnection();
+    $sql = "
+    SELECT * FROM `users`
+    ";
+    $result = $db->query($sql);
+    $users = $result->fetchAll();
+
+    return $app->render(template: "login", context: ["users" => $users]);
+});
+</code></pre>
+
+  <p>
+    This method returns a live <code>PDO</code> instance ready to perform queries,
+    execute prepared statements, or use transactions.
+  </p>
+
+  <h3>🔌 Connecting to Multiple Databases</h3>
+  <p>
+    The <code>getDatabaseConnection()</code> method can also accept
+    dynamic parameters to connect to different databases, even of different types.
+  </p>
+  <p>
+    You can optionally pass any of the following arguments:
+  </p>
+
+  <pre><code class="language-php">public function getDatabaseConnection(
+    ?string $provider = null,
+    ?string $host = null,
+    ?string $dbUser = null,
+    ?string $dbPassword = null,
+    ?string $dbName = null,
+    ?int $port = null
+): ?PDO</code></pre>
+
+  <p>
+    If a parameter is not provided, its value is automatically resolved
+    from the environment file (<code>.env</code>).
+  </p>
+
+  <h4>Example: Multiple Database Connections</h4>
+  <pre><code class="language-php">
+// Connect using default .env
+$db1 = $app->getDatabaseConnection();
+
+// Connect to a second database using custom env keys
+$db2 = $app->getDatabaseConnection(
+    provider: "pgsql",
+    host: $app->getEnv("DB_HOST_2"),
+    dbUser: $app->getEnv("DB_USER_2"),
+    dbPassword: $app->getEnv("DB_PASSWORD_2"),
+    dbName: $app->getEnv("DB_NAME_2"),
+    port: 5432
+);
+</code></pre>
+
+  <p>
+    This flexible design allows your application to connect to multiple
+    databases with different providers, hosts, or ports — all in a consistent and type-safe way.
+  </p>
+
+  <h3>🧾 Example Query</h3>
+  <p>
+    Once connected, you can use native PDO methods for querying:
+  </p>
+
+  <pre><code class="language-php">$stmt = $db->prepare("SELECT * FROM users WHERE email = :email");
+$stmt->execute(["email" => "user@example.com"]);
+$user = $stmt->fetch();</code></pre>
+
+  <p>
+    All <code>PDO</code> features are available — including prepared statements,
+    transactions, and advanced fetch modes.
+  </p>
+
+  <h3>🧩 Key Advantages</h3>
+  <ul class="list-disc pl-6">
+    <li>Automatic retry logic for robust connections</li>
+    <li>Unified PDO interface across MySQL, PostgreSQL, and SQLite</li>
+    <li>Environment-based configuration for flexibility</li>
+    <li>Support for multiple simultaneous connections</li>
+    <li>Secure, high-performance, and easy to scale</li>
+  </ul>
+
+  <p>
+    The <code>Database</code> layer in LilaPHP makes persistence simple, efficient,
+    and portable — ready for both development and production environments.
+  </p>
+</section>
 
 
 
