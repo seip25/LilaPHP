@@ -80,7 +80,7 @@ class Template
 
         self::$twig->addFunction(new TwigFunction('csrf_input', function (): string {
             $token = Security::generateCsrfToken();
-            return '<input type="hidden" name="_csrf" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
+            return '<input type="hidden" id="_csrf" name="_csrf" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
         }, ['is_safe' => ['html']]));
 
         self::$twig->addFunction(new TwigFunction('image', function (string $file, int $width = 800, int $height = 0, int $quality = 70, string $type = 'webp'): string {
