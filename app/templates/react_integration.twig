@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React LilaPHP Integration</title>
+    <link rel="icon" type="image/ico" href="{{ image('img/lila.png', 40, 0, 70, 'ico') }}" />
+   
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'media', 
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+               primary: {
+                  50: '#eef2ff',
+                  100: '#e0e7ff',
+                  500: '#6366f1',
+                  600: '#4f46e5',
+                  700: '#4338ca',
+               }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Inject Vite assets -->
+    {{ vite_assets() }}
+</head>
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300 min-h-screen flex flex-col">
+    
+    <!-- React Header Component -->
+    {{ react('Header', {'user': {'name': 'LilaPHP User'}, 'cartCount': 3}) }}
+
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-3">React Integration</h1>
+            <p class="text-lg text-slate-600 dark:text-slate-400">
+                Below are React components mounted directly into the Twig template.
+            </p>
+        </div>
+        
+        <!-- React Component Island -->
+        <div class="flex flex-col items-center gap-6 mb-12">
+            <div class="p-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 w-full text-center">
+                 <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Interactive Component</h2>
+                 {{ react('ButtonPage', {'label': 'Click Me (React)'}) }}
+            </div>
+        </div>
+
+        <article class="bg-indigo-50 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30 p-6">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Debug Info
+            </h2>
+            <div class="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <p><strong>App Mode:</strong> <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ app.debug ? 'Debug (HMR Active)' : 'Production' }}</span></p>
+                <p>If you see the React header and button above, the integration is successful.</p>
+            </div>
+        </article>
+    </main>
+
+    <footer class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+        <a href="{{ url('/') }}" class="hover:text-primary-600 transition-colors">← Back to Home</a>
+    </footer>
+
+</body>
+</html>
