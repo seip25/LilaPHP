@@ -90,7 +90,7 @@ Then visit [http://localhost:8000](http://localhost:8000)
 
 ### React install
 
-``bash
+```bash
 cd app
 npm install
 npm run dev 
