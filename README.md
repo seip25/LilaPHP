@@ -97,31 +97,6 @@ npm run dev
 npm run build
 ```
 
-**Using NGINX (Production):**
-
-```nginx
-server {
-    listen 80;
-    server_name example.com;
-    root /var/www/LilaPHP/;
-
-    index index.php;
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location /app {
-        deny all;
-    }
-
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-    }
-}
-```
-
----
 
 ## 📁 Project Structure
 
@@ -535,8 +510,10 @@ DEBUG=false
 location /app {
     deny all;
 }
-```
+``` 
+ 
 
+---
 **Apache (.htaccess):**
 
 ```apache
@@ -545,6 +522,7 @@ location /app {
   Deny from all
 </Directory>
 ```
+
 
 ---
 
