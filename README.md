@@ -82,7 +82,6 @@ LANG="eng"
 **Using PHP's Built-in Server (Development):**
 
 ```bash
-cd ..
 php -S localhost:8000
 ```
 
