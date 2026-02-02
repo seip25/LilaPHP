@@ -61,7 +61,7 @@ $app = new App([
 
 ## 📦 Installation
 
-### Clone the Repository
+### Install with composer
 
 ```bash
 composer create-project seip25/lila-php LilaPHP
