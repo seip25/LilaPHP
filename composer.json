@@ -1,6 +1,6 @@
 {
   "name": "seip25/lila-php",
-  "description": "Framework PHP con soporte React inspirado en Lila Framework Python",
+  "description": "Modern PHP framework , built for developing scalable web applications and APIs. Features an MVC architecture, React integration, Twig templating, internationalization (i18n), request validation, and flexible environment configuration.",
   "type": "project",
   "license": "MIT",
   "autoload": {
