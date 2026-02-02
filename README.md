@@ -88,7 +88,9 @@ php -S localhost:8000
 Then visit [http://localhost:8000](http://localhost:8000)
 
 
-### React install
+### React 
+
+## Install
 
 ```bash
 cd app
@@ -97,6 +99,7 @@ npm run dev
 npm run build
 ```
 
+**Edit in app/resources/pages  :**
 
 ## 📁 Project Structure
 
@@ -139,6 +142,53 @@ $app->post(callback: function($req, $res) use ($app) {
 
 $app->run();
 ```
+
+### React Render
+
+```php
+<?php
+include_once __DIR__."/app/index.php";
+
+$app->get(callback: function($req, $res) use ($app) {
+        
+        //Example render Twig and React Island app/templates/react_integration.twig
+        return $app->render(template:"react_integration", 
+        context:
+        [
+            "app" => [
+                "debug" => $app->getEnv("DEBUG")
+            ]
+        ]);
+
+        //Example render full page React app/resources/ReactExample.jsx
+        return $app->renderReact(
+            page: "ReactExample",
+            props: [
+                "app" => [
+                    "debug" => $app->getEnv("DEBUG")
+                ],
+                "csrf"=>Security::generateCsrfToken() ,
+                "translations"=>Translate::translations()
+            ],
+            options: [
+                "lang" => "es",
+                "title" => "React full Page + LilaPHP",
+                "meta" => [
+                    ["name" => "description", "content" => "React full page render example meta description"]
+                ],
+
+                "scripts" => [
+                    "https://cdn.tailwindcss.com"
+                ]
+            ]
+        );
+  
+});
+ 
+
+$app->run();
+```
+
 
 ### Validation with PHP 8 Attributes
 
