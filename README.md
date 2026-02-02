@@ -61,33 +61,23 @@ $app = new App([
 
 ## 📦 Installation
 
-### 1️⃣ Clone the Repository
+### Clone the Repository
 
 ```bash
-git clone https://github.com/seip25/LilaPHP.git
+composer create-project seip25/lila-php LilaPHP
 ```
 
-### 2️⃣ Install Dependencies
-
-```bash
-cd app && composer install
-```
-
-### 3️⃣ Configure Environment
-
-```bash
-cp .env.example .env
-```
+ 
 
 Edit `.env` and update the base URL:
 
 ```env
-URL_PROJECT="http://localhost:8000/"
+URL_PROJECT=http://localhost/LilaPHP #or "http://localhost:8000/" 
 DEBUG=true
 LANG="eng"
 ```
 
-### 4️⃣ Run the Application
+### Run the Application or visit http://localhost/LilaPHP in LAMPP ,XAMPP,WAMP
 
 **Using PHP's Built-in Server (Development):**
 
@@ -97,6 +87,16 @@ php -S localhost:8000
 ```
 
 Then visit [http://localhost:8000](http://localhost:8000)
+
+
+### React install
+
+``bash
+cd app
+npm install
+npm run dev 
+npm run build
+```
 
 **Using NGINX (Production):**
 
