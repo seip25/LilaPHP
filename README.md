@@ -188,7 +188,14 @@ $app->get(callback: function($req, $res) use ($app) {
 
 $app->run();
 ```
+## In React receives props 
 
+```javascript
+export default function ReactIsland({ csrf, translations }) { 
+    ...
+}
+
+```
 
 ### Validation with PHP 8 Attributes
 
