@@ -254,7 +254,7 @@ HTML;
             if ($template != "500") {
                 Logger::error("Template render error: " . $e->getMessage());
                 $context = ["error" => $error];
-                self::render("500", $context, $path);
+                self::render("lila/500", $context, $path);
             } else {
                 $html = <<<HTML
 <main style="min-height: 100vh; display: flex; flex-direction: column; background-color: #f9fafb;">
@@ -272,5 +272,4 @@ HTML;
             exit;
         }
     }
-    
 }

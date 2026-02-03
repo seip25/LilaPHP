@@ -10,11 +10,11 @@ export default function ReactIsland({ csrf, translations }) {
   }
   const exampleFetch = async () => {
     let input = {}
-    // input = {
-    //   email: "example@example.com",
-    //   password: "Mypassword.123",
-    //   _csrf: csrf
-    // }
+    input = {
+      email: "example@example.com",
+      password: "Mypassword.123",
+      _csrf: csrf
+    }
     const data = JSON.stringify(input)
     const r = await fetch("login/",
       {
@@ -26,7 +26,7 @@ export default function ReactIsland({ csrf, translations }) {
       });
     if (!r.ok) {
       const errors = await r.json();
-      console.log(`Try uncommenting the var input`);
+      console.log(`Try ommenting the var input`);
       console.log(errors);
       return;
     }

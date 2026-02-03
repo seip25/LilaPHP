@@ -4,6 +4,7 @@ namespace Core;
 
 use Core\Config;
 use Core\Logger;
+use Core\Debug;
 use Core\Response;
 use Core\Template;
 use Core\Session;
@@ -337,9 +338,28 @@ class App
     protected function dispatch(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+        if (Config::$DEBUG) {
+            Debug::init();
+            Debug::start();
+            $this->addMiddlewares([
+                'before' => [function () {
+                    Debug::end(http_response_code() ?: 200);
+                }]
+            ]);
+
+            if ($method === 'GET' && isset($_GET['debug'])   && Config::$DEBUG) {
+                if (isset($_GET['clear'])) Debug::clear();
+                elseif (isset($_GET['fetch'])) echo json_encode(Debug::getRequests());
+                else $this->render('lila/debug', ['requests' => Debug::getRequests()]);
+                exit;
+            }
+        }
+
         $route = $this->routes[$method] ?? null;
 
         if (!is_array($route) || !is_callable($route['callback'])) {
+            if (Config::$DEBUG) Debug::end(http_response_code() ?: 404);
             http_response_code(404);
             exit("404 Not Found");
         }
@@ -356,8 +376,10 @@ class App
         $req = array_merge($_GET, $_POST, $data, $_FILES);
 
         $res = new Response();
-        if (!$this->security->runBeforeMiddlewares($req))
+        if (!$this->security->runBeforeMiddlewares($req)) {
+            if (Config::$DEBUG) Debug::end(http_response_code() ?: 403);
             exit;
+        }
 
         foreach ($this->middlewares['before'] as $fn) {
             if (is_callable($fn))
