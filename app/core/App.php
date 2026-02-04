@@ -253,6 +253,26 @@ class App
         $this->middlewares = array_merge($this->middlewares, $middlewares);
     }
 
+    /**
+     * Generate a CSRF token
+     * 
+     * @return string CSRF token
+     */
+    public function generateCSRF(): string
+    {
+        return Security::generateCsrfToken();
+    }
+    /**
+     * Validate a CSRF token
+     * 
+     * @param array $request CSRF token to validate
+     * @return void
+     */
+    public function validateCSRF(array $request): void
+    {
+        Security::validateCsrfToken(request: $request);
+    }
+
 
     /**
      * Register a GET route handler

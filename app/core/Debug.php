@@ -38,7 +38,7 @@ class Debug
         }
 
         try {
-            $path = Config::$DIR_PROJECT . Config::$PATH_LOGS;
+            $path = Config::$DIR_PROJECT . "/lila";
             if (!is_dir($path)) {
                 mkdir($path, 0777, true);
             }
