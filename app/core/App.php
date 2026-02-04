@@ -20,7 +20,7 @@ use Throwable;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.0.0
+ * @version 1.0.2
  */
 class App
 {
@@ -138,12 +138,12 @@ class App
         ?string $dbName = null,
         ?int $port = null
     ): ?PDO {
-        $provider = $provider ?? Config::Env(key: "DB_PROVIDER");
-        $host = $host ?? Config::Env(key: "DB_HOST");
-        $dbUser = $dbUser ?? Config::Env(key: "DB_USER");
-        $dbPassword = $dbPassword ?? Config::Env(key: "DB_PASSWORD");
-        $dbName = $dbName ?? Config::Env(key: "DB_NAME");
-        $port = $port ?? (int) Config::Env(key: "DB_PORT");
+        $provider = $provider ?? (Config::Env(key: "DB_PROVIDER") ?? "sqlite");
+        $dbName = $dbName ?? Config::Env(key: "DB_NAME") ?? "lila";
+        $host = $host ?? Config::Env(key: "DB_HOST") ?? "localhost";
+        $dbUser = $dbUser ?? Config::Env(key: "DB_USER") ?? "root";
+        $dbPassword = $dbPassword ?? Config::Env(key: "DB_PASSWORD") ?? "";
+        $port = $port ?? (int) Config::Env(key: "DB_PORT") ?? 3306;
 
         $db = new \Core\Database(
             provider: $provider,
@@ -272,7 +272,25 @@ class App
     {
         Security::validateCsrfToken(request: $request);
     }
-
+    /**
+     * Get translations
+     * 
+     * @return array Translations array
+     */
+    public function translations(): array
+    {
+        return Translate::translations();
+    }
+    /**
+     * Translate a key
+     * 
+     * @param string $key Key to translate
+     * @return string Translated key
+     */
+    public function translate(string $key): string
+    {
+        return Translate::t(key: $key);
+    }
 
     /**
      * Register a GET route handler

@@ -6,3 +6,4 @@ app/package-lock.json
 app/logs
 .sqlite
 composer.lock
+app/lila/debug.sqlite

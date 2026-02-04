@@ -2,24 +2,33 @@
 
 /** @var \Core\App $app */
 
-use Core\Security;
-use Core\Translate;
-
 include_once "./app/index.php";
 
 
 $app->get(callback: function ($req, $res) use ($app): mixed {
+    //Example connect database
+    //Execute command in terminal: php app/cli.php migrate:create 
+    //Uncomment to test database connection
+    // $db = $app->getDatabaseConnection();
+    // $insert = $db->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+    // $random = rand(1, 100);
+    // $email = "Jhon{$random}@email.com";
+    // $insert->execute(['John Doe', $email, 'password']);
+    // $query = $db->query("SELECT * FROM users");
+    // $users = $query->fetchAll(PDO::FETCH_ASSOC); 
+
     $page = $req['page'] ?? 'index';
 
     if ($page === 'react') {
         //app/templates/react_integration.twig
-        return $app->render(template:"react_integration", 
-        context:
-        [
-            "app" => [
-                "debug" => $app->getEnv("DEBUG")
+        return $app->render(
+            template: "react_integration",
+            context: [
+                "app" => [
+                    "debug" => $app->getEnv("DEBUG")
+                ]
             ]
-        ]);
+        );
     }
     if ($page === 'react-page') {
         //app/resources/ReactExample.jsx
@@ -29,8 +38,8 @@ $app->get(callback: function ($req, $res) use ($app): mixed {
                 "app" => [
                     "debug" => $app->getEnv("DEBUG")
                 ],
-                "csrf"=>Security::generateCsrfToken() ,
-                "translations"=>Translate::translations()
+                "csrf" => $app->generateCSRF(),
+                "translations" => $app->translations()
             ],
             options: [
                 "lang" => "es",

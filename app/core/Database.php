@@ -37,11 +37,11 @@ class Database
      */
     public function __construct(
         string $provider = "mysql",
-        string $host = 'localhost',
-        string $dbUser = 'root',
-        string $dbPassword = '',
-        string $dbName = 'db_test',
-        int $port = 0,
+        ?string $host = 'localhost',
+        ?string $dbUser = 'root',
+        ?string $dbPassword = '',
+        ?string $dbName = 'lila',
+        ?int $port = 0,
         int $maxAttempts = 5
     ) {
         $this->provider = strtolower($provider);
@@ -75,7 +75,7 @@ class Database
         return match ($this->provider) {
             'mysql' => "mysql:host={$this->host};dbname={$this->dbName};port={$this->port};charset=utf8mb4",
             'pgsql' => "pgsql:host={$this->host};dbname={$this->dbName};port={$this->port}",
-            'sqlite' => "sqlite:{$this->dbName}",
+            'sqlite' => "sqlite:" . Config::$DIR_PROJECT . "/lila/" . $this->dbName . ".sqlite",
             default => throw new PDOException("Unsupported provider: {$this->provider}")
         };
     }
@@ -104,14 +104,14 @@ class Database
                     password: $this->dbPassword ?: null,
                     options: $options
                 );
- 
+
                 return $connection;
             } catch (PDOException $e) {
                 $attempt++;
-                $dns= $this->getDsn();
-                $file= $e->getFile();
-                $code= $e->getTraceAsString();
-                $message=$e->getMessage();
+                $dns = $this->getDsn();
+                $file = $e->getFile();
+                $code = $e->getTraceAsString();
+                $message = $e->getMessage();
                 $error = "{$message} \n{$dns} \n{$code}  {$file}\n\n\n";
                 $msg = "Connection error (attempt $attempt/{$this->maxAttempts}): \n" . $error;
                 Logger::error(message: $msg);
@@ -141,7 +141,6 @@ class Database
     public function createDatabase(string $dbName): bool
     {
         try {
-            // Connect without database name
             $dsn = match ($this->provider) {
                 'mysql' => "mysql:host={$this->host};port={$this->port};charset=utf8mb4",
                 'pgsql' => "pgsql:host={$this->host};port={$this->port}",
@@ -153,7 +152,7 @@ class Database
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             if ($this->provider === 'sqlite') {
-                return true; // SQLite creates database automatically
+                return true;
             }
 
             $sql = match ($this->provider) {
@@ -162,11 +161,10 @@ class Database
                 default => throw new PDOException("Unsupported provider: {$this->provider}")
             };
 
-            // For PostgreSQL, check if database exists first
             if ($this->provider === 'pgsql') {
                 $result = $pdo->query("SELECT 1 FROM pg_database WHERE datname = '{$dbName}'");
                 if ($result->rowCount() > 0) {
-                    return true; // Database already exists
+                    return true;
                 }
             }
 
@@ -235,27 +233,30 @@ class Database
             }
 
             $sql = "CREATE TABLE IF NOT EXISTS `{$tableName}` (\n";
+
             $sql .= "  " . implode(",\n  ", $columns);
 
-            if (!empty($primaryKeys)) {
+
+            if (!empty($primaryKeys) && $this->provider !== "sqlite") {
                 $sql .= ",\n  PRIMARY KEY (" . implode(', ', array_map(fn($k) => "`{$k}`", $primaryKeys)) . ")";
-            }
 
-            foreach ($uniques as $uniqueCol) {
-                $sql .= ",\n  UNIQUE KEY `unique_{$uniqueCol}` (`{$uniqueCol}`)";
-            }
 
-            foreach ($indexes as $indexCol) {
-                $sql .= ",\n  KEY `idx_{$indexCol}` (`{$indexCol}`)";
-            }
+                foreach ($uniques as $uniqueCol) {
+                    $sql .= ",\n  UNIQUE KEY `unique_{$uniqueCol}` (`{$uniqueCol}`)";
+                }
 
+                foreach ($indexes as $indexCol) {
+                    $sql .= ",\n  KEY `idx_{$indexCol}` (`{$indexCol}`)";
+                }
+            }
             $sql .= "\n)";
 
-            // Add engine for MySQL
             if ($this->provider === 'mysql') {
                 $sql .= " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
             }
-
+            if ($this->provider === 'pgsql') {
+                $sql .= " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            }
             $this->db->exec($sql);
             return true;
         } catch (PDOException $e) {
@@ -280,20 +281,28 @@ class Database
 
         $sql = "`{$columnName}` {$type}";
 
-        if ($definition['unsigned'] && in_array($definition['type'], ['int', 'bigint', 'smallint', 'tinyint'])) {
+
+        if (!$this->provider === "sqlite" && ($definition['unsigned'] && in_array($definition['type'], ['int', 'bigint', 'smallint', 'tinyint']))) {
             $sql .= " UNSIGNED";
         }
 
         if (!$definition['nullable']) {
-            $sql .= " NOT NULL";
+            if ($this->provider === "sqlite") {
+
+                $sql .= $definition['autoIncrement'] ? " " : " NOT NULL";
+            } else {
+                $sql .= " NOT NULL";
+            }
         } else {
             $sql .= " NULL";
         }
 
         if ($definition['autoIncrement']) {
-            $sql .= " AUTO_INCREMENT";
+            $sql .= $this->provider === "sqlite" ? " PRIMARY KEY AUTOINCREMENT" : " AUTO_INCREMENT";
         } elseif ($definition['default'] !== null) {
-            if (in_array(strtoupper($definition['default']), ['CURRENT_TIMESTAMP', 'NOW()'])) {
+            if ($this->provider === "sqlite") {
+                $sql .= $definition["default"] == "TEXT" ? " DEFAULT ''" : " DEFAULT " . $definition['default'];
+            } elseif (in_array(strtoupper($definition['default']), ['CURRENT_TIMESTAMP', 'NOW()'])) {
                 $sql .= " DEFAULT CURRENT_TIMESTAMP";
             } elseif (is_string($definition['default'])) {
                 $sql .= " DEFAULT '" . addslashes($definition['default']) . "'";
@@ -302,7 +311,7 @@ class Database
             }
         }
 
-        if ($definition['comment']) {
+        if ($definition['comment'] && $this->provider !== "sqlite") {
             $sql .= " COMMENT '" . addslashes($definition['comment']) . "'";
         }
 
@@ -319,6 +328,27 @@ class Database
     private function mapColumnType(string $type, ?int $length): string
     {
         $type = strtolower($type);
+
+        if ($this->provider === 'sqlite') {
+            return match ($type) {
+                'int', 'integer' => 'INTEGER',
+                'bigint' => 'INTEGER',
+                'smallint' => 'INTEGER',
+                'tinyint' => 'INTEGER',
+                'varchar', 'string' => 'TEXT',
+                'char' => 'TEXT',
+                'text' => 'TEXT',
+                'longtext' => 'TEXT',
+                'mediumtext' => 'TEXT',
+                'boolean', 'bool' => 'INTEGER',
+                'date' => 'TEXT',
+                'datetime' => 'TEXT',
+                'timestamp' => 'TEXT',
+                'time' => 'TEXT',
+                'decimal' => 'REAL',
+                'json' => 'TEXT',
+            };
+        }
 
         return match ($type) {
             'int', 'integer' => 'INT',
@@ -367,5 +397,19 @@ class Database
             Logger::error("Failed to get columns for table {$tableName}: " . $e->getMessage());
             return [];
         }
+    }
+    private function replaceColumn(array|string $column, string|array $typeToChanged = "VARCHAR", string $typeToReplace = "TEXT"): string
+    {
+        if (is_array($typeToChanged)) {
+            foreach ($typeToChanged as $type) {
+                if (strpos($column, $type)) {
+                    $column = str_ireplace($type, $typeToReplace, $column);
+                }
+            }
+        } elseif (strpos($column, $typeToChanged)) {
+            $column = str_ireplace($typeToChanged, $typeToReplace, $column);
+        }
+        $column = str_replace("TEXT", "TEXT", $column);
+        return $column;
     }
 }

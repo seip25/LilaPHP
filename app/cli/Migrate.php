@@ -36,17 +36,15 @@ class Migrate extends Command
      */
     public function run(array $args): void
     {
-        // Ensure we're connected to the database
         if (!$this->db) {
             $this->connectDatabase(true);
         }
 
+
         $this->info("Running migrations...");
 
-        // Ensure migrations table exists
         $this->createMigrationsTable();
 
-        // Get all model classes
         $models = $this->discoverModels();
 
         if (empty($models)) {
@@ -77,36 +75,31 @@ class Migrate extends Command
     public function create(array $args): void
     {
         $this->info("Creating database and tables...");
-
-        // Create database first (without connecting to it)
-        $dbName = $this->dbConfig['dbName'];
-
-        try {
-            // Create a temporary database instance without specifying database name
-            $tempDb = new \Core\Database(
-                provider: $this->dbConfig['provider'],
-                host: $this->dbConfig['host'],
-                dbUser: $this->dbConfig['dbUser'],
-                dbPassword: $this->dbConfig['dbPassword'],
-                dbName: '', // Empty to connect to server only
-                port: $this->dbConfig['port']
-            );
-
-            if ($tempDb->createDatabase($dbName)) {
-                $this->success("Database '{$dbName}' created or already exists.");
-            } else {
-                $this->error("Failed to create database '{$dbName}'.");
+        if ($this->dbConfig['provider'] !== "sqlite") {
+            $dbName = $this->dbConfig['dbName'];
+            try {
+                $tempDb = new \Core\Database(
+                    provider: $this->dbConfig['provider'],
+                    host: $this->dbConfig['host'],
+                    dbUser: $this->dbConfig['dbUser'],
+                    dbPassword: $this->dbConfig['dbPassword'],
+                    dbName: "",
+                    port: $this->dbConfig['port']
+                );
+                if ($tempDb->createDatabase($dbName)) {
+                    $this->success("Database '{$dbName}' created or already exists.");
+                } else {
+                    $this->error("Failed to create database '{$dbName}'.");
+                    return;
+                }
+            } catch (\Exception $e) {
+                $this->error("Error creating database: " . $e->getMessage());
                 return;
             }
-        } catch (\Exception $e) {
-            $this->error("Error creating database: " . $e->getMessage());
-            return;
         }
 
-        // Now connect to the database
         $this->connectDatabase(true);
 
-        // Run migrations
         $this->run($args);
     }
 
@@ -130,7 +123,6 @@ class Migrate extends Command
      */
     public function fresh(array $args): void
     {
-        // Ensure we're connected to the database
         if (!$this->db) {
             $this->connectDatabase(true);
         }
@@ -147,7 +139,6 @@ class Migrate extends Command
 
         $this->info("Dropping all tables...");
 
-        // Get all tables
         $tables = $this->getAllTables();
 
         foreach ($tables as $table) {
@@ -162,7 +153,6 @@ class Migrate extends Command
         $this->success("All tables dropped.");
         $this->line();
 
-        // Re-run migrations
         $this->run($args);
     }
 
@@ -174,7 +164,6 @@ class Migrate extends Command
      */
     public function status(array $args): void
     {
-        // Ensure we're connected to the database
         if (!$this->db) {
             $this->connectDatabase(true);
         }
@@ -217,13 +206,11 @@ class Migrate extends Command
             return false;
         }
 
-        // Check if table already exists
-        if ($this->database->tableExists($tableName)) {
+        if ($this->database->tableExists($tableName) && $this->dbConfig['provider'] !== 'sqlite') {
             $this->info("Table '{$tableName}' already exists. Skipping.");
             return false;
         }
 
-        // Create table
         if ($this->database->createTable($tableName, $schema)) {
             $this->success("Created table: {$tableName}");
             $this->recordMigration($tableName, $modelClass);
@@ -242,10 +229,8 @@ class Migrate extends Command
     private function discoverModels(): array
     {
         $models = [];
-        // Since we're in app/cli, go up one level to app directory
         $appDir = dirname(__DIR__);
 
-        // Recursively find all PHP files in app directory
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($appDir, \RecursiveDirectoryIterator::SKIP_DOTS)
         );
@@ -254,9 +239,7 @@ class Migrate extends Command
             if ($file->isFile() && $file->getExtension() === 'php') {
                 $content = file_get_contents($file->getPathname());
 
-                // Look for classes extending BaseModel
                 if (preg_match('/class\s+(\w+)\s+extends\s+BaseModel/', $content, $matches)) {
-                    // Extract namespace
                     $namespace = '';
                     if (preg_match('/namespace\s+([\w\\\\]+);/', $content, $nsMatches)) {
                         $namespace = $nsMatches[1] . '\\';
@@ -264,12 +247,9 @@ class Migrate extends Command
 
                     $className = $namespace . $matches[1];
 
-                    // Manually require the file since autoloader may not have Models namespace
                     require_once $file->getPathname();
 
-                    // Try to load the class
                     if (class_exists($className)) {
-                        // Check if it has FieldDatabase attributes
                         $schema = $className::getSchema();
                         if (!empty($schema)) {
                             $models[] = $className;
@@ -292,14 +272,23 @@ class Migrate extends Command
         if ($this->database->tableExists($this->migrationsTable)) {
             return;
         }
-
-        $sql = "CREATE TABLE IF NOT EXISTS `{$this->migrationsTable}` (
+        if ($this->dbConfig['provider'] === 'sqlite') {
+            $sql = "CREATE TABLE IF NOT EXISTS `{$this->migrationsTable}` (
+            `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+            `table_name` TEXT NOT NULL,
+            `model_class` TEXT NOT NULL,
+            `migrated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (table_name)
+        )";
+        } else {
+            $sql = "CREATE TABLE IF NOT EXISTS `{$this->migrationsTable}` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
             `table_name` VARCHAR(255) NOT NULL,
             `model_class` VARCHAR(255) NOT NULL,
             `migrated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY `unique_table` (`table_name`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+        }
 
         try {
             $this->db->exec($sql);
@@ -323,7 +312,7 @@ class Migrate extends Command
             );
             $stmt->execute([$tableName, $modelClass]);
         } catch (\PDOException $e) {
-            // Ignore duplicate errors
+            echo $e->getMessage() . PHP_EOL;
         }
     }
 

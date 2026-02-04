@@ -31,7 +31,7 @@ abstract class Command
             'host' => Config::Env("DB_HOST") ?? 'localhost',
             'dbUser' => Config::Env("DB_USER") ?? 'root',
             'dbPassword' => Config::Env("DB_PASSWORD") ?? '',
-            'dbName' => Config::Env("DB_NAME") ?? 'db_test',
+            'dbName' => Config::Env("DB_NAME") ?? 'lila',
             'port' => (int)(Config::Env("DB_PORT") ?? 3306)
         ];
     }
@@ -44,6 +44,7 @@ abstract class Command
      */
     protected function connectDatabase(bool $withDatabase = true): void
     {
+
         $dbName = $withDatabase ? $this->dbConfig['dbName'] : null;
 
         $this->database = new Database(
