@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Debug Dashboard | {{ title }}</title>
+    <link rel="icon" type="image/ico" href="{{ image('img/lila.png', 40, 0, 70, 'ico') }}" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gray-50 text-gray-800">
 
     <div class="min-h-screen p-6">
@@ -19,129 +25,148 @@
         </header>
 
         <main class="max-w-7xl mx-auto">
-                <div class="mb-4 mt-4 flex justify-end">
-                    <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+            <div class="mb-4 mt-4 flex justify-end">
+                <button
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
                     onclick="clearLog()">
-                        Clear Log
-                    </button>
-                </div>
+                    Clear Log
+                </button>
+            </div>
 
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200" >
+                    <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URI</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Memory</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Method</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    URI</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Duration</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Memory</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="tableBody">
                             {% for req in requests %}
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {% if req.response_code >= 200 and req.response_code < 300 %}
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                {{ req.response_code }}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if req.response_code >= 200 and req.response_code < 300 %} <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        {{ req.response_code }}
+                                        </span>
+                                        {% elseif req.response_code >= 300 and req.response_code < 400 %} <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            {{ req.response_code }}
                                             </span>
-                                        {% elseif req.response_code >= 300 and req.response_code < 400 %}
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            {% elseif req.response_code >= 400 and req.response_code < 500 %} <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                                 {{ req.response_code }}
-                                            </span>
-                                        {% elseif req.response_code >= 400 and req.response_code < 500 %}
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                {{ req.response_code }}
-                                            </span>
-                                        {% else %}
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                {{ req.response_code }}
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {{ req.method }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <div class="max-w-xs truncate" title="{{ req.uri }}">
-                                            {{ req.uri }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {% if req.duration > 500 %}
-                                            <span class="text-amber-600 font-semibold">{{ req.duration|number_format(2) }} ms</span>
-                                        {% else %}
-                                            <span class="text-green-600">{{ req.duration|number_format(2) }} ms</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ (req.memory_peak / 1024 / 1024)|number_format(2) }} MB
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ req.created_at }}
-                                    </td>
-                                </tr>
+                                                </span>
+                                                {% else %}
+                                                <span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    {{ req.response_code }}
+                                                </span>
+                                                {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ req.method }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <div class="max-w-xs truncate" title="{{ req.uri }}">
+                                        {{ req.uri }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {% if req.duration > 500 %}
+                                    <span class="text-amber-600 font-semibold">{{ req.duration|number_format(2) }}
+                                        ms</span>
+                                    {% else %}
+                                    <span class="text-green-600">{{ req.duration|number_format(2) }} ms</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ (req.memory_peak / 1024 / 1024)|number_format(2) }} MB
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ req.created_at }}
+                                </td>
+                            </tr>
                             {% else %}
-                                <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                                        No requests logged yet.
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No requests logged yet.
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="mt-4 text-center">
-                 <a href="{{ url('/') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                <a href="{{ url('/') }}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
                     Back to Home
                 </a>
             </div>
         </main>
         <script>
+            let time = null;
             function clearLog() {
                 fetch('?debug=true&clear=true');
+                clearAllLogs();
             }
-            let timer = setInterval(async () => {
-                const response=await fetch('?debug=true&fetch=true');
-                const data=await response.json(); 
+            const clearAllLogs = async ( ) => {
+
+                const response = await fetch('?debug=true&fetch=true');
+                const data = await response.json();
                 if (data.length === 0) {
-                    document.getElementById('tableBody').innerHTML =`
+                    document.getElementById('tableBody').innerHTML = `
                         <tr>
                             <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                 No requests logged yet.
                             </td>
                         </tr>
                     `;
-                    return ;
-                }else{
-                document.getElementById('tableBody').innerHTML =`
+                    return;
+                } else {
+                    document.getElementById('tableBody').innerHTML = `
                 ${data.map(req => `
               <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap">
                 ${(req.response_code >= 200 && req.response_code < 300) ?
-                    `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                         ${req.response_code}
                     </span>`
-                 :''}
+                            : ''}
                 ${(req.response_code >= 300 && req.response_code < 400) ?
-                    `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                         ${req.response_code}
                     </span>`
-                 :''}
+                            : ''}
                 ${(req.response_code >= 400 && req.response_code < 500) ?
-                    `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                         ${req.response_code}
                     </span>`
-                 :''}
+                            : ''}
                 ${(req.response_code >= 500 && req.response_code < 600) ?
-                    `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                         ${req.response_code}
                     </span>`
-                 :''}
+                            : ''}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 ${req.method}
@@ -153,11 +178,11 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 ${(req.duration > 500) ?
-                    `<span class="text-amber-600 font-semibold">${req.duration.toFixed(2)} ms</span>`
-                :''}
+                            `<span class="text-amber-600 font-semibold">${req.duration.toFixed(2)} ms</span>`
+                            : ''}
                 ${(req.duration <= 500) ?
-                    `<span class="text-green-600">${req.duration.toFixed(2)} ms</span>`
-                :''}
+                            `<span class="text-green-600">${req.duration.toFixed(2)} ms</span>`
+                            : ''}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 ${(req.memory_peak / 1024 / 1024).toFixed(2)} MB
@@ -168,11 +193,13 @@
             </tr>
                         `).join('')}
                         `;
-                } 
-                
-                              
-            }, 3000);
+                }
+
+
+            };
+            timer = setInterval(clearAllLogs, 3000);
         </script>
     </div>
 </body>
+
 </html>

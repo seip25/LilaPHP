@@ -249,27 +249,117 @@ HTML;
             } else {
                 echo $html;
             }
-        } catch (\Throwable $e) {
-            $error = Config::$DEBUG ? $e->getMessage() : "General error";
-            if ($template != "500") {
-                Logger::error("Template render error: " . $e->getMessage());
-                $context = ["error" => $error];
-                self::render("lila/500", $context, $path);
-            } else {
-                $html = <<<HTML
-<main style="min-height: 100vh; display: flex; flex-direction: column; background-color: #f9fafb;">
-    <div style="display: flex; justify-content: center;">
-        <article style="max-width: 600px; margin-top: 2rem; padding: 2rem; background-color: #fef2f2; border-radius: 8px;">
-            <p style="color: #ef4444; font-family: sans-serif; font-size: 1rem; text-align: center;">
-                $error
-            </p>
-        </article>
+        } catch (\Throwable $exc) {
+            $message = "General error";
+            if (Config::$DEBUG) {
+                $message   = $exc->getMessage();
+                $file    = $exc->getFile();
+                $trace   = $exc->getTraceAsString();
+                $time    = date('Y-m-d H:i:s');
+                $content = <<<HTML
+     <div class="main-header">
+        <h1>An unexpected error occurred</h1>
     </div>
-</main>
+
+    <div class="main-body">
+        <p><strong>Message:</strong> {$message}</p>
+
+        <div class="main-meta">
+            <div><strong>File:</strong> {$file}</div> 
+            <div><strong>Time:</strong> {$time}</div>
+        </div>
+
+        <div>
+             <pre>{$trace}</pre>
+        </div>
+    </div>
+
+    <div class="footer">
+        Debug mode enabled
+    </div>
 HTML;
-                Response::HTML($html, 500);
+         
             }
+            Logger::error("Template render error: " . $message);
+            $context = ["error" => $message];
+            Response::HTML(self::templateLilaHTML($content));
             exit;
         }
+    }
+
+    static function templateLilaHTML(string $content,string $title="Application Error"): string
+    {
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/ico" href="favicon.ico" />
+    <title>$title</title>
+    <style>
+        body {
+            background: #f6f7f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 40px;
+            color: #333;
+        }
+        .main-container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,.08);
+            overflow: hidden;
+        }
+        .main-header {
+            background: #ff4d4f;
+            color: #fff;
+            padding: 20px;
+        }
+        .main-header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .main-body{
+            padding: 20px;
+        }
+        .main-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            padding: 15px;
+            font-size: 12px;
+            color: #999;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    $content
+   
+</div>
+
+</div>
+
+</body>
+</html>
+HTML;
+        return $html;
     }
 }

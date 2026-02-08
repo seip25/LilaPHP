@@ -5,6 +5,9 @@ include_once "../app/index.php";
 
 use Core\BaseModel;
 use Core\Field;
+use Core\CSRF;
+use Core\GET;
+use Core\POST;
 
 
 class LoginModel extends BaseModel
@@ -18,19 +21,22 @@ class LoginModel extends BaseModel
 
 $lang = $app->getSession(key: "lang", default: "es");
 
-$app->get(callback: function ($req, $res) use ($app) {
+#[GET]
+function login($req, $res)
+{
+    global $app;
     return $app->render("login");
-});
+}
+$app->add(callback: 'login');
 
-$app->post(
-    callback: function ($req, $res) use ($app, $lang) {
-        return $app->jsonResponse(["success" => true, "login" => false, "session" => $lang]);
-    },
-    middlewares: [
-        fn($req, $res) => new LoginModel(data: $req, lang: $lang),
-    ],
-    csrf: true
-);
+#[POST]
+#[CSRF]
+function loginPost($req, $res)
+{
+    global $app;
+    return $app->jsonResponse(["success" => true]);
+}
+$app->add(callback: 'loginPost', middlewares: [fn($req, $res) => new LoginModel(data: $req, lang: $lang)]);
 
 $app->addMiddlewares(middlewares: [
     'before' => [

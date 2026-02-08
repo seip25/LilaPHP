@@ -10,6 +10,8 @@ use Core\Template;
 use Core\Session;
 use PDO;
 use Throwable;
+use ReflectionFunction;
+use ReflectionMethod;
 
 /**
  * LilaPHP Application Core Class
@@ -295,46 +297,94 @@ class App
     /**
      * Register a GET route handler
      * 
-     * @param callable $callback Route handler function(req, res)
+     * @param callable|array|string $callback Route handler
      * @param array $middlewares Route-specific middleware functions
      * @return void
      */
-    public function get(callable $callback, array $middlewares = []): void
+    public function get(mixed $callback, array $middlewares = []): void
     {
-        $this->routes['GET'] = [
-            'callback' => $callback,
-            'middlewares' => $middlewares
-        ];
+        $this->registerRoute('GET', $callback, $middlewares);
     }
 
     /**
      * Register a POST route handler
      * 
-     * @param callable $callback Route handler function(req, res)
+     * @param callable|array|string $callback Route handler
      * @param array $middlewares Route-specific middleware functions
      * @param bool $csrf Enable CSRF token validation
      * @return void
      */
-    public function post(callable $callback, array $middlewares = [], bool $csrf = false): void
+    public function post(mixed $callback, array $middlewares = [], bool $csrf = false): void
     {
-        $this->routes['POST'] = [
-            'callback' => $callback,
-            'middlewares' => $middlewares,
-            'csrf' => $csrf
-        ];
+        $this->registerRoute('POST', $callback, $middlewares, $csrf);
     }
 
     /**
      * Register a PUT route handler
      * 
-     * @param callable $callback Route handler function(req, res)
+     * @param callable|array|string $callback Route handler
      * @param array $middlewares Route-specific middleware functions
      * @param bool $csrf Enable CSRF token validation
      * @return void
      */
-    public function put(callable $callback, array $middlewares = [], bool $csrf = false): void
+    public function put(mixed $callback, array $middlewares = [], bool $csrf = false): void
     {
-        $this->routes['PUT'] = [
+        $this->registerRoute('PUT', $callback, $middlewares, $csrf);
+    }
+
+    /**
+     * Register a DELETE route handler
+     * 
+     * @param callable|array|string $callback Route handler
+     * @param array $middlewares Route-specific middleware functions
+     * @param bool $csrf Enable CSRF token validation
+     * @return void
+     */
+    public function delete(mixed $callback, array $middlewares = [], bool $csrf = false): void
+    {
+        $this->registerRoute('DELETE', $callback, $middlewares, $csrf);
+    }
+
+    /**
+     * Register a route using PHP Attributes
+     * 
+     * @param mixed $callback Route handler with Attributes
+     * @return void
+     */
+    public function add(mixed $callback, array $middlewares = []): void
+    {
+        $reflection = $this->getReflection($callback);
+        if (!$reflection) return;
+
+        $methods = ['GET', 'POST', 'PUT', 'DELETE'];
+        foreach ($methods as $method) {
+            $attributeClass = "Core\\$method";
+            if (!empty($reflection->getAttributes($attributeClass))) {
+                $this->registerRoute($method, $callback, $middlewares);
+            }
+        }
+    }
+
+    /**
+     * Helper to register routes and extract attributes
+     * 
+     * @param string $method HTTP method
+     * @param mixed $callback Route handler
+     * @param array $middlewares Initial middlewares
+     * @param bool $csrf Initial CSRF status
+     * @return void
+     */
+    protected function registerRoute(string $method, mixed $callback, array $middlewares = [], bool $csrf = false): void
+    {
+        $reflection = $this->getReflection($callback);
+
+        if ($reflection) {
+            if (!empty($reflection->getAttributes(CSRF::class))) {
+                $csrf = true;
+            }
+        }
+
+        $this->routes[$method] = [
             'callback' => $callback,
             'middlewares' => $middlewares,
             'csrf' => $csrf
@@ -342,20 +392,27 @@ class App
     }
 
     /**
-     * Register a DELETE route handler
+     * Get reflection object for a callback
      * 
-     * @param callable $callback Route handler function(req, res)
-     * @param array $middlewares Route-specific middleware functions
-     * @param bool $csrf Enable CSRF token validation
-     * @return void
+     * @param mixed $callback
+     * @return ReflectionFunction|ReflectionMethod|null
      */
-    public function delete(callable $callback, array $middlewares = [], bool $csrf = false): void
+    protected function getReflection(mixed $callback): mixed
     {
-        $this->routes['DELETE'] = [
-            'callback' => $callback,
-            'middlewares' => $middlewares,
-            'csrf' => $csrf
-        ];
+        try {
+            if (is_array($callback)) {
+                return new ReflectionMethod($callback[0], $callback[1]);
+            }
+            if (is_string($callback) && strpos($callback, '::') !== false) {
+                return new ReflectionMethod($callback);
+            }
+            if (is_callable($callback)) {
+                return new ReflectionFunction($callback);
+            }
+        } catch (Throwable $e) {
+            return null;
+        }
+        return null;
     }
 
 
@@ -420,8 +477,7 @@ class App
         }
 
         foreach ($this->middlewares['before'] as $fn) {
-            if (is_callable($fn))
-                $fn($req, $res);
+            if (is_callable($fn)) $fn($req, $res);
         }
 
         foreach ($route['middlewares'] as $fn) {
@@ -601,76 +657,17 @@ class App
                 die(Response::JSON(['error' => true] + $details, 500));
             }
 
-            $htmlDebug = <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head> 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/ico" href="favicon.ico" />
-    <title>Application Error</title>
-    <style>
-        body {
-            background: #f6f7f9;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 40px;
-            color: #333;
-        }
-        .error-container {
-            max-width: 900px;
-            margin: auto;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,.08);
-            overflow: hidden;
-        }
-        .error-header {
-            background: #ff4d4f;
-            color: #fff;
-            padding: 20px;
-        }
-        .error-header h1 {
-            margin: 0;
-            font-size: 22px;
-        }
-        .error-body {
-            padding: 20px;
-        }
-        .error-meta {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 15px;
-        }
-        pre {
-            background: #f4f4f4;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-        
-        .footer {
-            padding: 15px;
-            font-size: 12px;
-            color: #999;
-            background: #fafafa;
-            border-top: 1px solid #eee;
-            text-align: right;
-        }
-    </style>
-</head>
-<body>
-
-<div class="error-container">
-    <div class="error-header">
+            $html = "<h1>Internal Server error</h1>";
+            if (Config::$DEBUG) {
+                $html = <<<HTML
+    <div class="main-header">
         <h1>An unexpected error occurred</h1>
     </div>
 
-    <div class="error-body">
+    <div class="main-body">
         <p><strong>Message:</strong> {$error}</p>
 
-        <div class="error-meta">
+        <div class="main-meta">
             <div><strong>File:</strong> {$file}</div>
             <div><strong>Line:</strong> {$line}</div>
             <div><strong>Time:</strong> {$time}</div>
@@ -684,17 +681,9 @@ class App
     <div class="footer">
         Debug mode enabled
     </div>
-</div>
-
-</body>
-</html>
 HTML;
-
-            $html = Config::$DEBUG
-                ? $htmlDebug
-                : "<h1>Internal Server Error</h1>";
-
-            die(Response::HTML($html, 500));
+            }
+            die(Response::HTML(Template::templateLilaHTML($html), 500));
         });
     }
 
