@@ -7,3 +7,4 @@ app/logs
 .sqlite
 composer.lock
 app/lila/debug.sqlite
+app/lila/lila.sqlite
