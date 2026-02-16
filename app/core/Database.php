@@ -232,29 +232,30 @@ class Database
                 }
             }
 
-            $sql = "CREATE TABLE IF NOT EXISTS `{$tableName}` (\n";
+            $quotedTable = $this->quoteIdentifier($tableName);
+            $sql = "CREATE TABLE IF NOT EXISTS {$quotedTable} (\n";
 
             $sql .= "  " . implode(",\n  ", $columns);
 
 
             if (!empty($primaryKeys) && $this->provider !== "sqlite") {
-                $sql .= ",\n  PRIMARY KEY (" . implode(', ', array_map(fn($k) => "`{$k}`", $primaryKeys)) . ")";
+                $quotedKeys = array_map(fn($k) => $this->quoteIdentifier($k), $primaryKeys);
+                $sql .= ",\n  PRIMARY KEY (" . implode(', ', $quotedKeys) . ")";
 
 
                 foreach ($uniques as $uniqueCol) {
-                    $sql .= ",\n  UNIQUE KEY `unique_{$uniqueCol}` (`{$uniqueCol}`)";
+                    $quotedCol = $this->quoteIdentifier($uniqueCol);
+                    $sql .= ",\n  UNIQUE KEY " . $this->quoteIdentifier("unique_{$uniqueCol}") . " ({$quotedCol})";
                 }
 
                 foreach ($indexes as $indexCol) {
-                    $sql .= ",\n  KEY `idx_{$indexCol}` (`{$indexCol}`)";
+                    $quotedCol = $this->quoteIdentifier($indexCol);
+                    $sql .= ",\n  KEY " . $this->quoteIdentifier("idx_{$indexCol}") . " ({$quotedCol})";
                 }
             }
             $sql .= "\n)";
 
             if ($this->provider === 'mysql') {
-                $sql .= " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-            }
-            if ($this->provider === 'pgsql') {
                 $sql .= " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
             }
             $this->db->exec($sql);
@@ -279,10 +280,11 @@ class Database
     {
         $type = $this->mapColumnType($definition['type'], $definition['length']);
 
-        $sql = "`{$columnName}` {$type}";
+        $quotedColumn = $this->quoteIdentifier($columnName);
+        $sql = "{$quotedColumn} {$type}";
 
 
-        if (!$this->provider === "sqlite" && ($definition['unsigned'] && in_array($definition['type'], ['int', 'bigint', 'smallint', 'tinyint']))) {
+        if ($this->provider !== "sqlite" && $definition['unsigned'] && in_array($definition['type'], ['int', 'bigint', 'smallint', 'tinyint'])) {
             $sql .= " UNSIGNED";
         }
 
@@ -300,9 +302,7 @@ class Database
         if ($definition['autoIncrement']) {
             $sql .= $this->provider === "sqlite" ? " PRIMARY KEY AUTOINCREMENT" : " AUTO_INCREMENT";
         } elseif ($definition['default'] !== null) {
-            if ($this->provider === "sqlite") {
-                $sql .= $definition["default"] == "TEXT" ? " DEFAULT ''" : " DEFAULT " . $definition['default'];
-            } elseif (in_array(strtoupper($definition['default']), ['CURRENT_TIMESTAMP', 'NOW()'])) {
+            if (in_array(strtoupper($definition['default']), ['CURRENT_TIMESTAMP', 'NOW()'])) {
                 $sql .= " DEFAULT CURRENT_TIMESTAMP";
             } elseif (is_string($definition['default'])) {
                 $sql .= " DEFAULT '" . addslashes($definition['default']) . "'";
@@ -398,6 +398,21 @@ class Database
             return [];
         }
     }
+    /**
+     * Quote identifier based on database provider
+     * 
+     * @param string $identifier Identifier to quote
+     * @return string Quoted identifier
+     */
+    private function quoteIdentifier(string $identifier): string
+    {
+        return match ($this->provider) {
+            'pgsql' => "\"{$identifier}\"",
+            'mysql', 'sqlite' => "`{$identifier}`",
+            default => "`{$identifier}`"
+        };
+    }
+
     private function replaceColumn(array|string $column, string|array $typeToChanged = "VARCHAR", string $typeToReplace = "TEXT"): string
     {
         if (is_array($typeToChanged)) {
