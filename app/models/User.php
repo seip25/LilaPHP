@@ -44,7 +44,7 @@ class User extends BaseModel
      * 
      * @var string
      */
-    #[Field(required: true, format: 'email', messages: ['email' => 'Please provide a valid email address'])]
+    #[Field(required: true, format: 'email')]
     #[FieldDatabase(type: 'varchar', length: 255, unique: true, index: true, comment: 'User email address')]
     public string $email;
 
