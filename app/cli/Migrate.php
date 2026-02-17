@@ -143,7 +143,8 @@ class Migrate extends Command
 
         foreach ($tables as $table) {
             try {
-                $this->db->exec("DROP TABLE IF EXISTS `{$table}`");
+                $quotedTable = $this->quoteIdentifier($table);
+                $this->db->exec("DROP TABLE IF EXISTS {$quotedTable}");
                 $this->info("Dropped table: {$table}");
             } catch (\PDOException $e) {
                 $this->error("Failed to drop table {$table}: " . $e->getMessage());
@@ -166,6 +167,11 @@ class Migrate extends Command
     {
         if (!$this->db) {
             $this->connectDatabase(true);
+        }
+
+        if (!$this->database) {
+            $this->error("Database connection failed.");
+            return;
         }
 
         $this->info("Migration Status:");
@@ -272,21 +278,32 @@ class Migrate extends Command
         if ($this->database->tableExists($this->migrationsTable)) {
             return;
         }
+
+        $quotedTable = $this->quoteIdentifier($this->migrationsTable);
+
         if ($this->dbConfig['provider'] === 'sqlite') {
-            $sql = "CREATE TABLE IF NOT EXISTS `{$this->migrationsTable}` (
-            `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-            `table_name` TEXT NOT NULL,
-            `model_class` TEXT NOT NULL,
-            `migrated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (table_name)
+            $sql = "CREATE TABLE IF NOT EXISTS {$quotedTable} (
+            " . $this->quoteIdentifier('id') . " INTEGER PRIMARY KEY AUTOINCREMENT,
+            " . $this->quoteIdentifier('table_name') . " TEXT NOT NULL,
+            " . $this->quoteIdentifier('model_class') . " TEXT NOT NULL,
+            " . $this->quoteIdentifier('migrated_at') . " TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (" . $this->quoteIdentifier('table_name') . ")
+        )";
+        } elseif ($this->dbConfig['provider'] === 'pgsql') {
+            $sql = "CREATE TABLE IF NOT EXISTS {$quotedTable} (
+            " . $this->quoteIdentifier('id') . " SERIAL PRIMARY KEY,
+            " . $this->quoteIdentifier('table_name') . " VARCHAR(255) NOT NULL,
+            " . $this->quoteIdentifier('model_class') . " VARCHAR(255) NOT NULL,
+            " . $this->quoteIdentifier('migrated_at') . " TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (" . $this->quoteIdentifier('table_name') . ")
         )";
         } else {
-            $sql = "CREATE TABLE IF NOT EXISTS `{$this->migrationsTable}` (
-            `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `table_name` VARCHAR(255) NOT NULL,
-            `model_class` VARCHAR(255) NOT NULL,
-            `migrated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY `unique_table` (`table_name`)
+            $sql = "CREATE TABLE IF NOT EXISTS {$quotedTable} (
+            " . $this->quoteIdentifier('id') . " INT AUTO_INCREMENT PRIMARY KEY,
+            " . $this->quoteIdentifier('table_name') . " VARCHAR(255) NOT NULL,
+            " . $this->quoteIdentifier('model_class') . " VARCHAR(255) NOT NULL,
+            " . $this->quoteIdentifier('migrated_at') . " TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY " . $this->quoteIdentifier('unique_table') . " (" . $this->quoteIdentifier('table_name') . ")
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
         }
 
@@ -307,13 +324,33 @@ class Migrate extends Command
     private function recordMigration(string $tableName, string $modelClass): void
     {
         try {
+            $quotedTable = $this->quoteIdentifier($this->migrationsTable);
+            $quotedTableName = $this->quoteIdentifier('table_name');
+            $quotedModelClass = $this->quoteIdentifier('model_class');
+
             $stmt = $this->db->prepare(
-                "INSERT INTO `{$this->migrationsTable}` (`table_name`, `model_class`) VALUES (?, ?)"
+                "INSERT INTO {$quotedTable} ({$quotedTableName}, {$quotedModelClass}) VALUES (?, ?)"
             );
             $stmt->execute([$tableName, $modelClass]);
         } catch (\PDOException $e) {
             echo $e->getMessage() . PHP_EOL;
         }
+    }
+
+    /**
+     * Quote identifier based on database provider
+     * 
+     * @param string $identifier Identifier to quote
+     * @return string Quoted identifier
+     */
+    private function quoteIdentifier(string $identifier): string
+    {
+        $provider = $this->dbConfig['provider'] ?? 'mysql';
+        return match ($provider) {
+            'pgsql' => "\"{$identifier}\"",
+            'mysql', 'sqlite' => "`{$identifier}`",
+            default => "`{$identifier}`"
+        };
     }
 
     /**

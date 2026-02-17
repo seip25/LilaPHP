@@ -179,13 +179,15 @@ class {$name}
         // Example: Insert users
         \$stmt = \$this->db->prepare("
             INSERT INTO users (email, password, created_at) 
-            VALUES (?, ?, NOW())
+            VALUES (?, ?, ?)
         ");
 
+        \$currentTime = date('Y-m-d H:i:s');
+        
         \$users = [
-            ['user1@example.com', password_hash('password123', PASSWORD_DEFAULT)],
-            ['user2@example.com', password_hash('password123', PASSWORD_DEFAULT)],
-            ['user3@example.com', password_hash('password123', PASSWORD_DEFAULT)],
+            ['user1@example.com', password_hash('password123', PASSWORD_DEFAULT), \$currentTime],
+            ['user2@example.com', password_hash('password123', PASSWORD_DEFAULT), \$currentTime],
+            ['user3@example.com', password_hash('password123', PASSWORD_DEFAULT), \$currentTime],
         ];
 
         foreach (\$users as \$user) {

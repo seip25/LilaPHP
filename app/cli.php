@@ -18,9 +18,11 @@ require_once __DIR__ . '/index.php';
 require_once __DIR__ . '/cli/Command.php';
 require_once __DIR__ . '/cli/Migrate.php';
 require_once __DIR__ . '/cli/Seed.php';
+require_once __DIR__ . '/cli/Model.php';
 
 use Cli\Migrate;
 use Cli\Seed;
+use Cli\Model;
 
 // Parse command line arguments
 $command = $argv[1] ?? 'help';
@@ -85,6 +87,11 @@ try {
             $seed->create($args);
             break;
 
+        case 'model:create':
+            $model = new Model();
+            $model->create($args);
+            break;
+
         case 'react:install':
             require_once __DIR__ . '/cli/React.php';
             $react = new \Cli\React();
@@ -107,13 +114,15 @@ try {
   \033[32mseed:run\033[0m            Run all seeders
   \033[32mseed:create\033[0m         Create a new seeder file
 
+  \033[32mmodel:create\033[0m        Create a new model file
+
   \033[32mreact:install\033[0m       Install React + Vite scaffolding
 
   \033[32mhelp\033[0m                Show this help message
 
 \033[33mExamples:\033[0m
   php cli.php migrate:create
-  php cli.php migrate:run
+  php cli.php model:create Product
   php cli.php seed:run
 
 HELP;
