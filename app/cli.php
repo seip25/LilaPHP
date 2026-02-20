@@ -92,11 +92,7 @@ try {
             $model->create($args);
             break;
 
-        case 'react:install':
-            require_once __DIR__ . '/cli/React.php';
-            $react = new \Cli\React();
-            $react->install($args);
-            break;
+         
 
         case 'help':
         default:
@@ -115,8 +111,7 @@ try {
   \033[32mseed:create\033[0m         Create a new seeder file
 
   \033[32mmodel:create\033[0m        Create a new model file
-
-  \033[32mreact:install\033[0m       Install React + Vite scaffolding
+ 
 
   \033[32mhelp\033[0m                Show this help message
 
