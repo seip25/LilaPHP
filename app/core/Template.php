@@ -115,6 +115,7 @@ class Template
                 <script type="module" src="http://localhost:5173/@vite/client"></script>
                 <script type="module" src="http://localhost:5173/main.jsx"></script>';
             }
+            $html = '<!-- Vite Manifest not found --><script>console.log("Vite Manifest not found ")</script>';
 
             $manifest  = require Config::$DIR_PROJECT . '/lila/build_manifest.php';
 
@@ -126,8 +127,6 @@ class Template
                 $html .= '<link rel="stylesheet" href="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $cssFile . '">';
             }
             return $html;
-
-            return '<!-- Vite Manifest not found -->';
         }, ['is_safe' => ['html']]));
     }
 
