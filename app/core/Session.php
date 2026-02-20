@@ -5,6 +5,7 @@ namespace Core;
 class Session
 {
     protected static bool $started = false;
+    private const CIPHER = 'aes-256-gcm';
 
     public static function start(): void
     {
@@ -13,7 +14,7 @@ class Session
         $secure = Config::$DEBUG == false || isset($_SERVER['HTTPS']) ? true : false;
         session_set_cookie_params([
             'lifetime' => 0,
-            'path' => '/', 
+            'path' => '/',
             'secure' => $secure,
             'httponly' => true,
             'samesite' => 'Strict'
@@ -50,14 +51,25 @@ class Session
         }
     }
 
-    public static function set(string $key, $value): void
+    public static function set(string $key, mixed $value, bool $encrypt = false): void
     {
-        $_SESSION[$key] = $value;
+        $_SESSION[$key] = $encrypt
+            ? ['__enc' => true, 'value' => self::encrypt($value)]
+            : $value;
     }
-
-    public static function get(string $key, $default = null)
+    public static function get(string $key, mixed $default = null, bool $decrypt = false): mixed
     {
-        return $_SESSION[$key] ?? $default;
+        if (!isset($_SESSION[$key])) {
+            return $default;
+        }
+
+        $stored = $_SESSION[$key];
+
+        if ($decrypt && is_array($stored) && ($stored['__enc'] ?? false)) {
+            return self::decrypt($stored['value']);
+        }
+
+        return $stored;
     }
 
     public static function has(string $key): bool
@@ -78,5 +90,55 @@ class Session
         }
         session_destroy();
         self::$started = false;
+    }
+
+    private static function encrypt(mixed $value): string
+    {
+        $key = self::getKey();
+        $iv  = random_bytes(12);
+        $tag = '';
+
+        $ciphertext = openssl_encrypt(
+            json_encode($value),
+            self::CIPHER,
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv,
+            $tag
+        );
+
+        return base64_encode($iv . $tag . $ciphertext);
+    }
+     
+    private static function decrypt(string $payload): mixed
+    {
+        $key = self::getKey();
+        $data = base64_decode($payload);
+
+        $iv  = substr($data, 0, 12);
+        $tag = substr($data, 12, 16);
+        $ciphertext = substr($data, 28);
+
+        $decrypted = openssl_decrypt(
+            $ciphertext,
+            self::CIPHER,
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv,
+            $tag
+        );
+
+        return $decrypted !== false ? json_decode($decrypted, true) : null;
+    }
+   
+    private static function getKey(): string
+    {
+        $key = Config::Env('SECRET_KEY');
+
+        if (str_starts_with($key, 'base64:')) {
+            return base64_decode(substr($key, 7));
+        }
+
+        return hash('sha256', $key, true);
     }
 }

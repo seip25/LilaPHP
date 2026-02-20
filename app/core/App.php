@@ -185,12 +185,14 @@ class App
      * 
      * @param string $key Session key
      * @param mixed $value Value to store
+     * @param bool $encrypt encrypt
      * @return void
      */
-    public function setSession(string $key, $value): void
+    public function setSession(string $key,mixed $value, bool $encrypt = false): void
     {
-        Session::set($key, $value);
+        Session::set($key, $value, $encrypt);
     }
+
 
     /**
      * Get a session variable
@@ -198,10 +200,11 @@ class App
      * @param string $key Session key
      * @param mixed $default Default value if key doesn't exist
      * @return mixed Session value or default
+     * @return bool $decrypt
      */
-    public function getSession(string $key, $default = null)
+    public function getSession(string $key, $default = null, bool $decrypt = false)
     {
-        return Session::get($key, $default);
+        return Session::get($key, $default, $decrypt);
     }
 
     /**
@@ -542,7 +545,6 @@ class App
     {
         try {
             Template::react(page: $page, props: $props, lang: $options['lang'] ?? null, title: $options['title'] ?? null, meta: $options['meta'] ?? [], scripts: $options['scripts'] ?? [], styles: $options['styles'] ?? []);
-        
         } catch (Throwable $e) {
             $this->handleRenderException($e);
         }
