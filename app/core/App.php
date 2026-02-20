@@ -541,9 +541,8 @@ class App
     public function renderReact(string $page, array $props = [], array $options = ["lang" => null, "title" => null, "meta" => [], "scripts" => [], "styles" => []]): void
     {
         try {
-            $html = Template::react(island: $page, props: $props, lang: $options['lang'] ?? null, title: $options['title'] ?? null, meta: $options['meta'] ?? [], scripts: $options['scripts'] ?? [], styles: $options['styles'] ?? []);
-            $html = Template::minifyHtml(buffer: $html);
-            echo $html;
+            Template::react(page: $page, props: $props, lang: $options['lang'] ?? null, title: $options['title'] ?? null, meta: $options['meta'] ?? [], scripts: $options['scripts'] ?? [], styles: $options['styles'] ?? []);
+        
         } catch (Throwable $e) {
             $this->handleRenderException($e);
         }

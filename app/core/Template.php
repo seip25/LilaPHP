@@ -103,7 +103,6 @@ class Template
 
         self::$twig->addFunction(new TwigFunction('vite_assets', function (): string {
             $isDev = Config::$DEBUG;
-
             if ($isDev) {
                 return '
                 <script type="module">
@@ -117,106 +116,54 @@ class Template
                 <script type="module" src="http://localhost:5173/build/main.jsx"></script>';
             }
 
-            $manifestPath = Config::$DIR_PROJECT . '/../public/build/manifest.json';
+            $manifest  = require Config::$DIR_PROJECT . '/lila/build_manifest.php';
 
-            if (!file_exists($manifestPath)) {
-                $manifestPath = Config::$DIR_PROJECT . '/../public/build/.vite/manifest.json';
-            }
-            if (file_exists($manifestPath)) {
-                $manifest = json_decode(file_get_contents($manifestPath), true);
-                //manifest example {"main.jsx":{"file":"assets\/main-D0GVAlEg.js","name":"main","src":"main.jsx","isEntry":true}}
-                if (isset($manifest['main.jsx'])) {
-                    $file = $manifest['main.jsx']['file'];
-                    $css = $manifest['main.jsx']['css'] ?? [];
+            $file = $manifest['main.jsx']['file'] ?? "main.jsx";
+            $css = $manifest['main.jsx']['css'] ?? [];
 
-                    $html = '<script type="module" src="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $file . '"></script>';
-                    foreach ($css as $cssFile) {
-                        $html .= '<link rel="stylesheet" href="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $cssFile . '">';
-                    }
-                    return $html;
-                }
-                return '<!-- Vite Manifest not found -->';
+            $html = '<script type="module" src="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $file . '"></script>';
+            foreach ($css as $cssFile) {
+                $html .= '<link rel="stylesheet" href="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $cssFile . '">';
             }
+            return $html;
 
             return '<!-- Vite Manifest not found -->';
         }, ['is_safe' => ['html']]));
     }
 
-    public static function react(string $island, array $props = [], ?string $lang = null, ?string $title = null, array $meta = [], array $scripts = [], array $styles = []): string
+    public static function react(string $page, array $props = [], ?string $lang = null, ?string $title = null, array $meta = [], array $scripts = [], array $styles = []): void
     {
-        $isDev = Config::$DEBUG;
-        $id = 'react-' . uniqid();
-        $propsJson = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
-        $component = "<div id=\"{$id}\" data-react-component=\"{$island}\" data-props='{$propsJson}'></div>";
-        $html = "";
-        $scriptsReact = "";
-        if ($isDev) {
-            $scriptsReact .= '
-                <script type="module">
-                    import RefreshRuntime from "http://localhost:5173/build/@react-refresh";
-                    RefreshRuntime.injectIntoGlobalHook(window);
-                    window.$RefreshReg$ = () => {};
-                    window.$RefreshSig$ = () => (type) => type;
-                    window.__vite_plugin_react_preamble_installed__ = true;
-                </script>
-                <script type="module" src="http://localhost:5173/build/@vite/client"></script>
-                <script type="module" src="http://localhost:5173/build/main.jsx"></script>';
-        }
 
-        $manifestPath = Config::$DIR_PROJECT . '/../public/build/manifest.json';
-
-        if (!file_exists($manifestPath)) {
-            $manifestPath = Config::$DIR_PROJECT . '/../public/build/.vite/manifest.json';
-        }
-        if (file_exists($manifestPath)) {
-            $manifest = json_decode(file_get_contents($manifestPath), true);
-            if (isset($manifest['main.jsx'])) {
-                $file = $manifest['main.jsx']['file'];
-                $css = $manifest['main.jsx']['css'] ?? [];
-
-                $scriptsReact .= '<script type="module" src="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $file . '"></script>';
-                foreach ($css as $cssFile) {
-                    $scriptsReact .= '<link rel="stylesheet" href="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $cssFile . '">';
-                }
-            }
-        }
         $stylesHtml = "";
-        foreach ($styles as $style) {
-            $stylesHtml .= '<link rel="stylesheet" href="' . rtrim($style) . '">';
-        }
         $scriptsHtml = "";
+        $metaHtml = "";
+        $titleHtml = "";
+        $lang = is_null($lang) ? Config::$LANGHTML : $lang;
+        $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
+        $propsJson = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
+        foreach ($styles as $style) {
+            $stylesHtml .= '<link rel="stylesheet" href="' . rtrim($style) . '" />';
+        }
         foreach ($scripts as $script) {
             $scriptsHtml .= '<script src="' . rtrim($script) . '"></script>';
         }
-        $metaHtml = "";
         foreach ($meta as $meta) {
-            $metaHtml .= '<meta name="' . $meta['name'] . '" content="' . $meta['content'] . '">';
+            $metaHtml .= '<meta name="' . $meta['name'] . '" content="' . $meta['content'] . '" />';
         }
-        $titleHtml = "";
         if ($title) {
             $titleHtml = '<title>' . $title . ' | ' . Config::$TITLE_PROJECT . '</title>';
         }
-        $lang = is_null($lang) ? Config::$LANGHTML : $lang;
-
-        $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
-
-        $html = <<<HTML
-        <html  lang="{$lang}">
-        <head>
-            {$titleHtml}
-            <link rel="icon" type="image/ico" href="$icon">
-            {$metaHtml}
-            {$scriptsReact}
-            {$stylesHtml}
-            {$scriptsHtml}
-        </head>
-        <body>
-            {$component}
-        </body>    
-            
-        
-HTML;
-        return $html;
+        $context = [
+            "langHtml" => $lang,
+            "titleHtml" => $titleHtml,
+            "meta" => $metaHtml,
+            "css" => $stylesHtml,
+            "icon" => $icon,
+            "scripts" => $scriptsHtml,
+            "component" => $page,
+            "props" => $propsJson
+        ];
+        self::render(template: "lila/react_base", context: $context);
     }
 
     private static function getBaseContext(array $extra = []): array
@@ -241,7 +188,7 @@ HTML;
             $fullContext = self::getBaseContext(extra: $context);
             $html = $twig->render("$template.twig", $fullContext);
             $html = self::minifyHtml($html);
-            header('Cache-Control: public, max-age=604800, immutable');
+            header('Cache-Control: no-cache, must-revalidate');
 
             if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
                 header('Content-Encoding: gzip');
@@ -278,7 +225,6 @@ HTML;
         Debug mode enabled
     </div>
 HTML;
-         
             }
             Logger::error("Template render error: " . $message);
             $context = ["error" => $message];
@@ -287,7 +233,7 @@ HTML;
         }
     }
 
-    static function templateLilaHTML(string $content,string $title="Application Error"): string
+    static function templateLilaHTML(string $content, string $title = "Application Error"): string
     {
         $html = <<<HTML
 <!DOCTYPE html>
