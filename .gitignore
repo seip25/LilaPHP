@@ -9,5 +9,6 @@ composer.lock
 app/lila/debug.sqlite
 app/lila/lila.sqlite
 app/cache
-public/build
-app/lila
+public/build 
+app/lila/*.sqlite
+app/lila/build_manifest.php
