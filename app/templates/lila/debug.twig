@@ -14,54 +14,68 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
+     <script>
+      tailwind.config = {
+        darkMode: "media",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            
+          },
+        },
+      };
+    </script>
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800 dark:bg-slate-900 dark:text-slate-300">
 
     <div class="min-h-screen p-6">
         <header class="mb-8 max-w-7xl mx-auto">
-            <h1 class="text-3xl font-bold text-gray-900">Request Debugger</h1>
-            <p class="text-gray-500 mt-2">Monitoring request performance and memory usage.</p>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-slate-300">Request Debugger</h1>
+            <p class="text-gray-500 mt-2 dark:text-slate-300">Monitoring request performance and memory usage.</p>
         </header>
 
         <main class="max-w-7xl mx-auto">
             <div class="mb-4 mt-4 flex justify-end">
                 <button
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-100 
+                    dark:text-gray-900 bg-gray-900 hover:bg-gray-700 dark:hover:bg-gray-200 dark:text-slate-900 dark:bg-gray-100"
                     onclick="clearLog()">
                     Clear Log
                 </button>
             </div>
 
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full  ">
+                        <thead class="bg-gray-50 dark:bg-slate-800">
                             <tr>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">
                                     Status</th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">
                                     Method</th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">
                                     URI</th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">
                                     Duration</th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">
                                     Memory</th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">
                                     Date</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="tableBody">
+                        <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700" id="tableBody">
                             {% for req in requests %}
-                            <tr class="hover:bg-gray-50 transition-colors">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     {% if req.response_code >= 200 and req.response_code < 300 %} <span
                                         class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -82,10 +96,10 @@
                                                 </span>
                                                 {% endif %}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-300">
                                     {{ req.method }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-300">
                                     <div class="max-w-xs truncate" title="{{ req.uri }}">
                                         {{ req.uri }}
                                     </div>
@@ -98,10 +112,10 @@
                                     <span class="text-green-600">{{ req.duration|number_format(2) }} ms</span>
                                     {% endif %}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-slate-300">
                                     {{ (req.memory_peak / 1024 / 1024)|number_format(2) }} MB
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-300">
                                     {{ req.created_at }}
                                 </td>
                             </tr>
@@ -118,7 +132,7 @@
             </div>
             <div class="mt-4 text-center">
                 <a href="{{ url('/') }}"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-100 bg-gray-900 hover:bg-gray-700 dark:hover:bg-gray-200 dark:text-gray-900 dark:bg-gray-100">
                     Back to Home
                 </a>
             </div>
@@ -145,7 +159,7 @@
                 } else {
                     document.getElementById('tableBody').innerHTML = `
                 ${data.map(req => `
-              <tr class="hover:bg-gray-50 transition-colors">
+              <tr class="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap">
                 ${(req.response_code >= 200 && req.response_code < 300) ?
                             `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -168,15 +182,15 @@
                     </span>`
                             : ''}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-300">
                 ${req.method}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-300">
                 <div class="max-w-xs truncate" title="${req.uri}">
                     ${req.uri}
                 </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-slate-300">
                 ${(req.duration > 500) ?
                             `<span class="text-amber-600 font-semibold">${req.duration.toFixed(2)} ms</span>`
                             : ''}
@@ -184,10 +198,10 @@
                             `<span class="text-green-600">${req.duration.toFixed(2)} ms</span>`
                             : ''}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-slate-300">
                 ${(req.memory_peak / 1024 / 1024).toFixed(2)} MB
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-300">
                 ${req.created_at}
             </td>
             </tr>
