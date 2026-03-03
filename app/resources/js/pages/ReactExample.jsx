@@ -47,7 +47,7 @@ export default function ReactIsland({ csrf, translations }) {
             Send fetch example to /login
           </Button>
 
-          <Button onClick={historyBack} className="rounded-xl mt-4 bg-blue-100 text-blue-500 font-semibold px-4 py-2 rounded hover:bg-blue-200">
+          <Button onClick={historyBack} className="rounded-xl mt-4 bg-gray-100 text-gray-500 font-semibold px-4 py-2 rounded hover:bg-gray-200">
             Back to index
           </Button>
         </div>

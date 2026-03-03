@@ -8,7 +8,7 @@ export default function Header({ user, cartCount }) {
       <h1 className="text-xl font-bold text-gray-800">Hello, {user?.name || 'Guest'}!</h1>
       <button 
         onClick={() => setCount(c => c + 1)}
-        className="px-4 py-2 bg-blue-500 text-white rounded"
+        className="px-4 py-2 bg-gray-900 text-white rounded"
       >
         Cart: {count}
       </button>

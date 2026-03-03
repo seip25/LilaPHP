@@ -136,8 +136,7 @@ class Template
         $stylesHtml = "";
         $scriptsHtml = "";
         $metaHtml = "";
-        $titleHtml = "";
-        $lang = is_null($lang) ? Config::$LANGHTML : $lang;
+         $lang = is_null($lang) ? Config::$LANGHTML : $lang;
         $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
         $propsJson = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
         foreach ($styles as $style) {
@@ -149,9 +148,8 @@ class Template
         foreach ($meta as $meta) {
             $metaHtml .= '<meta name="' . $meta['name'] . '" content="' . $meta['content'] . '" />';
         }
-        if ($title) {
-            $titleHtml = '<title>' . $title . ' | ' . Config::$TITLE_PROJECT . '</title>';
-        }
+            $titleHtml = $title ?? Config::$TITLE_PROJECT ;
+        
         $context = [
             "langHtml" => $lang,
             "titleHtml" => $titleHtml,
