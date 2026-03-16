@@ -16,7 +16,8 @@ class Translate
             self::$translations = require $file;
         } else {
             error_log(message: "[Translate] Missing locale file: $file");
-            self::$translations = [];
+            $default = require Config::$DIR_PROJECT . '/locales/eng.php';
+            self::$translations = $default;
         }
     }
 
