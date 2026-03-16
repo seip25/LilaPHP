@@ -57,3 +57,25 @@ class Middleware
      */
     public function __construct(public mixed $callback) {}
 }
+
+/**
+ * Attribute to enable Response Caching
+ * 
+ * @package Core
+ */
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+class Cache
+{
+    public function __construct(public int $seconds = 60) {}
+}
+
+/**
+ * Attribute to enable Model Validation
+ * 
+ * @package Core
+ */
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+class Validate
+{
+    public function __construct(public string $modelClass, public string|bool $langParam = false) {}
+}

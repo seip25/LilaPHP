@@ -11,7 +11,11 @@ class ImageOptimizer
         int $height = 0,
         int $quality = 70
     ): ?string {
-        $publicDir = realpath(Config::$DIR_PROJECT . '/../public/') . '/';
+        if (!extension_loaded('gd')) {
+            return null;
+        }
+
+        $publicDir = realpath(Config::$DIR_PROJECT . '/../assets/') . '/';
         $cacheDir = $publicDir . 'cache/';
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0775, true);
@@ -36,7 +40,7 @@ class ImageOptimizer
         $optimizedPath = $cacheDir . $optimizedName;
 
         if (file_exists($optimizedPath)) {
-            return rtrim(Config::$URL_PROJECT, '/') . '/public/cache/' . $optimizedName;
+            return rtrim(Config::$URL_PROJECT, '/') . '/assets/cache/' . $optimizedName;
         }
 
         $image = match ($extension) {
@@ -82,7 +86,7 @@ class ImageOptimizer
             return null;
         }
 
-        return rtrim(Config::$URL_PROJECT, '/') . '/public/cache/' . $optimizedName;
+        return rtrim(Config::$URL_PROJECT, '/') . '/assets/cache/' . $optimizedName;
     }
 
     protected static function saveAsIco($image, string $path): bool

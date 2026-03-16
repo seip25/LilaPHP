@@ -30,8 +30,8 @@ class Template
     private static function registerFunctions(): void
     {
         self::$twig->addFunction(new TwigFunction('asset', function (string $file): string {
-            $urlBase = rtrim(Config::$URL_PROJECT, '/') . '/public/';
-            $publicDir = realpath(Config::$DIR_PROJECT . '/../public/') . '/';
+            $urlBase = rtrim(Config::$URL_PROJECT, '/') . '/assets/';
+            $publicDir = realpath(Config::$DIR_PROJECT . '/../assets/') . '/';
             $fullPath = $publicDir . ltrim($file, '/');
 
             if (!file_exists($fullPath)) {
@@ -85,7 +85,7 @@ class Template
 
         self::$twig->addFunction(new TwigFunction('image', function (string $file, int $width = 800, int $height = 0, int $quality = 70, string $type = 'webp'): string {
             $url = ImageOptimizer::getOptimized($file, $type, $width, $height, $quality);
-            return $url ?? (rtrim(Config::$URL_PROJECT, '/') . '/public/' . ltrim($file, '/'));
+            return $url ?? (rtrim(Config::$URL_PROJECT, '/') . '/assets/' . ltrim($file, '/'));
         }));
         self::$twig->addFunction(new TwigFunction('translate', function (string $key): string {
             return Translate::t($key);
@@ -122,9 +122,9 @@ class Template
             $file = $manifest['main.jsx']['file'] ?? "main.jsx";
             $css = $manifest['main.jsx']['css'] ?? [];
 
-            $html = '<script type="module" src="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $file . '"></script>';
+            $html = '<script type="module" src="' . rtrim(Config::$URL_PROJECT, '/') . '/assets/build/' . $file . '"></script>';
             foreach ($css as $cssFile) {
-                $html .= '<link rel="stylesheet" href="' . rtrim(Config::$URL_PROJECT, '/') . '/public/build/' . $cssFile . '">';
+                $html .= '<link rel="stylesheet" href="' . rtrim(Config::$URL_PROJECT, '/') . '/assets/build/' . $cssFile . '">';
             }
             return $html;
         }, ['is_safe' => ['html']]));
@@ -189,7 +189,7 @@ class Template
 
             if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
                 header('Content-Encoding: gzip');
-                echo gzencode($html, 9);
+                echo gzencode($html, 6);
             } else {
                 echo $html;
             }

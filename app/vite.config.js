@@ -7,7 +7,7 @@ function generatePhpManifest() {
   return {
     name: 'generate-php-manifest',
     closeBundle() {
-      const manifestPath = path.resolve(__dirname, '../public/build/.vite/manifest.json');
+      const manifestPath = path.resolve(__dirname, '../assets/build/.vite/manifest.json');
       const phpOutputPath = path.resolve(__dirname, '../app/lila/build_manifest.php');
 
       if (!fs.existsSync(manifestPath)) {
@@ -53,7 +53,7 @@ export default defineConfig({
   root: path.resolve(__dirname, 'resources/js'),
   base: './',
   build: {
-    outDir: path.resolve(__dirname, '../public/build'),
+    outDir: path.resolve(__dirname, '../assets/build'),
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {

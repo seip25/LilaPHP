@@ -78,11 +78,11 @@ class App
         Config::load();
         $this->registerErrorHandler();
         $this->registerExceptionHandler();
-        $this->security = new Security(array_merge($options['security'], [
+        $this->security = new Security(array_merge([
             'logger' => true,
             'sanitize' => true,
             'cors' => true
-        ]));
+        ], $options['security'] ?? []));
         Session::start();
         if (Session::has(key: 'lang') == false) {
             $newLang = Config::$LANG;
@@ -173,11 +173,26 @@ class App
      * Redirect to a URL
      * 
      * @param string $url Target URL for redirection
+     * @param bool $useUrlProject Use URL_PROJECT from .env
+     * @param bool $validateReferer Validate referer to prevent Open Redirect
      * @return void
      */
-    public function redirect(string $url): void
+    public function redirect(string $url, bool $useUrlProject = true, bool $validateReferer = true): void
     {
-        header(header: "Location: $url");
+        $newUrl = $url;
+        $baseUrl = $this->getEnv("URL_PROJECT") ?? '';
+
+        if ($useUrlProject && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+            $newUrl = rtrim($baseUrl, '/') . '/' . ltrim($url, '/');
+        }
+
+        if ($validateReferer) {
+            if (!str_starts_with($newUrl, '/') && !str_starts_with($newUrl, $baseUrl)) {
+                $newUrl = '/';
+            }
+        }
+        header(header: "Location: $newUrl");
+        exit;
     }
 
     /**
@@ -188,7 +203,7 @@ class App
      * @param bool $encrypt encrypt
      * @return void
      */
-    public function setSession(string $key,mixed $value, bool $encrypt = false): void
+    public function setSession(string $key, mixed $value, bool $encrypt = false): void
     {
         Session::set($key, $value, $encrypt);
     }
@@ -352,6 +367,7 @@ class App
      * Register a route using PHP Attributes
      * 
      * @param mixed $callback Route handler with Attributes
+     * @param array $middlewares Route-specific middleware functions
      * @return void
      */
     public function add(mixed $callback, array $middlewares = []): void
@@ -379,11 +395,28 @@ class App
      */
     protected function registerRoute(string $method, mixed $callback, array $middlewares = [], bool $csrf = false): void
     {
+        include_once __DIR__ . '/Method.php';
         $reflection = $this->getReflection($callback);
 
         if ($reflection) {
             if (!empty($reflection->getAttributes(CSRF::class))) {
                 $csrf = true;
+            }
+ 
+            $cacheAttr = $reflection->getAttributes(Cache::class);
+            if (!empty($cacheAttr)) {
+                $seconds = $cacheAttr[0]->newInstance()->seconds;
+                $middlewares[] = Response::cacheResponse($seconds);
+            }
+ 
+            $validateAttr = $reflection->getAttributes(Validate::class);
+            if (!empty($validateAttr)) {
+                $instance = $validateAttr[0]->newInstance();
+                $middlewares[] = $this->createValidationMiddleware($instance->modelClass, $instance->langParam);
+            }
+ 
+            foreach ($reflection->getAttributes(Middleware::class) as $attr) {
+                $middlewares[] = $attr->newInstance()->callback;
             }
         }
 
@@ -393,6 +426,22 @@ class App
             'csrf' => $csrf
         ];
     }
+
+    /**
+     * Create validation middleware
+     * 
+     * @param string $modelClass The class name of the model
+     * @param string|bool $langParam Language parameter override
+     * @return callable Middleware closure
+     */
+    protected function createValidationMiddleware(string $modelClass, string|bool $langParam = false): callable
+    {
+        return function(array $req, Response $res) use ($modelClass, $langParam) {
+            $lang = $langParam === false ? (Session::get('lang') ?? $this->getLangDefault()) : $langParam;
+            new $modelClass(data: $req, lang: $lang, jsonResponse: true);
+        };
+    }
+
 
     /**
      * Get reflection object for a callback
@@ -472,6 +521,21 @@ class App
         }
 
         $req = array_merge($_GET, $_POST, $data, $_FILES);
+
+        if (isset($_GET['set-lang'])) {
+            $newLang = $_GET["lang"] ?? $this->getLangDefault();
+            $this->setSession(key: "lang", value: $newLang);
+            
+            if (isset($_GET['redirect']) && $_GET['redirect'] === 'false') {
+                $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
+                exit;
+            } else {
+                http_response_code(302);
+                $back = $_SERVER['HTTP_REFERER'] ?? '/';
+                $this->redirect(url: $back);
+                exit;
+            }
+        }
 
         $res = new Response();
         if (!$this->security->runBeforeMiddlewares($req)) {

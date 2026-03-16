@@ -8,6 +8,7 @@ use Core\Field;
 use Core\CSRF;
 use Core\GET;
 use Core\POST;
+use Core\Validate;
 
 
 class LoginModel extends BaseModel
@@ -31,37 +32,42 @@ $app->add(callback: 'login');
 
 #[POST]
 #[CSRF]
+#[Validate(LoginModel::class)]
 function loginPost($req, $res)
 {
     global $app;
-
     //Run php app/cli.php migrate:create and descomment code
-    //     $db = $app->getDatabaseConnection();
-    //     $q = <<<SQL
+    // $db = $app->getDatabaseConnection();
+    // $q = <<<SQL
     //     SELECT id,name,password FROM users 
     //     WHERE email = ? 
     //     AND is_active = 1
     // SQL;
-    //     $email = $req["email"] ?? "";
-    //     $email = trim($email);
-    //     $params = [$email];
-    //     $select = $db->prepare(query: $q);
-    //     $select->execute($params);
-    //     $user = $select->fetchObject();
-    //     if ($user) {
-    //         $passwordDB = $user->password;
-    //         unset($user->password);
-    //         $password = trim($req["password"]);
-    //         if (password_verify($password, $passwordDB)) {
-    //             session_regenerate_id(true);
-    //             $app->setSession(key: "auth", value: $user, encrypt: true); //encrypt session and secure
-    //             return $app->jsonResponse(data: ["success" => true]);
-    //         }
+    // $email = $req["email"] ?? "";
+    // $email = trim($email);
+    // $params = [$email];
+    // $select = $db->prepare(query: $q);
+    // $select->execute($params);
+    // $user = $select->fetchObject();
+    // $password = trim($req["password"]);
+    // if ($user) {
+    //     $passwordDB = $user->password;
+    //     unset($user->password);
+    //     if (password_verify($password, $passwordDB)) {
+    //         session_regenerate_id(true);
+    //         $app->setSession(key: "auth", value: $user, encrypt: true); //encrypt session and secure
+    //         return $app->jsonResponse(data: ["success" => true]);
     //     }
-    //     return $app->jsonResponse(data: ["success" => false], code: 401);
+    // }
+    // // Always verify password even if user not found
+    // // to prevent user enumeration timing attacks
+    // $fakeHash = '$2y$10$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG';
+    // $fakeVerify = password_verify($password, $fakeHash) && $user;
+    // return $app->jsonResponse(data: ["success" => false], code: 401);
+
     return $app->jsonResponse(["success" => true]);
 }
-$app->add(callback: 'loginPost', middlewares: [fn($req, $res) => new LoginModel(data: $req, lang: $lang)]);
+$app->add(callback: 'loginPost');
 
 $app->addMiddlewares(middlewares: [
     'before' => [

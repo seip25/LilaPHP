@@ -71,7 +71,6 @@ class Security
         array_walk_recursive($req, function (&$value) {
             $value = trim($value);
             $value = strip_tags($value);
-            $value = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         });
     }
 

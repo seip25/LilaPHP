@@ -11,7 +11,7 @@ class Response
 
         if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
             header('Content-Encoding: gzip');
-            echo gzencode($html, 9);
+            echo gzencode($html, 6);
         } else {
             echo $html;
         }
@@ -91,5 +91,51 @@ class Response
         http_response_code($status);
         header('Content-Type: text/plain; charset=utf-8');
         echo $text;
+    }
+
+    /**
+     * Cache the response
+     * 
+     * @param int $seconds Cache duration in seconds
+     * @return callable Middleware closure
+     */
+    public static function cacheResponse(int $seconds = 60): callable
+    {
+        return function(array $req, $res) use ($seconds) {
+            $cacheKey = md5($_SERVER['REQUEST_URI'] . json_encode($req));
+            $cacheDir = dirname(__DIR__) . '/cache/responses';
+            $cacheFile = $cacheDir . '/' . $cacheKey . '.cache';
+
+            if (!is_dir($cacheDir)) {
+                mkdir($cacheDir, 0755, true);
+            }
+
+            if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $seconds)) {
+                $cached = @unserialize(file_get_contents($cacheFile));
+                if ($cached) {
+                    http_response_code($cached['status'] ?? 200);
+                    foreach ($cached['headers'] ?? [] as $header) {
+                        header($header);
+                    }
+                    echo $cached['body'] ?? '';
+                    exit;
+                }
+            }
+
+            ob_start();
+
+            register_shutdown_function(function() use ($cacheFile) {
+                $status = http_response_code();
+                if ($status >= 200 && $status < 300) {
+                    $body = ob_get_flush(); 
+                    $headers = headers_list();
+                    file_put_contents($cacheFile, serialize([
+                        'body' => $body,
+                        'headers' => $headers,
+                        'status' => $status
+                    ]));
+                }
+            });
+        };
     }
 }
