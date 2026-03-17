@@ -10,7 +10,7 @@ class Security
     {
         $this->options = array_merge([
             'logger' => true,
-            'rateLimit' => true,
+            'rateLimit' => 200,
             'sanitize' => true,
             'cors' => [
                 'enabled' => true,
@@ -28,6 +28,13 @@ class Security
             return false;
         if ($this->options['cors'])
             $this->corsHeaders();
+
+        if (isset($this->options['rateLimit']) && $this->options['rateLimit'] !== false) {
+            if (!$this->rateLimitMiddleware()) {
+                return false;
+            }
+        }
+
         if ($this->options['sanitize'])
             $this->sanitizeRequest($req);
         if ($this->options['payloadCheck']) if (!$this->payloadCheck($req))
@@ -141,5 +148,70 @@ class Security
             Response::JSON(data: $data, status: 403);
             exit;
         }
+    }
+    /**
+     * Rate Limiting Middleware using Sessions
+     *
+     * @return bool True if allowed, false if rejected
+     */
+    protected function rateLimitMiddleware(): bool
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+            return true;
+        }
+
+        $limit = $this->options['rateLimit'] ?? 200;
+        $limit = ($limit === true || $limit === 1) ? 200 : (int)$limit;
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            Session::start();
+        }
+
+        $now = time();
+        $rateData = Session::get('__rate_limit', [
+            'count' => 0,
+            'start' => $now
+        ]);
+
+        if ($now - $rateData['start'] >= 60) {
+            $rateData['start'] = $now;
+            $rateData['count'] = 0;
+        }
+
+        $rateData['count']++;
+        Session::set('__rate_limit', $rateData);
+
+        $remaining = max(0, $limit - $rateData['count']);
+        $reset = max(0, 60 - ($now - $rateData['start']));
+
+        header("X-RateLimit-Limit: $limit");
+        header("X-RateLimit-Remaining: $remaining");
+        header("X-RateLimit-Reset: $reset");
+
+        if ($rateData['count'] > $limit) {
+            header("Retry-After: $reset");
+            //if response content type json or is fetch or ajax 
+            $isContentTypeJsonOrFetchOrAjax = isset($_SERVER['CONTENT_TYPE']) && (strtolower($_SERVER['CONTENT_TYPE']) === 'application/json'
+                || strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+                || strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false
+                || strpos($_SERVER['HTTP_ACCEPT'], 'text/plain') !== false);
+            if ($isContentTypeJsonOrFetchOrAjax) {
+                Response::JSON(data:[
+                    'error' => 'Too Many Requests',
+                    'message' => 'Rate limit exceeded. Try again in ' . $reset . ' seconds.'
+                ],status: 429);
+            } else {
+                $html = <<<HTML
+    <div class="main-header ">
+        <h1>Too Many Requests</h1>
+    </div>
+
+HTML;
+                Response::HTML(html :$html,status: 429);
+            }
+            return false;
+        }
+
+        return true;
     }
 }

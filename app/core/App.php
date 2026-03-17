@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.0.8
+ * @version 1.1.7
  */
 class App
 {
@@ -66,7 +66,8 @@ class App
      *     'security' => [
      *         'cors' => false,
      *         'sanitize' => true,
-     *         'logger' => true
+     *         'logger' => true,
+     *         'rateLimit'=>200
      *     ],
      *     'translate' => false
      * ]);
@@ -81,17 +82,18 @@ class App
         $this->security = new Security(array_merge([
             'logger' => true,
             'sanitize' => true,
-            'cors' => true
+            'cors' => true,
+            'rateLimit' => 200
         ], $options['security'] ?? []));
         Session::start();
         if (Session::has(key: 'lang') == false) {
             $newLang = Config::$LANG;
             Session::set(key: 'lang', value: $newLang);
         }
-        if ($options['translate'])
+        if (isset($options['translate']) && $options['translate']) {
             Translate::load();
+        }
     }
-
     /**
      * Get environment variable value
      * 
@@ -402,19 +404,19 @@ class App
             if (!empty($reflection->getAttributes(CSRF::class))) {
                 $csrf = true;
             }
- 
+
             $cacheAttr = $reflection->getAttributes(Cache::class);
             if (!empty($cacheAttr)) {
                 $seconds = $cacheAttr[0]->newInstance()->seconds;
                 $middlewares[] = Response::cacheResponse($seconds);
             }
- 
+
             $validateAttr = $reflection->getAttributes(Validate::class);
             if (!empty($validateAttr)) {
                 $instance = $validateAttr[0]->newInstance();
                 $middlewares[] = $this->createValidationMiddleware($instance->modelClass, $instance->langParam);
             }
- 
+
             foreach ($reflection->getAttributes(Middleware::class) as $attr) {
                 $middlewares[] = $attr->newInstance()->callback;
             }
@@ -436,7 +438,7 @@ class App
      */
     protected function createValidationMiddleware(string $modelClass, string|bool $langParam = false): callable
     {
-        return function(array $req, Response $res) use ($modelClass, $langParam) {
+        return function (array $req, Response $res) use ($modelClass, $langParam) {
             $lang = $langParam === false ? (Session::get('lang') ?? $this->getLangDefault()) : $langParam;
             new $modelClass(data: $req, lang: $lang, jsonResponse: true);
         };
@@ -525,7 +527,7 @@ class App
         if (isset($_GET['set-lang'])) {
             $newLang = $_GET["lang"] ?? $this->getLangDefault();
             $this->setSession(key: "lang", value: $newLang);
-            
+
             if (isset($_GET['redirect']) && $_GET['redirect'] === 'false') {
                 $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
                 exit;
