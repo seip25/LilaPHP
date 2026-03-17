@@ -53,7 +53,7 @@ class App
      * security middleware, session management, and translations.
      * 
      * @param array $options Configuration options
-     *   - 'security' => array Security configuration (cors, sanitize, logger)
+     *   - 'security' => array Security configuration (cors, sanitize, logger, csp)
      *   - 'translate' => bool Enable/disable translation system (default: true)
      * 
      * @example
@@ -67,7 +67,43 @@ class App
      *         'cors' => false,
      *         'sanitize' => true,
      *         'logger' => true,
-     *         'rateLimit'=>200
+     *         'rateLimit' => 200,
+     *            'csp' => [
+                'enabled' => true,
+                'directives' => [
+                    'default-src' => ["'self'"],
+                    'script-src'  => [
+                        "'self'",
+                        "'unsafe-inline'",
+                        "'unsafe-eval'",
+                        "http://localhost:5173",
+                        "https://challenges.cloudflare.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://stackpath.bootstrapcdn.com",
+                        "https://cdn.tailwindcss.com",
+                        "https://ajax.googleapis.com"
+                    ],
+                    'style-src'   => [
+                        "'self'",
+                        "'unsafe-inline'",
+                        "http://localhost:5173",
+                        "https://fonts.googleapis.com",
+                        "https://cdn.tailwindcss.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://stackpath.bootstrapcdn.com",
+                        "https://cdnjs.cloudflare.com"
+                    ],
+                    'font-src'    => [
+                        "'self'",
+                        "https://fonts.gstatic.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://cdnjs.cloudflare.com"
+                    ],
+                    'img-src'     => ["'self'", "data:", "https:"],
+                    'frame-src'   => ["'self'", "https://challenges.cloudflare.com"],
+                    'connect-src' => ["'self'", "https://*"]
+                ]
+            ]
      *     ],
      *     'translate' => false
      * ]);
@@ -79,12 +115,7 @@ class App
         Config::load();
         $this->registerErrorHandler();
         $this->registerExceptionHandler();
-        $this->security = new Security(array_merge([
-            'logger' => true,
-            'sanitize' => true,
-            'cors' => true,
-            'rateLimit' => 200
-        ], $options['security'] ?? []));
+        $this->security = new Security(  $options['security'] ?? []);
         Session::start();
         if (Session::has(key: 'lang') == false) {
             $newLang = Config::$LANG;

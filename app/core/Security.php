@@ -19,7 +19,43 @@ class Security
                 'headers' => ['Content-Type', 'Authorization', 'X-CSRF-Token'],
                 'credentials' => false
             ],
-            'payloadCheck' => true
+            'payloadCheck' => true,
+            'csp' => [
+                'enabled' => true,
+                'directives' => [
+                    'default-src' => ["'self'"],
+                    'script-src'  => [
+                        "'self'",
+                        "'unsafe-inline'",
+                        "'unsafe-eval'",
+                        "http://localhost:5173",
+                        "https://challenges.cloudflare.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://stackpath.bootstrapcdn.com",
+                        "https://cdn.tailwindcss.com",
+                        "https://ajax.googleapis.com"
+                    ],
+                    'style-src'   => [
+                        "'self'",
+                        "'unsafe-inline'",
+                        "http://localhost:5173",
+                        "https://fonts.googleapis.com",
+                        "https://cdn.tailwindcss.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://stackpath.bootstrapcdn.com",
+                        "https://cdnjs.cloudflare.com"
+                    ],
+                    'font-src'    => [
+                        "'self'",
+                        "https://fonts.gstatic.com",
+                        "https://cdn.jsdelivr.net",
+                        "https://cdnjs.cloudflare.com"
+                    ],
+                    'img-src'     => ["'self'", "data:", "https:"],
+                    'frame-src'   => ["'self'", "https://challenges.cloudflare.com"],
+                    'connect-src' => ["'self'", "https://*"]
+                ]
+            ]
         ], $options);
     }
     public function runBeforeMiddlewares(array &$req): bool
@@ -28,6 +64,8 @@ class Security
             return false;
         if ($this->options['cors'])
             $this->corsHeaders();
+        if ($this->options['csp'])
+            $this->cspHeaders();
 
         if (isset($this->options['rateLimit']) && $this->options['rateLimit'] !== false) {
             if (!$this->rateLimitMiddleware()) {
@@ -75,9 +113,11 @@ class Security
 
     protected function sanitizeRequest(array &$req): void
     {
-        array_walk_recursive($req, function (&$value) {
-            $value = trim($value);
-            $value = strip_tags($value);
+        array_walk_recursive($req, function (&$value, $key) {
+            if (is_string($value)) {
+                $value = trim($value);
+                $value = str_replace(chr(0), '', $value);
+            }
         });
     }
 
@@ -109,6 +149,22 @@ class Security
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(200);
             exit;
+        }
+    }
+
+    protected function cspHeaders(): void
+    {
+        $csp = $this->options['csp'];
+        if (empty($csp['enabled']))
+            return;
+
+        $directives = $csp['directives'] ?? [];
+        $policy = '';
+        foreach ($directives as $directive => $sources) {
+            $policy .= $directive . ' ' . implode(' ', $sources) . '; ';
+        }
+        if (!empty($policy)) {
+            header("Content-Security-Policy: " . rtrim($policy));
         }
     }
 
@@ -196,10 +252,10 @@ class Security
                 || strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false
                 || strpos($_SERVER['HTTP_ACCEPT'], 'text/plain') !== false);
             if ($isContentTypeJsonOrFetchOrAjax) {
-                Response::JSON(data:[
+                Response::JSON(data: [
                     'error' => 'Too Many Requests',
                     'message' => 'Rate limit exceeded. Try again in ' . $reset . ' seconds.'
-                ],status: 429);
+                ], status: 429);
             } else {
                 $html = <<<HTML
     <div class="main-header ">
@@ -207,7 +263,7 @@ class Security
     </div>
 
 HTML;
-                Response::HTML(html :$html,status: 429);
+                Response::HTML(html: $html, status: 429);
             }
             return false;
         }
