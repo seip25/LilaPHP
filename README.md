@@ -197,6 +197,20 @@ export default function ReactIsland({ csrf, translations }) {
 
 ```
 
+### 🔄 Re-rendering React Islands
+
+You can trigger a re-render of your React islands from standard JavaScript (e.g., from Twig templates, jQuery, or other non-React code) using the global function:
+
+```javascript
+// Re-render all React components on the page
+window.renderReactComponent();
+
+// Re-render only components named 'CartBadge'
+window.renderReactComponent('CartBadge');
+```
+
+This is incredibly useful for updating separate component roots when reading shared client endpoints (such as `localStorage`) from external areas.
+
 ### Validation with PHP 8 Attributes
 
 ```php
@@ -314,7 +328,6 @@ $app->post(
 
 LilaPHP extends Twig with powerful built-in helpers:
 
-- **`asset(file)`** — Returns versioned and minified URLs for CSS/JS
 - **`image(file, width, height, quality, type)`** — Generates optimized WebP or ICO images
 - **`url(path)`** — Returns the full absolute project URL
 - **`csrf_input()`** — Outputs the hidden CSRF token field
@@ -324,7 +337,6 @@ LilaPHP extends Twig with powerful built-in helpers:
 
 ```twig
 <link rel="icon" href="{{ image('img/lila.png', 40, 0, 70, 'ico') }}" />
-<link rel="stylesheet" href="{{ asset('css/lila.css') }}" />
 <img src="{{ image('img/lila.png', 200) }}" width="200" alt="LilaPHP" />
 ```
 
