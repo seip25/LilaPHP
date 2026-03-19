@@ -69,41 +69,41 @@ class App
      *         'logger' => true,
      *         'rateLimit' => 200,
      *            'csp' => [
-                'enabled' => true,
-                'directives' => [
-                    'default-src' => ["'self'"],
-                    'script-src'  => [
-                        "'self'",
-                        "'unsafe-inline'",
-                        "'unsafe-eval'",
-                        "http://localhost:5173",
-                        "https://challenges.cloudflare.com",
-                        "https://cdn.jsdelivr.net",
-                        "https://stackpath.bootstrapcdn.com",
-                        "https://cdn.tailwindcss.com",
-                        "https://ajax.googleapis.com"
-                    ],
-                    'style-src'   => [
-                        "'self'",
-                        "'unsafe-inline'",
-                        "http://localhost:5173",
-                        "https://fonts.googleapis.com",
-                        "https://cdn.tailwindcss.com",
-                        "https://cdn.jsdelivr.net",
-                        "https://stackpath.bootstrapcdn.com",
-                        "https://cdnjs.cloudflare.com"
-                    ],
-                    'font-src'    => [
-                        "'self'",
-                        "https://fonts.gstatic.com",
-                        "https://cdn.jsdelivr.net",
-                        "https://cdnjs.cloudflare.com"
-                    ],
-                    'img-src'     => ["'self'", "data:", "https:"],
-                    'frame-src'   => ["'self'", "https://challenges.cloudflare.com"],
-                    'connect-src' => ["'self'", "https://*"]
-                ]
-            ]
+     *               'enabled' => true,
+     *               'directives' => [
+     *                   'default-src' => ["'self'"],
+     *                   'script-src'  => [
+     *                       "'self'",
+     *                       "'unsafe-inline'",
+     *                       "'unsafe-eval'",
+     *                       "http://localhost:5173",
+     *                       "https://challenges.cloudflare.com",
+     *                       "https://cdn.jsdelivr.net",
+     *                       "https://stackpath.bootstrapcdn.com",
+     *                       "https://cdn.tailwindcss.com",
+     *                       "https://ajax.googleapis.com"
+     *               ],
+     *               'style-src'   => [
+     *                   "'self'",
+     *                   "'unsafe-inline'",
+     *                   "http://localhost:5173",
+     *                   "https://fonts.googleapis.com",
+     *                   "https://cdn.tailwindcss.com",
+     *                   "https://cdn.jsdelivr.net",
+     *                   "https://stackpath.bootstrapcdn.com",
+     *                   "https://cdnjs.cloudflare.com"
+     *               ],
+     *               'font-src'    => [
+     *                   "'self'",
+     *                   "https://fonts.gstatic.com",
+     *                   "https://cdn.jsdelivr.net",
+     *                   "https://cdnjs.cloudflare.com"
+     *               ],
+     *               'img-src'     => ["'self'", "data:", "https:"],
+     *               'frame-src'   => ["'self'", "https://challenges.cloudflare.com"],
+     *               'connect-src' => ["'self'", "https://*"]
+     *           ]
+     *       ]
      *     ],
      *     'translate' => false
      * ]);
