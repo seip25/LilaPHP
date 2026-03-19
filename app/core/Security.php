@@ -246,7 +246,6 @@ class Security
 
         if ($rateData['count'] > $limit) {
             header("Retry-After: $reset");
-            //if response content type json or is fetch or ajax 
             $isContentTypeJsonOrFetchOrAjax = isset($_SERVER['CONTENT_TYPE']) && (strtolower($_SERVER['CONTENT_TYPE']) === 'application/json'
                 || strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
                 || strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false
