@@ -29,50 +29,6 @@ class Template
 
     private static function registerFunctions(): void
     {
-        self::$twig->addFunction(new TwigFunction('asset', function (string $file): string {
-            $urlBase = rtrim(Config::$URL_PROJECT, '/') . '/assets/';
-            $publicDir = realpath(Config::$DIR_PROJECT . '/../assets/') . '/';
-            $fullPath = $publicDir . ltrim($file, '/');
-
-            if (!file_exists($fullPath)) {
-                error_log("[Asset] File not found: $fullPath");
-                return $urlBase . ltrim($file, '/');
-            }
-
-            if (Config::$DEBUG) {
-                return $urlBase . ltrim($file, '/');
-            }
-
-            $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-            if (!in_array($ext, ['css', 'js'])) {
-                return $urlBase . ltrim($file, '/');
-            }
-
-            $cacheDir = $publicDir . 'cache/';
-            if (!is_dir($cacheDir)) {
-                mkdir($cacheDir, 0775, true);
-            }
-
-            $minFile = $cacheDir . md5($file . filemtime($fullPath)) . ".min.$ext";
-            $minUrl = $urlBase . 'cache/' . basename($minFile);
-
-            if (file_exists($minFile)) {
-                return $minUrl;
-            }
-
-            $content = file_get_contents($fullPath);
-
-            if ($ext === 'css') {
-                $minified = preg_replace(['!/\*.*?\*/!s', '/\n\s*/', '/\s{2,}/', '/ ?([,:;{}]) ?/'], ['', '', ' ', '$1'], $content);
-            } else {
-                $minified = preg_replace(['!//.*!', '!/\*.*?\*/!s', '/\s{2,}/', '/\n+/'], ['', '', ' ', ''], $content);
-            }
-
-            file_put_contents($minFile, trim($minified));
-
-            return $minUrl;
-        }));
-
         self::$twig->addFunction(new TwigFunction('url', function (string $path = ''): string {
             return rtrim(Config::$URL_PROJECT, '/') . '/' . ltrim($path, '/');
         }));

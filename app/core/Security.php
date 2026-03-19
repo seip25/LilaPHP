@@ -53,7 +53,7 @@ class Security
                     ],
                     'img-src'     => ["'self'", "data:", "https:"],
                     'frame-src'   => ["'self'", "https://challenges.cloudflare.com"],
-                    'connect-src' => ["'self'", "https://*"]
+                    'connect-src' => ["'self'", "https://*", "ws://localhost:5173"]
                 ]
             ]
         ], $options);
@@ -124,7 +124,7 @@ class Security
     protected function payloadCheck(array $req): bool
     {
         $payload = json_encode($req);
-        if (preg_match('/<script|onerror=|onload=|javascript:/i', $payload)) {
+        if (preg_match('/<script\b[^>]*>|\bonerror\s*=\s*|\bonload\s*=\s*|javascript:/i', $payload)) {
             Response::JSON(['error' => 'Invalid payload'], 400);
             return false;
         }

@@ -530,7 +530,7 @@ class App
 
             if ($method === 'GET' && isset($_GET['debug'])   && Config::$DEBUG) {
                 if (isset($_GET['clear'])) Debug::clear();
-                elseif (isset($_GET['fetch'])) echo json_encode(Debug::getRequests());
+                elseif (isset($_GET['fetch'])) $this->jsonResponse(data: Debug::getRequests());
                 else $this->render('lila/debug', ['requests' => Debug::getRequests()]);
                 exit;
             }
@@ -662,7 +662,6 @@ class App
     public function jsonResponse(array $data, int $code = 200): void
     {
         Response::JSON($data, $code);
-        exit;
     }
 
     /**
@@ -729,6 +728,10 @@ class App
     protected function registerExceptionHandler(): void
     {
         set_exception_handler(function (Throwable $exc) {
+            if ($exc instanceof ValidationException) {
+                $exc->render();
+                exit;
+            }
 
             $error   = $exc->getMessage();
             $file    = $exc->getFile();

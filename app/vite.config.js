@@ -50,14 +50,14 @@ export default defineConfig({
     react(),
     generatePhpManifest()
   ],
-  root: path.resolve(__dirname, 'resources/js'),
+  root: path.resolve(__dirname, 'resources'),
   base: './',
   build: {
     outDir: path.resolve(__dirname, '../assets/build'),
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {
-      input: path.resolve(__dirname, 'resources/js/main.jsx'),
+      input: path.resolve(__dirname, 'resources/main.jsx'),
     },
   },
 });
