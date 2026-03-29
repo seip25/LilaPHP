@@ -9,7 +9,7 @@ class Security
     public function __construct(array $options = [])
     {
         $this->options = array_merge([
-            'logger' => true,
+            'logger' => false,
             'rateLimit' => 200,
             'sanitize' => true,
             'cors' => [
@@ -24,7 +24,7 @@ class Security
                 'enabled' => true,
                 'directives' => [
                     'default-src' => ["'self'"],
-                    'script-src'  => [
+                    'script-src' => [
                         "'self'",
                         "'unsafe-inline'",
                         "'unsafe-eval'",
@@ -35,7 +35,7 @@ class Security
                         "https://cdn.tailwindcss.com",
                         "https://ajax.googleapis.com"
                     ],
-                    'style-src'   => [
+                    'style-src' => [
                         "'self'",
                         "'unsafe-inline'",
                         "http://localhost:5173",
@@ -45,20 +45,20 @@ class Security
                         "https://stackpath.bootstrapcdn.com",
                         "https://cdnjs.cloudflare.com"
                     ],
-                    'font-src'    => [
+                    'font-src' => [
                         "'self'",
                         "https://fonts.gstatic.com",
                         "https://cdn.jsdelivr.net",
                         "https://cdnjs.cloudflare.com"
                     ],
-                    'img-src'     => ["'self'", "data:", "https:"],
-                    'frame-src'   => ["'self'", "https://challenges.cloudflare.com"],
+                    'img-src' => ["'self'", "data:", "https:"],
+                    'frame-src' => ["'self'", "https://challenges.cloudflare.com"],
                     'connect-src' => ["'self'", "https://*", "ws://localhost:5173"]
                 ]
             ]
         ], $options);
     }
-    public function runBeforeMiddlewares(array &$req): bool
+    public function runBeforeMiddlewares(array &$req, string $method = "GET"): bool
     {
         if ($this->options['logger']) if (!$this->loggerMiddleware($req))
             return false;
@@ -73,11 +73,18 @@ class Security
             }
         }
 
-        if ($this->options['sanitize'])
-            $this->sanitizeRequest($req);
-        if ($this->options['payloadCheck']) if (!$this->payloadCheck($req))
-            return false;
+        $isMutation = in_array(strtoupper($method), ['POST', 'PUT', 'DELETE']);
 
+        if ($isMutation) {
+            if ($this->options['sanitize']) {
+                $this->sanitizeRequest($req);
+            }
+
+            if ($this->options['payloadCheck']) {
+                if (!$this->payloadCheck($req))
+                    return false;
+            }
+        }
         header("X-Powered-By: Lila Framework");
         return true;
     }
@@ -123,14 +130,22 @@ class Security
 
     protected function payloadCheck(array $req): bool
     {
-        $payload = json_encode($req);
-        if (preg_match('/<script\b[^>]*>|\bonerror\s*=\s*|\bonload\s*=\s*|javascript:/i', $payload)) {
-            Response::JSON(['error' => 'Invalid payload'], 400);
+        $found = false;
+        array_walk_recursive($req, function ($value) use (&$found) {
+            if ($found || !is_string($value))
+                return;
+
+            if (preg_match('/<script\b[^>]*>|\bonerror\s*=\s*|\bonload\s*=\s*|javascript:/i', $value)) {
+                $found = true;
+            }
+        });
+
+        if ($found) {
+            Response::JSON(['error' => 'Invalid payload detected'], 400);
             return false;
         }
         return true;
     }
-
     protected function corsHeaders(): void
     {
         $cors = $this->options['cors'];
@@ -217,7 +232,7 @@ class Security
         }
 
         $limit = $this->options['rateLimit'] ?? 200;
-        $limit = ($limit === true || $limit === 1) ? 200 : (int)$limit;
+        $limit = ($limit === true || $limit === 1) ? 200 : (int) $limit;
 
         if (session_status() !== PHP_SESSION_ACTIVE) {
             Session::start();

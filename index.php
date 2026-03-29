@@ -1,11 +1,22 @@
 <?php
 
-/** @var \Core\App $app */
-
 include_once "./app/index.php";
+use Core\App;
+use Core\GET;
 
+$app = new App([
+    "security" => [
+        "logger" => false,
+        "cors" => true,
+        "rateLimit" => 200,
+    ],
+    "translate" => true
+]);
 
-$app->get(callback: function ($req, $res) use ($app): mixed {
+#[GET]
+function get($req, $res)
+{
+    global $app;
     //Example connect database
     //Execute command in terminal: php app/cli.php migrate:create 
     //Uncomment to test database connection
@@ -56,7 +67,9 @@ $app->get(callback: function ($req, $res) use ($app): mixed {
     }
     //app/tempaltes/index.twig
     return $app->render("index");
-});
+}
+;
 
+$app->add(callback: 'get');
 
 $app->run();

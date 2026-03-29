@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.1.7
+ * @version 1.2.0
  */
 class App
 {
@@ -115,12 +115,13 @@ class App
         Config::load();
         $this->registerErrorHandler();
         $this->registerExceptionHandler();
-        $this->security = new Security(  $options['security'] ?? []);
         Session::start();
         if (Session::has(key: 'lang') == false) {
             $newLang = Config::$LANG;
             Session::set(key: 'lang', value: $newLang);
         }
+        $this->security = new Security($options['security'] ?? []);
+
         if (isset($options['translate']) && $options['translate']) {
             Translate::load();
         }
@@ -406,7 +407,8 @@ class App
     public function add(mixed $callback, array $middlewares = []): void
     {
         $reflection = $this->getReflection($callback);
-        if (!$reflection) return;
+        if (!$reflection)
+            return;
 
         $methods = ['GET', 'POST', 'PUT', 'DELETE'];
         foreach ($methods as $method) {
@@ -523,15 +525,20 @@ class App
             Debug::init();
             Debug::start();
             $this->addMiddlewares([
-                'before' => [function () {
-                    Debug::end(http_response_code() ?: 200);
-                }]
+                'before' => [
+                    function () {
+                        Debug::end(http_response_code() ?: 200);
+                    }
+                ]
             ]);
 
-            if ($method === 'GET' && isset($_GET['debug'])   && Config::$DEBUG) {
-                if (isset($_GET['clear'])) Debug::clear();
-                elseif (isset($_GET['fetch'])) $this->jsonResponse(data: Debug::getRequests());
-                else $this->render('lila/debug', ['requests' => Debug::getRequests()]);
+            if ($method === 'GET' && isset($_GET['debug']) && Config::$DEBUG) {
+                if (isset($_GET['clear']))
+                    Debug::clear();
+                elseif (isset($_GET['fetch']))
+                    $this->jsonResponse(data: Debug::getRequests());
+                else
+                    $this->render('lila/debug', ['requests' => Debug::getRequests()]);
                 exit;
             }
         }
@@ -539,7 +546,8 @@ class App
         $route = $this->routes[$method] ?? null;
 
         if (!is_array($route) || !is_callable($route['callback'])) {
-            if (Config::$DEBUG) Debug::end(http_response_code() ?: 404);
+            if (Config::$DEBUG)
+                Debug::end(http_response_code() ?: 404);
             http_response_code(404);
             exit("404 Not Found");
         }
@@ -571,13 +579,15 @@ class App
         }
 
         $res = new Response();
-        if (!$this->security->runBeforeMiddlewares($req)) {
-            if (Config::$DEBUG) Debug::end(http_response_code() ?: 403);
+        if (!$this->security->runBeforeMiddlewares($req, $method)) {
+            if (Config::$DEBUG)
+                Debug::end(http_response_code() ?: 403);
             exit;
         }
 
         foreach ($this->middlewares['before'] as $fn) {
-            if (is_callable($fn)) $fn($req, $res);
+            if (is_callable($fn))
+                $fn($req, $res);
         }
 
         foreach ($route['middlewares'] as $fn) {
@@ -614,7 +624,7 @@ class App
     public function render(string $template, array $context = [], ?string $path = null): void
     {
         try {
-            $html = Template::render(template: $template, context: $context, path: $path,);
+            $html = Template::render(template: $template, context: $context, path: $path, );
             echo $html;
         } catch (Throwable $e) {
             $this->handleRenderException($e);
@@ -733,12 +743,12 @@ class App
                 exit;
             }
 
-            $error   = $exc->getMessage();
-            $file    = $exc->getFile();
-            $line    = $exc->getLine();
-            $trace   = $exc->getTraceAsString();
-            $code    = $exc->getCode();
-            $time    = date('Y-m-d H:i:s');
+            $error = $exc->getMessage();
+            $file = $exc->getFile();
+            $line = $exc->getLine();
+            $trace = $exc->getTraceAsString();
+            $code = $exc->getCode();
+            $time = date('Y-m-d H:i:s');
             $fileName = pathinfo($file, PATHINFO_BASENAME);
 
             $errorDetails = "{$file}({$line})\nError: {$error}\n\n{$trace}\n";

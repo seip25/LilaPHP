@@ -23,7 +23,7 @@ project-root/
 ├── AGENTS.md
 ├── index.php              ← Main endpoint (includes app/index.php)
 ├── login/index.php        ← Login endpoint
-├── register/index.php     ← Register endpoint 
+├── register/index.php     ← Register endpoint
 ├── dashboard/index.php    ← Dashboard endpoint
 ├── api/
 │   └── */index.php        ← API endpoints
@@ -75,6 +75,21 @@ project-root/
 ### Closure-based (inline)
 
 ```php
+include_once "./app/index.php";
+use Core\App;
+$app=new App();
+/*
+Example with logger and cors
+$app = new App([
+    'security' => [
+        'cors' => false,
+        'sanitize' => true,
+        'logger' => true,
+        'rateLimit' => 200
+    ],
+    'translate' => false
+]);
+*/
 $app->get(callback: function($req, $res) use ($app) {
     return $app->render("home", ['title' => 'Welcome']);
 });
@@ -108,13 +123,13 @@ $app->add('handleSubmit');
 
 ### Available Attributes
 
-| Attribute | Purpose |
-|-----------|---------|
-| `#[GET]`, `#[POST]`, `#[PUT]`, `#[DELETE]` | HTTP method binding |
-| `#[CSRF]` | Enable CSRF token validation |
-| `#[Cache(seconds: 60)]` | Response caching middleware |
-| `#[Validate(ModelClass::class)]` | Auto-validate request against model |
-| `#[Middleware(callable)]` | Attach middleware to route |
+| Attribute                                  | Purpose                             |
+| ------------------------------------------ | ----------------------------------- |
+| `#[GET]`, `#[POST]`, `#[PUT]`, `#[DELETE]` | HTTP method binding                 |
+| `#[CSRF]`                                  | Enable CSRF token validation        |
+| `#[Cache(seconds: 60)]`                    | Response caching middleware         |
+| `#[Validate(ModelClass::class)]`           | Auto-validate request against model |
+| `#[Middleware(callable)]`                  | Attach middleware to route          |
 
 ---
 
@@ -133,6 +148,7 @@ All security runs **before** middlewares via `Security::runBeforeMiddlewares()`:
 ### CSP + Vite
 
 When Vite dev server runs on `localhost:5173`, ensure CSP directives include:
+
 - `script-src`: `http://localhost:5173`
 - `style-src`: `http://localhost:5173`
 - `connect-src`: `ws://localhost:5173`
@@ -144,6 +160,7 @@ When Vite dev server runs on `localhost:5173`, ensure CSP directives include:
 Models extend `Core\BaseModel` and use two attribute systems:
 
 ### `#[Field(...)]` — Request Validation
+
 Triggered automatically when instantiating: `new ModelClass(data: $req, lang: 'esp')`
 Throws `ValidationException` on failure.
 
@@ -158,6 +175,7 @@ public string $password;
 **Supported formats**: `email`, `url`, `ip`, `uuid`, `number`, `integer`, `float`, `boolean`, `date`, `datetime`, `alpha`, `alphanumeric`, `numeric`, `phone`, `credit_card`, `domain`, `mac_address`, `json`, `base64`, `regex`
 
 ### `#[FieldDatabase(...)]` — Database Schema
+
 Used by CLI migrations to auto-create tables.
 
 ```php
@@ -179,14 +197,14 @@ protected string $created_at;
 
 ### Twig Helpers
 
-| Helper | Usage |
-|--------|-------|
-| `{{ url('path') }}` | Generates full URL from `URL_PROJECT` |
-| `{{ csrf_input() }}` | Hidden CSRF input field |
-| `{{ image('path', width, height) }}` | Optimized WebP image URL |
-| `{{ translate('key') }}` or `{{ __('key') }}` | Translation lookup |
-| `{{ react('ComponentName', {props}) }}` | Mount React island component |
-| `{{ vite_assets() }}` | Inject Vite dev/prod scripts |
+| Helper                                        | Usage                                 |
+| --------------------------------------------- | ------------------------------------- |
+| `{{ url('path') }}`                           | Generates full URL from `URL_PROJECT` |
+| `{{ csrf_input() }}`                          | Hidden CSRF input field               |
+| `{{ image('path', width, height) }}`          | Optimized WebP image URL              |
+| `{{ translate('key') }}` or `{{ __('key') }}` | Translation lookup                    |
+| `{{ react('ComponentName', {props}) }}`       | Mount React island component          |
+| `{{ vite_assets() }}`                         | Inject Vite dev/prod scripts          |
 
 ### React Islands Architecture
 
@@ -212,6 +230,7 @@ $app->renderReact('PageComponent', $props, [
 ## 🗄️ Database & CLI
 
 ### Database Connection
+
 ```php
 $db = $app->getDatabaseConnection(); // Uses .env config
 // Returns PDO instance with retry logic (up to 5 attempts)

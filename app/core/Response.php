@@ -101,21 +101,20 @@ class Response
      */
     public static function cacheResponse(int $seconds = 60): callable
     {
-        return function(array $req, $res) use ($seconds) {
-            $cacheKey = md5($_SERVER['REQUEST_URI'] . json_encode($req));
-            $cacheDir = dirname(__DIR__) . '/cache/responses';
-            $cacheFile = $cacheDir . '/' . $cacheKey . '.cache';
+        return function (array $req, $res) use ($seconds) {
 
-            if (!is_dir($cacheDir)) {
-                mkdir($cacheDir, 0755, true);
-            }
+            $cacheKey = md5($_SERVER['REQUEST_URI'] . json_encode($req));
+            $cacheDir = Config::$DIR_PROJECT . '/cache/responses';
+            $cacheFile = $cacheDir . '/' . $cacheKey . '.cache';
 
             if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $seconds)) {
                 $cached = @unserialize(file_get_contents($cacheFile));
                 if ($cached) {
                     http_response_code($cached['status'] ?? 200);
                     foreach ($cached['headers'] ?? [] as $header) {
-                        header($header);
+                        if (stripos($header, 'Content-Encoding') === false) {
+                            header($header);
+                        }
                     }
                     echo $cached['body'] ?? '';
                     exit;
@@ -124,11 +123,17 @@ class Response
 
             ob_start();
 
-            register_shutdown_function(function() use ($cacheFile) {
+            register_shutdown_function(function () use ($cacheFile, $seconds) {
                 $status = http_response_code();
+
                 if ($status >= 200 && $status < 300) {
-                    $body = ob_get_flush(); 
+                    $body = ob_get_contents();
                     $headers = headers_list();
+
+                    if (!is_dir(dirname($cacheFile))) {
+                        mkdir(dirname($cacheFile), 0755, true);
+                    }
+
                     file_put_contents($cacheFile, serialize([
                         'body' => $body,
                         'headers' => $headers,

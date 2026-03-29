@@ -1,6 +1,5 @@
 <?php
 
-/** @var \Core\App $app */
 include_once "../app/index.php";
 
 use Core\BaseModel;
@@ -9,7 +8,10 @@ use Core\CSRF;
 use Core\GET;
 use Core\POST;
 use Core\Validate;
+use Core\App;
 
+
+$app = new App();
 
 class LoginModel extends BaseModel
 {
