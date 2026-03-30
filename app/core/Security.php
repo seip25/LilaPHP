@@ -33,7 +33,9 @@ class Security
                         "https://cdn.jsdelivr.net",
                         "https://stackpath.bootstrapcdn.com",
                         "https://cdn.tailwindcss.com",
-                        "https://ajax.googleapis.com"
+                        "https://ajax.googleapis.com",
+                        "https://static.cloudflareinsights.com",
+                        "https://cdnjs.cloudflare.com"
                     ],
                     'style-src' => [
                         "'self'",
@@ -53,7 +55,7 @@ class Security
                     ],
                     'img-src' => ["'self'", "data:", "https:"],
                     'frame-src' => ["'self'", "https://challenges.cloudflare.com"],
-                    'connect-src' => ["'self'", "https://*", "ws://localhost:5173"]
+                    'connect-src' => ["'self'", "https://*", "ws://localhost:5173","https://cloudflareinsights.com"]
                 ]
             ]
         ], $options);
