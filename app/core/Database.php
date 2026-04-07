@@ -413,18 +413,23 @@ class Database
         };
     }
 
+    /**
+     * @param array|string $column
+     * @param string|array $typeToChanged
+     * @param string $typeToReplace
+     * @return string
+     */
     private function replaceColumn(array|string $column, string|array $typeToChanged = "VARCHAR", string $typeToReplace = "TEXT"): string
     {
         if (is_array($typeToChanged)) {
             foreach ($typeToChanged as $type) {
-                if (strpos($column, $type)) {
+                if (stripos($column, $type) !== false) {
                     $column = str_ireplace($type, $typeToReplace, $column);
                 }
             }
-        } elseif (strpos($column, $typeToChanged)) {
+        } elseif (stripos($column, $typeToChanged) !== false) {
             $column = str_ireplace($typeToChanged, $typeToReplace, $column);
         }
-        $column = str_replace("TEXT", "TEXT", $column);
-        return $column;
+        return (string) $column;
     }
 }

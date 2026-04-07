@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.2.0
+ * @version 1.2.1
  */
 class App
 {
@@ -125,7 +125,7 @@ class App
         if (isset($options['translate']) && $options['translate']) {
             Translate::load();
         }
-    }
+    } 
     /**
      * Get environment variable value
      * 
@@ -135,6 +135,21 @@ class App
     public function getEnv(string $key): string|null
     {
         return Config::Env(key: $key);
+    }
+    /**
+     * Return if application is in debug mode
+     * 
+     */
+    public function debug(): bool
+    {
+        return Config::$DEBUG ?? false;
+    }
+    /**
+     * Return url project configurated in app/.env
+     */
+    public function urlProject(): string
+    {
+        return Config::$URL_PROJECT ?? "";
     }
     /**
      * Get database connection using PDO
@@ -594,11 +609,14 @@ class App
             if (is_callable($fn))
                 $fn($req, $res);
         }
+        $isValidRequest = true;
         if (in_array(needle: strtolower(string: $method), haystack: ['post', 'put', 'delete']) && (isset($route['csrf']) && $route['csrf'])) {
-            Security::validateCsrfToken(request: $req);
+            $isValidRequest = Security::validateCsrfToken(request: $req);
         }
 
-        $route['callback']($req, $res);
+        if ($isValidRequest) {
+            $route['callback']($req, $res);
+        }
 
         foreach ($this->middlewares['after'] as $fn) {
             if (is_callable($fn))

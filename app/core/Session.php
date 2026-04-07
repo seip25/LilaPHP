@@ -30,6 +30,9 @@ class Session
         self::validate();
     }
 
+    /**
+     * @return void
+     */
     protected static function validate(): void
     {
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
@@ -38,16 +41,10 @@ class Session
         }
         $_SESSION['last_activity'] = time();
 
-        if (!isset($_SESSION['user_ip']) && !isset($_SESSION['user_agent'])) {
-            $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'] ?? '';
+        if (!isset($_SESSION['user_agent'])) {
             $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        } else {
-            if (
-                $_SESSION['user_ip'] !== ($_SERVER['REMOTE_ADDR'] ?? '') ||
-                $_SESSION['user_agent'] !== ($_SERVER['HTTP_USER_AGENT'] ?? '')
-            ) {
-                self::destroy();
-            }
+        } elseif ($_SESSION['user_agent'] !== ($_SERVER['HTTP_USER_AGENT'] ?? '')) {
+            self::destroy();
         }
     }
 

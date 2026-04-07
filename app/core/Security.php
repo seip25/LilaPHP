@@ -8,7 +8,7 @@ class Security
 
     public function __construct(array $options = [])
     {
-        $this->options = array_merge([
+        $this->options = array_replace_recursive([
             'logger' => false,
             'rateLimit' => 200,
             'sanitize' => true,
@@ -55,15 +55,16 @@ class Security
                     ],
                     'img-src' => ["'self'", "data:", "https:"],
                     'frame-src' => ["'self'", "https://challenges.cloudflare.com"],
-                    'connect-src' => ["'self'", "https://*", "ws://localhost:5173","https://cloudflareinsights.com"]
+                    'connect-src' => ["'self'", "https://*", "ws://localhost:5173", "https://cloudflareinsights.com"]
                 ]
             ]
         ], $options);
     }
     public function runBeforeMiddlewares(array &$req, string $method = "GET"): bool
     {
-        if ($this->options['logger']) if (!$this->loggerMiddleware($req))
-            return false;
+        if ($this->options['logger']) {
+            if (!$this->loggerMiddleware($req)) return false;
+        }
         if ($this->options['cors'])
             $this->corsHeaders();
         if ($this->options['csp'])
@@ -87,7 +88,7 @@ class Security
                     return false;
             }
         }
-        header("X-Powered-By: Lila Framework");
+        header("X-Powered-By: Lila PHP Framework");
         return true;
     }
 
@@ -103,16 +104,20 @@ class Security
         if (array_key_exists("_csrf", $req)) {
             $req['_csrf'] = "********";
         }
-        if (array_key_exists("email", $req)) {
+        if (array_key_exists("email", $req) && is_string($req['email']) && trim($req['email']) !== "") {
             $pos = strpos($req['email'], "@");
-            $pos = $pos > 3 ? $pos - 2 : $pos - 1;
-            $req['email'][0] = "*";
-            if (isset($req['email'][1]) && isset($req['email'][2]) && isset($req['email'][3])) {
-                $req['email'][1] = "*";
-                $req['email'][2] = "*";
-                $req['email'][3] = "*";
+            if ($pos !== false && $pos > 0) {
+                $maskPos = $pos > 3 ? $pos - 2 : $pos - 1;
+                $req['email'][0] = "*";
+                if (isset($req['email'][1]) && isset($req['email'][2]) && isset($req['email'][3])) {
+                    $req['email'][1] = "*";
+                    $req['email'][2] = "*";
+                    $req['email'][3] = "*";
+                }
+                $req['email'] = substr($req['email'], 0, $maskPos) . "********";
+            } else {
+                $req['email'] = "********";
             }
-            $req['email'] = substr($req['email'], 0, $pos) . "********";
         }
         Logger::info("{$method} {$uri} | IP={$ip} | Params=" . json_encode($req));
         return true;
@@ -198,10 +203,14 @@ class Security
         return $token;
     }
 
-    public static function validateCsrfToken(array $request): void
+    /**
+     * @param array $request
+     * @return bool
+     */
+    public static function validateCsrfToken(array $request): bool
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET')
-            return;
+            return true;
         if (session_status() === PHP_SESSION_ACTIVE)
             Session::start();
         $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($request['_csrf'] ?? '');
@@ -219,8 +228,9 @@ class Security
                 "message" => "<p class='text-red-500 mt-4 text-center'>Session error</p>",
             ];
             Response::JSON(data: $data, status: 403);
-            exit;
+            return false;
         }
+        return true;
     }
     /**
      * Rate Limiting Middleware using Sessions
