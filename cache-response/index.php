@@ -12,13 +12,12 @@ $app = new App();
 
 #[GET]
 #[Cache]
-function CacheResponse()
+function CacheResponse($req, $res)
 {
-    global $app;
 
     sleep(6);
 
-    return $app->jsonResponse([
+    return $res->jsonResponse([
         "message" => "Hi!",
         "time" => date("Y-m-d H:i:s")
     ]);

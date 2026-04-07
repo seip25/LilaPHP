@@ -615,7 +615,32 @@ class App
         }
 
         if ($isValidRequest) {
-            $route['callback']($req, $res);
+            $reflection = $this->getReflection($route['callback']);
+            if ($reflection) {
+                $args = [];
+                foreach ($reflection->getParameters() as $param) {
+                    $type = $param->getType();
+                    $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
+                    
+                    if ($typeName === 'array' || $param->getName() === 'req') {
+                        $args[] = $req;
+                    } elseif ($typeName === Response::class || $typeName === 'Response' || $param->getName() === 'res') {
+                        $args[] = $res;
+                    } elseif ($typeName && class_exists($typeName)) {
+                        $classRef = new \ReflectionClass($typeName);
+                        if ($classRef->isInstantiable() && (!$classRef->getConstructor() || $classRef->getConstructor()->getNumberOfRequiredParameters() === 0)) {
+                            $args[] = new $typeName();
+                        } else {
+                            $args[] = null;
+                        }
+                    } else {
+                        $args[] = null;
+                    }
+                }
+                $route['callback'](...$args);
+            } else {
+                $route['callback']($req, $res);
+            }
         }
 
         foreach ($this->middlewares['after'] as $fn) {
@@ -642,8 +667,7 @@ class App
     public function render(string $template, array $context = [], ?string $path = null): void
     {
         try {
-            $html = Template::render(template: $template, context: $context, path: $path, );
-            echo $html;
+            Template::render(template: $template, context: $context, path: $path);
         } catch (Throwable $e) {
             $this->handleRenderException($e);
         }

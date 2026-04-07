@@ -73,7 +73,7 @@ class Template
             }
             $html = '<!-- Vite Manifest not found --><script>console.log("Vite Manifest not found ")</script>';
 
-            $manifest  = require Config::$DIR_PROJECT . '/lila/build_manifest.php';
+            $manifest = require Config::$DIR_PROJECT . '/lila/build_manifest.php';
 
             $file = $manifest['main.jsx']['file'] ?? "main.jsx";
             $css = $manifest['main.jsx']['css'] ?? [];
@@ -92,7 +92,7 @@ class Template
         $stylesHtml = "";
         $scriptsHtml = "";
         $metaHtml = "";
-         $lang = is_null($lang) ? Config::$LANGHTML : $lang;
+        $lang = is_null($lang) ? Config::$LANGHTML : $lang;
         $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
         $propsJson = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
         foreach ($styles as $style) {
@@ -104,8 +104,8 @@ class Template
         foreach ($meta as $meta) {
             $metaHtml .= '<meta name="' . $meta['name'] . '" content="' . $meta['content'] . '" />';
         }
-            $titleHtml = $title ?? Config::$TITLE_PROJECT ;
-        
+        $titleHtml = $title ?? Config::$TITLE_PROJECT;
+
         $context = [
             "langHtml" => $lang,
             "titleHtml" => $titleHtml,
@@ -152,10 +152,10 @@ class Template
         } catch (\Throwable $exc) {
             $message = "General error";
             if (Config::$DEBUG) {
-                $message   = $exc->getMessage();
-                $file    = $exc->getFile();
-                $trace   = $exc->getTraceAsString();
-                $time    = date('Y-m-d H:i:s');
+                $message = $exc->getMessage();
+                $file = $exc->getFile();
+                $trace = $exc->getTraceAsString();
+                $time = date('Y-m-d H:i:s');
                 $content = <<<HTML
      <div class="main-header">
         <h1>An unexpected error occurred</h1>

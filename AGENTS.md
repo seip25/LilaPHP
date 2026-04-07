@@ -77,7 +77,9 @@ project-root/
 ```php
 include_once "./app/index.php";
 use Core\App;
-$app=new App();
+use Core\Response;
+
+$app = new App();
 /*
 Example with logger and cors
 $app = new App([
@@ -90,11 +92,11 @@ $app = new App([
     'translate' => false
 ]);
 */
-$app->get(callback: function($req, $res) use ($app) {
-    return $app->render("home", ['title' => 'Welcome']);
+$app->get(callback: function(array $req, Response $res) {
+    return $res->render("home", ['title' => 'Welcome']);
 });
 
-$app->post(callback: function($req, $res) use ($app) {
+$app->post(callback: function(array $req, Response $res) {
     return $app->jsonResponse(["success" => true]);
 }, csrf: true, middlewares: [fn($req, $res) => new LoginModel(data: $req)]);
 ```
@@ -102,21 +104,19 @@ $app->post(callback: function($req, $res) use ($app) {
 ### Attribute-based (named functions)
 
 ```php
-use Core\{GET, POST, CSRF, Validate, Cache};
+use Core\{GET, POST, CSRF, Validate, Cache, Response};
 
 #[GET]
-function showPage($req, $res) {
-    global $app;
-    return $app->render("page");
+function showPage(array $req, Response $res) {
+    return $res->render("page");
 }
 $app->add('showPage');
 
 #[POST]
 #[CSRF]
 #[Validate(LoginModel::class)]
-function handleSubmit($req, $res) {
-    global $app;
-    return $app->jsonResponse(["success" => true]);
+function handleSubmit(array $req, Response $res) {
+    return $res->jsonResponse(["success" => true]);
 }
 $app->add('handleSubmit');
 ```
@@ -189,6 +189,17 @@ public string $email;
 protected string $created_at;
 ```
 
+**Active Record Methods**:
+Automatically inherited from `BaseModel`.
+
+```php
+$user = UserModel::find(1);
+$activeUsers = UserModel::where('is_active', '=', 1);
+$allUsers = UserModel::all();
+$user->save();
+$user->delete();
+```
+
 **Table naming**: `UserProfile` → `user_profiles` (snake_case + pluralized).
 
 ---
@@ -216,7 +227,7 @@ protected string $created_at;
 ### React Full Page Render
 
 ```php
-$app->renderReact('PageComponent', $props, [
+$res->renderReact('PageComponent', $props, [
     'lang' => 'es',
     'title' => 'Page Title',
     'meta' => [['name' => 'description', 'content' => '...']],
@@ -248,6 +259,9 @@ php app/cli.php migrate:status     # Show migration status
 php app/cli.php model:create Name  # Generate model file
 php app/cli.php seed:create Name   # Generate seeder file
 php app/cli.php seed:run           # Run all seeders
+php app/cli.php test:run           # Run all unit tests
+php app/cli.php assets:minify      # Minify all assets
+php app/cli.php schedule:run       # Run scheduled tasks
 ```
 
 ---
@@ -255,10 +269,10 @@ php app/cli.php seed:run           # Run all seeders
 ## 📦 Response Types
 
 ```php
-$app->jsonResponse(['key' => 'value'], 200);        // JSON
-$app->render('template', ['var' => 'val']);           // Twig HTML
-$app->renderReact('Component', $props, $options);     // React full page
-$app->redirect('/path');                              // Redirect
+$res->jsonResponse(['key' => 'value'], 200);        // JSON
+$res->render('template', ['var' => 'val']);           // Twig HTML
+$res->renderReact('Component', $props, $options);     // React full page
+$res->redirect('/path');                              // Redirect
 
 // Static Response methods
 Response::JSON($data, $status);
@@ -334,3 +348,4 @@ DB_PORT="3306"
 8. **CSP matters** — when adding external scripts/CDNs, update the CSP directives in the `App` constructor
 9. **CSRF for mutations** — POST/PUT/DELETE routes should use `csrf: true` or `#[CSRF]` attribute
 10. **Use named parameters** — LilaPHP code style uses PHP 8 named arguments extensively
+11. **Auto-wiring DI** — Don't use `global $app` in route handlers. Instead, write dependencies as method arguments: `function dashboard(array $req, \Core\Response $res, \Core\Session $session)` to auto-inject.

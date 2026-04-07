@@ -9,6 +9,7 @@ use Core\GET;
 use Core\POST;
 use Core\Validate;
 use Core\App;
+use Core\Response;
 
 
 $app = new App();
@@ -25,19 +26,17 @@ class LoginModel extends BaseModel
 $lang = $app->getSession(key: "lang", default: "es");
 
 #[GET]
-function login($req, $res)
+function login($req, Response $res)
 {
-    global $app;
-    return $app->render("login");
+    return $res->render("login");
 }
 $app->add(callback: 'login');
 
 #[POST]
 #[CSRF]
 #[Validate(LoginModel::class)]
-function loginPost($req, $res)
+function loginPost($req, Response $res)
 {
-    global $app;
     //Run php app/cli.php migrate:create and descomment code
     // $db = $app->getDatabaseConnection();
     // $q = <<<SQL
@@ -67,7 +66,7 @@ function loginPost($req, $res)
     // $fakeVerify = password_verify($password, $fakeHash) && $user;
     // return $app->jsonResponse(data: ["success" => false], code: 401);
 
-    return $app->jsonResponse(["success" => true]);
+    return $res->jsonResponse(["success" => true]);
 }
 $app->add(callback: 'loginPost');
 

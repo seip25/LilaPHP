@@ -2,7 +2,11 @@
 
 include_once "./app/index.php";
 use Core\App;
+use Core\Config;
 use Core\GET;
+use Core\Response;
+use Core\Session;
+
 
 $app = new App([
     "security" => [
@@ -14,9 +18,10 @@ $app = new App([
 ]);
 
 #[GET]
-function get($req, $res)
+function get($req, Response $res, Session $session, Config $config)
 {
-    global $app;
+
+
     //Example connect database
     //Execute command in terminal: php app/cli.php migrate:create 
     //Uncomment to test database connection
@@ -27,30 +32,33 @@ function get($req, $res)
     // $insert->execute(['John Doe', $email, 'password']);
     // $query = $db->query("SELECT * FROM users");
     // $users = $query->fetchAll(PDO::FETCH_ASSOC); 
-
+    $debug = $config::$DEBUG;
+    $lang = $session::get("lang") ?? "eng";
     $page = $req['page'] ?? 'index';
 
     if ($page === 'react') {
         //app/templates/react_integration.twig
-        return $app->render(
+        return $res->render(
             template: "react_integration",
             context: [
                 "app" => [
-                    "debug" => $app->getEnv("DEBUG")
+                    "debug" => $debug,
+                    "lang" => $lang
                 ]
             ]
         );
     }
     if ($page === 'react-page') {
         //app/resources/ReactExample.jsx
-        return $app->renderReact(
+        return $res->renderReact(
             page: "ReactExample",
             props: [
                 "app" => [
-                    "debug" => $app->getEnv("DEBUG")
+                    "debug" => $debug,
+                    "lang" => $lang
                 ],
-                "csrf" => $app->generateCSRF(),
-                "translations" => $app->translations()
+                "csrf" => $res->generateCSRF(),
+                "translations" => $res->translations()
             ],
             options: [
                 "lang" => "es",
@@ -66,9 +74,9 @@ function get($req, $res)
         );
     }
     //app/tempaltes/index.twig
-    return $app->render("index");
+    return $res->render("index");
 }
-;
+
 
 $app->add(callback: 'get');
 

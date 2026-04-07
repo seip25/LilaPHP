@@ -19,10 +19,18 @@ require_once __DIR__ . '/cli/Command.php';
 require_once __DIR__ . '/cli/Migrate.php';
 require_once __DIR__ . '/cli/Seed.php';
 require_once __DIR__ . '/cli/Model.php';
+require_once __DIR__ . '/cli/Test.php';
+require_once __DIR__ . '/cli/Minify.php';
+require_once __DIR__ . '/cli/Schedule.php';
+require_once __DIR__ . '/core/TestCase.php';
+require_once __DIR__ . '/core/Schedule.php';
 
 use Cli\Migrate;
 use Cli\Seed;
 use Cli\Model;
+use Cli\Test;
+use Cli\Minify;
+use Cli\Schedule;
 
 // Parse command line arguments
 $command = $argv[1] ?? 'help';
@@ -92,7 +100,20 @@ try {
             $model->create($args);
             break;
 
-         
+        case 'test:run':
+            $test = new Test();
+            $test->execute($args);
+            break;
+
+        case 'assets:minify':
+            $minify = new Minify();
+            $minify->execute($args);
+            break;
+
+        case 'schedule:run':
+            $schedule = new Schedule();
+            $schedule->execute($args);
+            break;
 
         case 'help':
         default:
@@ -112,6 +133,9 @@ try {
 
   \033[32mmodel:create\033[0m        Create a new model file
  
+  \033[32mtest:run\033[0m            Run all test suites (*Test.php)
+  \033[32massets:minify\033[0m       Minify CSS and JS files in assets/
+  \033[32mschedule:run\033[0m        Execute scheduled tasks from app/tasks.php
 
   \033[32mhelp\033[0m                Show this help message
 

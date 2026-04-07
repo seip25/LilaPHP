@@ -2,8 +2,121 @@
 
 namespace Core;
 
+use Core\Template;
+use Core\Session;
+use Core\Security;
+use Core\Translate;
+
 class Response
 {
+    /**
+     * Render a Twig template
+     * 
+     * @param string $template Template name (without .twig extension)
+     * @param array $context Variables to pass to the template
+     * @param string|null $path Custom template directory path
+     * @return void
+     */
+    public function render(string $template, array $context = [], ?string $path = null): void
+    {
+        Template::render(template: $template, context: $context, path: $path);
+    }
+
+    /**
+     * Set a session variable
+     * 
+     * @param string $key Session key
+     * @param mixed $value Value to store
+     * @param bool $encrypt Encrypt value before storing
+     * @return void
+     */
+    public function setSession(string $key, mixed $value, bool $encrypt = false): void
+    {
+        Session::set($key, $value, $encrypt);
+    }
+
+    /**
+     * Get a session variable
+     * 
+     * @param string $key Session key
+     * @param mixed $default Default value if key doesn't exist
+     * @param bool $decrypt Decrypt value
+     * @return mixed Session value or default
+     */
+    public function getSession(string $key, mixed $default = null, bool $decrypt = false): mixed
+    {
+        return Session::get($key, $default, $decrypt);
+    }
+
+    /**
+     * Check if a session variable exists
+     * 
+     * @param string $key Session key
+     * @return bool True if exists
+     */
+    public function hasSession(string $key): bool
+    {
+        return Session::has($key);
+    }
+
+    /**
+     * Remove a session variable
+     * 
+     * @param string $key Session key to remove
+     * @return void
+     */
+    public function removeSession(string $key): void
+    {
+        Session::remove($key);
+    }
+
+    /**
+     * Render a React full page
+     * 
+     * @param string $page Page React component name
+     * @param array $props Props to pass to the island
+     * @param array $options Layout options (lang, title, meta, scripts, styles)
+     * @return void
+     */
+    public function renderReact(string $page, array $props = [], array $options = ["lang" => null, "title" => null, "meta" => [], "scripts" => [], "styles" => []]): void
+    {
+        Template::react(
+            page: $page,
+            props: $props,
+            lang: $options['lang'] ?? null,
+            title: $options['title'] ?? null,
+            meta: $options['meta'] ?? [],
+            scripts: $options['scripts'] ?? [],
+            styles: $options['styles'] ?? []
+        );
+    }
+
+    /**
+     * Redirect to a URL
+     * 
+     * @param string $url Target URL
+     * @param int $status HTTP status code
+     * @return void
+     */
+    public function redirect(string $url, int $status = 302): void
+    {
+        http_response_code($status);
+        header("Location: {$url}");
+        exit;
+    }
+
+    /**
+     * Send a JSON response
+     * 
+     * @param array $data Data to encode
+     * @param int $status HTTP status code
+     * @return void
+     */
+    public function jsonResponse(array $data, int $status = 200): void
+    {
+        self::JSON($data, $status);
+    }
+
     public static function HTML(string $html, int $status = 200)
     {
         http_response_code($status);
@@ -74,12 +187,7 @@ class Response
         flush();
     }
 
-    public static function Redirect(string $url, int $status = 302): void
-    {
-        http_response_code($status);
-        header("Location: {$url}");
-        exit;
-    }
+
 
     public static function NoContent(): void
     {
@@ -142,5 +250,25 @@ class Response
                 }
             });
         };
+    }
+
+    /**
+     * Generate a new CSRF token
+     * 
+     * @return string
+     */
+    public function generateCSRF(): string
+    {
+        return Security::generateCsrfToken();
+    }
+
+    /**
+     * Get all currently loaded translations
+     * 
+     * @return array
+     */
+    public function translations(): array
+    {
+        return Translate::translations();
     }
 }

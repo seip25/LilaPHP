@@ -5,6 +5,9 @@ namespace Core;
 use Attribute;
 use ReflectionProperty;
 use Throwable;
+use Core\Config;
+use Core\Database;
+use PDO;
 
 /**
  * Database Field Attribute
@@ -452,5 +455,189 @@ abstract class BaseModel
         }
 
         return $fields;
+    }
+
+    /**
+     * Get database connection lazily
+     * 
+     * @return PDO
+     */
+    protected static function getDB(): PDO
+    {
+        static $db = null;
+        if ($db === null) {
+            $provider = Config::Env("DB_PROVIDER") ?? 'mysql';
+            $host = Config::Env("DB_HOST") ?? 'localhost';
+            $dbUser = Config::Env("DB_USER") ?? 'root';
+            $dbPassword = Config::Env("DB_PASSWORD") ?? '';
+            $dbName = Config::Env("DB_NAME") ?? '';
+            $port = (int)(Config::Env("DB_PORT") ?? 3306);
+
+            $database = new Database($provider, $host, $dbUser, $dbPassword, $dbName, $port);
+            $db = $database->getConnection();
+        }
+        return $db;
+    }
+
+    /**
+     * Find a record by primary key
+     * 
+     * @param int|string $id Primary key value
+     * @return static|null
+     */
+    public static function find(int|string $id): ?static
+    {
+        $table = static::getTableName();
+        $pk = 'id';
+        foreach (static::getSchema() as $col => $def) {
+            if ($def['primaryKey']) {
+                $pk = $col; break;
+            }
+        }
+        
+        $stmt = static::getDB()->prepare("SELECT * FROM {$table} WHERE {$pk} = :id LIMIT 1");
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($row) {
+            $instance = clone (new \ReflectionClass(static::class))->newInstanceWithoutConstructor();
+            foreach ($row as $key => $val) {
+                if (property_exists($instance, $key)) {
+                    $instance->$key = $val;
+                }
+            }
+            return $instance;
+        }
+        return null;
+    }
+
+    /**
+     * Find records matching a condition
+     * 
+     * @param string $column The column name
+     * @param string $operator The comparison operator
+     * @param mixed $value The value to match
+     * @return static[] Array of populated models
+     */
+    public static function where(string $column, string $operator, mixed $value): array
+    {
+        $table = static::getTableName();
+        $stmt = static::getDB()->prepare("SELECT * FROM {$table} WHERE {$column} {$operator} :val");
+        $stmt->execute(['val' => $value]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $results = [];
+        $ref = new \ReflectionClass(static::class);
+        foreach ($rows as $row) {
+            $instance = clone $ref->newInstanceWithoutConstructor();
+            foreach ($row as $key => $val) {
+                if (property_exists($instance, $key)) {
+                    $instance->$key = $val;
+                }
+            }
+            $results[] = $instance;
+        }
+        return $results;
+    }
+
+    /**
+     * Retrieve all records
+     * 
+     * @return static[] Array of populated models
+     */
+    public static function all(): array
+    {
+        $table = static::getTableName();
+        $stmt = static::getDB()->query("SELECT * FROM {$table}");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $results = [];
+        $ref = new \ReflectionClass(static::class);
+        foreach ($rows as $row) {
+            $instance = clone $ref->newInstanceWithoutConstructor();
+            foreach ($row as $key => $val) {
+                if (property_exists($instance, $key)) {
+                    $instance->$key = $val;
+                }
+            }
+            $results[] = $instance;
+        }
+        return $results;
+    }
+
+    /**
+     * Insert or update the record in the database
+     * 
+     * @return bool Success status
+     */
+    public function save(): bool
+    {
+        $table = static::getTableName();
+        $pk = 'id';
+        foreach (static::getSchema() as $col => $def) {
+            if ($def['primaryKey']) {
+                $pk = $col; break;
+            }
+        }
+
+        $fields = static::getDatabaseFields();
+        $data = [];
+        foreach ($fields as $f) {
+            if (isset($this->$f)) {
+                $data[$f] = $this->$f;
+            }
+        }
+
+        if (!empty($this->$pk) && $this->recordExistsInDB($table, $pk, $this->$pk)) {
+            // Update
+            $set = [];
+            foreach ($data as $k => $v) {
+                if ($k === $pk) continue;
+                $set[] = "{$k} = :{$k}";
+            }
+            if (empty($set)) return true;
+            $setString = implode(', ', $set);
+            $stmt = static::getDB()->prepare("UPDATE {$table} SET {$setString} WHERE {$pk} = :_pk");
+            $data['_pk'] = $this->$pk;
+            return $stmt->execute($data);
+        } else {
+            // Insert
+            $cols = implode(', ', array_keys($data));
+            $vals = implode(', ', array_map(fn($k) => ":{$k}", array_keys($data)));
+            $stmt = static::getDB()->prepare("INSERT INTO {$table} ({$cols}) VALUES ({$vals})");
+            $success = $stmt->execute($data);
+            if ($success && static::getDB()->lastInsertId()) {
+                $this->$pk = static::getDB()->lastInsertId();
+            }
+            return $success;
+        }
+    }
+
+    /**
+     * Delete the record from the database
+     * 
+     * @return bool Success status
+     */
+    public function delete(): bool
+    {
+        $table = static::getTableName();
+        $pk = 'id';
+        foreach (static::getSchema() as $col => $def) {
+            if ($def['primaryKey']) {
+                $pk = $col; break;
+            }
+        }
+
+        if (empty($this->$pk)) return false;
+
+        $stmt = static::getDB()->prepare("DELETE FROM {$table} WHERE {$pk} = :id");
+        return $stmt->execute(['id' => $this->$pk]);
+    }
+
+    private function recordExistsInDB(string $table, string $pk, mixed $id): bool
+    {
+        $stmt = static::getDB()->prepare("SELECT {$pk} FROM {$table} WHERE {$pk} = :id LIMIT 1");
+        $stmt->execute(['id' => $id]);
+        return (bool)$stmt->fetchColumn();
     }
 }
