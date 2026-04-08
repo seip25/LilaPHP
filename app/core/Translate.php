@@ -29,6 +29,14 @@ class Translate
     {
         return self::$translations ?? [];
     }
+    public static function getAll(): array
+    {
+        return self::$translations ?? [];
+    }
+    public static function getLang(): string
+    {
+        return self::$lang ?? "eng";
+    }
     public static function get(string $key, $default = null): string
     {
         return self::$translations[$key] ?? ($default ?? $key);

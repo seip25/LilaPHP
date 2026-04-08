@@ -7,6 +7,7 @@ use Core\Database;
 use Core\GET;
 use Core\Response;
 use Core\Session;
+use Core\Translate;
 
 
 $app = new App([
@@ -19,9 +20,8 @@ $app = new App([
 ]);
 
 #[GET]
-function get($req, Response $res, Session $session, Config $config)
+function get($req, Response $res, Session $session, Config $config, Translate $translate)
 {
-
 
     //Example connect database
     //Execute command in terminal: php app/cli.php migrate:create 
@@ -32,10 +32,10 @@ function get($req, Response $res, Session $session, Config $config)
     // $random = rand(1, 100);
     // $email = "Jhon{$random}@email.com";
     // $insert->execute(['John Doe', $email, 'password']);
-    // $query = $db->query("SELECT * FROM users");
+    // $query = $pdo->query("SELECT * FROM users");
     // $users = $query->fetchAll(PDO::FETCH_ASSOC); 
     $debug = $config::$DEBUG;
-    $lang = $session::get(key: "lang") ?? "eng";
+    $lang = $session::get(key: "lang") ?? $translate::getLang();
     $page = $req['page'] ?? 'index';
 
     if ($page === 'react') {
