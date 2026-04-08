@@ -36,21 +36,24 @@ class Database
      * @param int $maxAttempts Maximum connection retry attempts
      */
     public function __construct(
-        string $provider = "mysql",
-        ?string $host = 'localhost',
-        ?string $dbUser = 'root',
-        ?string $dbPassword = '',
-        ?string $dbName = 'lila',
-        ?int $port = 0,
+        ?string $provider = null,
+        ?string $host = null,
+        ?string $dbUser = null,
+        ?string $dbPassword = null,
+        ?string $dbName = null,
+        ?int $port = null,
         int $maxAttempts = 5
     ) {
-        $this->provider = strtolower($provider);
-        $this->host = $host;
-        $this->dbUser = $dbUser;
-        $this->dbPassword = $dbPassword;
-        $this->dbName = $dbName;
+        $this->provider = strtolower($provider ?? Config::Env(key: "DB_PROVIDER") ?? "sqlite");
+        $this->host = $host ?? Config::Env(key: "DB_HOST") ?? "localhost";
+        $this->dbUser = $dbUser ?? Config::Env(key: "DB_USER") ?? "root";
+        $this->dbPassword = $dbPassword ?? Config::Env(key: "DB_PASSWORD") ?? "";
+        $this->dbName = $dbName ?? Config::Env(key: "DB_NAME") ?? "lila";
         $this->maxAttempts = $maxAttempts;
-        $this->port = $port ?: ($this->provider === 'pgsql' ? 5432 : 3306);
+        
+        $envPort = Config::Env(key: "DB_PORT");
+        $this->port = $port ?? ($envPort ? (int)$envPort : ($this->provider === 'pgsql' ? 5432 : 3306));
+        
         $this->db = $this->connectWithRetry();
     }
 

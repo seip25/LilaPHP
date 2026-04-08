@@ -3,6 +3,7 @@
 include_once "./app/index.php";
 use Core\App;
 use Core\Config;
+use Core\Database;
 use Core\GET;
 use Core\Response;
 use Core\Session;
@@ -24,9 +25,10 @@ function get($req, Response $res, Session $session, Config $config)
 
     //Example connect database
     //Execute command in terminal: php app/cli.php migrate:create 
-    //Uncomment to test database connection
-    // $db = $app->getDatabaseConnection();
-    // $insert = $db->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+    //Uncomment to test database connection and add Database $db in function parameters , Config $config,Database $db...){
+
+    //$pdo = $db->getConnection();
+    // $insert = $pdo->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
     // $random = rand(1, 100);
     // $email = "Jhon{$random}@email.com";
     // $insert->execute(['John Doe', $email, 'password']);

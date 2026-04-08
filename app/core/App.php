@@ -125,7 +125,7 @@ class App
         if (isset($options['translate']) && $options['translate']) {
             Translate::load();
         }
-    } 
+    }
     /**
      * Get environment variable value
      * 
@@ -189,12 +189,6 @@ class App
         ?string $dbName = null,
         ?int $port = null
     ): ?PDO {
-        $provider = $provider ?? (Config::Env(key: "DB_PROVIDER") ?? "sqlite");
-        $dbName = $dbName ?? Config::Env(key: "DB_NAME") ?? "lila";
-        $host = $host ?? Config::Env(key: "DB_HOST") ?? "localhost";
-        $dbUser = $dbUser ?? Config::Env(key: "DB_USER") ?? "root";
-        $dbPassword = $dbPassword ?? Config::Env(key: "DB_PASSWORD") ?? "";
-        $port = $port ?? (int) Config::Env(key: "DB_PORT") ?? 3306;
 
         $db = new \Core\Database(
             provider: $provider,
@@ -621,7 +615,7 @@ class App
                 foreach ($reflection->getParameters() as $param) {
                     $type = $param->getType();
                     $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
-                    
+
                     if ($typeName === 'array' || $param->getName() === 'req') {
                         $args[] = $req;
                     } elseif ($typeName === Response::class || $typeName === 'Response' || $param->getName() === 'res') {

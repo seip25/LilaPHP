@@ -66,7 +66,7 @@ function loginPost($req, Response $res)
     // $fakeVerify = password_verify($password, $fakeHash) && $user;
     // return $app->jsonResponse(data: ["success" => false], code: 401);
 
-    return $res->jsonResponse(["success" => true]);
+    return $res->jsonResponse(["success" => true, "email" => $req["email"]]);
 }
 $app->add(callback: 'loginPost');
 
