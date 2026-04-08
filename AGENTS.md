@@ -133,6 +133,45 @@ $app->add('handleSubmit');
 
 ---
 
+## 🧩 Core Classes & Auto-wiring
+
+LilaPHP natively supports **Auto-wiring Dependency Injection** via Reflection for all route handlers. You do not need to use `global $app` or instantiate core database connections manually.
+
+```php
+use Core\Response;
+use Core\Session;
+use Core\Config;
+use Core\Database;
+use Core\Translate;
+
+#[GET]
+function dashboard(array $req, Response $res, Session $session, Config $config, Database $db, Translate $translate) {
+    // 1. Session injected
+    $lang = $session::get('lang') ?? $translate::getLang();
+    
+    // 2. Config static properties (Loaded automatically from .env)
+    $debugMode = $config::$DEBUG;
+    $url = $config::$URL_PROJECT;
+    
+    // 3. Database connection injected (defaults to .env settings implicitly)
+    $pdo = $db->getConnection();
+    
+    return $res->render('dashboard', ['lang' => $lang]);
+}
+```
+
+### Static Core Usage vs Injection
+Most core classes can be used globally via static scope OR injected cleanly into handlers:
+- **`Config`**: Exposes `.env` variables via static properties: `Config::$DEBUG`, `Config::$URL_PROJECT`, `Config::$PATH_LOGS`, `Config::$VERSION_PROJECT`, etc.
+- **`Translate`**: Dynamically accesses translations globally: `Translate::get('key')`, `Translate::getLang()`.
+- **`Database`**: When injected as `Database $db`, its constructor auto-resolves `.env` DB configuration. No manual instantiation needed.
+- **`Session`**: Provides static management: `Session::get()`, `Session::set()`, `Session::has()`.
+- **`Logger`**: Resolves logs dynamically: `Logger::info()`, `Logger::error()`.
+
+Always favor Auto-wiring these via the method signature so components remain fully decoupled.
+
+---
+
 ## 🛡️ Security Stack
 
 All security runs **before** middlewares via `Security::runBeforeMiddlewares()`:
@@ -339,7 +378,7 @@ DB_PORT="3306"
 ## ⚠️ Rules for AI Assistants
 
 1. **Never add `exit;` or `die()`** in response helpers or middlewares — let the dispatch loop complete
-2. **Always use `$app->getDatabaseConnection()`** — never instantiate `Database` directly in routes
+2. **Leverage Auto-wiring for Dependencies** — Never use `global $app` or instantiate `Database` directly in routes. Inject dependencies via handler arguments: `function(Database $db, Config $config)` which replaces older patterns like `$app->getDatabaseConnection()`.
 3. **Validation is automatic** — instantiating `new Model($data)` triggers validation in the constructor
 4. **Translations are separated** — app translations in `locales/{lang}.php`, validation messages in `locales/validation_{lang}.php`
 5. **Exceptions go in `app/core/`** — e.g., `ValidationException.php`, to comply with PSR autoloading
@@ -348,4 +387,4 @@ DB_PORT="3306"
 8. **CSP matters** — when adding external scripts/CDNs, update the CSP directives in the `App` constructor
 9. **CSRF for mutations** — POST/PUT/DELETE routes should use `csrf: true` or `#[CSRF]` attribute
 10. **Use named parameters** — LilaPHP code style uses PHP 8 named arguments extensively
-11. **Auto-wiring DI** — Don't use `global $app` in route handlers. Instead, write dependencies as method arguments: `function dashboard(array $req, \Core\Response $res, \Core\Session $session)` to auto-inject.
+11. **Auto-wiring DI is the Standard** — Write fully independent endpoint controllers utilizing the native DI. Auto-wiring handles resolution regardless of parameter order.
