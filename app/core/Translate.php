@@ -29,4 +29,8 @@ class Translate
     {
         return self::$translations ?? [];
     }
+    public static function get(string $key, $default = null): string
+    {
+        return self::$translations[$key] ?? ($default ?? $key);
+    }
 }
