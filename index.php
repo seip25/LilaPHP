@@ -35,7 +35,7 @@ function get($req, Response $res, Session $session, Config $config)
     // $query = $db->query("SELECT * FROM users");
     // $users = $query->fetchAll(PDO::FETCH_ASSOC); 
     $debug = $config::$DEBUG;
-    $lang = $session::get("lang") ?? "eng";
+    $lang = $session::get(key: "lang") ?? "eng";
     $page = $req['page'] ?? 'index';
 
     if ($page === 'react') {
