@@ -6,7 +6,9 @@
   "autoload": {
     "psr-4": {
       "Core\\": "app/core/",
-      "App\\": "app/"
+      "App\\": "app/",
+      "Models\\": "app/models/",
+      "Cli\\": "app/cli/"
     }
   },
   "require": {

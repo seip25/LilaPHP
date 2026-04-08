@@ -118,6 +118,43 @@ class Field
 }
 
 
+/**
+ * Relation Attributes
+ */
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class HasMany
+{
+    public function __construct(
+        public string $model,
+        public string $foreignKey,
+        public string $localKey = 'id'
+    ) {
+    }
+}
+
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class HasOne
+{
+    public function __construct(
+        public string $model,
+        public string $foreignKey,
+        public string $localKey = 'id'
+    ) {
+    }
+}
+
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class BelongsTo
+{
+    public function __construct(
+        public string $model,
+        public string $foreignKey,
+        public string $ownerKey = 'id'
+    ) {
+    }
+}
+
+
 
 /**
  * Base Model Class
@@ -151,7 +188,7 @@ abstract class BaseModel
         foreach ($ref->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
             $name = $prop->getName();
             $attrs = $prop->getAttributes(Field::class);
-            $field = $attrs[0]->newInstance() ?? null;
+            $field = !empty($attrs) ? $attrs[0]->newInstance() : null;
 
             $value = $data[$name] ?? ($field?->default ?? null);
 
@@ -483,20 +520,29 @@ abstract class BaseModel
      * Find a record by primary key
      * 
      * @param int|string $id Primary key value
+     * @param bool $activeOnly Whether to filter by is_active = 1
+     * @param array $with Relations to eager load
      * @return static|null
      */
-    public static function find(int|string $id): ?static
+    public static function find(int|string $id, bool $activeOnly = true, array $with = []): ?static
     {
         $table = static::getTableName();
         $pk = 'id';
-        foreach (static::getSchema() as $col => $def) {
+        $schema = static::getSchema();
+        foreach ($schema as $col => $def) {
             if ($def['primaryKey']) {
                 $pk = $col;
                 break;
             }
         }
 
-        $stmt = static::getDB()->prepare("SELECT * FROM {$table} WHERE {$pk} = :id LIMIT 1");
+        $query = "SELECT * FROM {$table} WHERE {$pk} = :id";
+        if ($activeOnly && isset($schema['is_active'])) {
+            $query .= " AND is_active = 1";
+        }
+        $query .= " LIMIT 1";
+
+        $stmt = static::getDB()->prepare($query);
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -507,8 +553,12 @@ abstract class BaseModel
                     $instance->$key = $val;
                 }
             }
+            if (!empty($with)) {
+                $instance->loadRelations($with);
+            }
             return $instance;
         }
+
         return null;
     }
 
@@ -518,12 +568,21 @@ abstract class BaseModel
      * @param string $column The column name
      * @param string $operator The comparison operator
      * @param mixed $value The value to match
+     * @param bool $activeOnly Whether to filter by is_active = 1
+     * @param array $with Relations to eager load
      * @return static[] Array of populated models
      */
-    public static function where(string $column, string $operator, mixed $value): array
+    public static function where(string $column, string $operator, mixed $value, bool $activeOnly = true, array $with = []): array
     {
         $table = static::getTableName();
-        $stmt = static::getDB()->prepare("SELECT * FROM {$table} WHERE {$column} {$operator} :val");
+        $schema = static::getSchema();
+
+        $query = "SELECT * FROM {$table} WHERE {$column} {$operator} :val";
+        if ($activeOnly && isset($schema['is_active'])) {
+            $query .= " AND is_active = 1";
+        }
+
+        $stmt = static::getDB()->prepare($query);
         $stmt->execute(['val' => $value]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -536,6 +595,9 @@ abstract class BaseModel
                     $instance->$key = $val;
                 }
             }
+            if (!empty($with)) {
+                $instance->loadRelations($with);
+            }
             $results[] = $instance;
         }
         return $results;
@@ -544,12 +606,20 @@ abstract class BaseModel
     /**
      * Retrieve all records
      * 
+     * @param bool $activeOnly Whether to filter by is_active = 1
+     * @param array $with Relations to eager load
      * @return static[] Array of populated models
      */
-    public static function all(): array
+    public static function all(bool $activeOnly = true, array $with = []): array
     {
         $table = static::getTableName();
-        $stmt = static::getDB()->query("SELECT * FROM {$table}");
+        $schema = static::getSchema();
+
+        $query = "SELECT * FROM {$table}";
+        if ($activeOnly && isset($schema['is_active'])) {
+            $query .= " WHERE is_active = 1";
+        }
+        $stmt = static::getDB()->query($query);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $results = [];
@@ -560,6 +630,9 @@ abstract class BaseModel
                 if (property_exists($instance, $key)) {
                     $instance->$key = $val;
                 }
+            }
+            if (!empty($with)) {
+                $instance->loadRelations($with);
             }
             $results[] = $instance;
         }
@@ -636,7 +709,7 @@ abstract class BaseModel
         if (empty($this->$pk))
             return false;
         $q = $logic ?
-            "UPDATE FROM {$table} SET is_active = 0 WHERE {$pk} = :id"
+            "UPDATE {$table} SET is_active = 0 WHERE {$pk} = :id"
             : "DELETE FROM {$table} WHERE {$pk} = :id";
         $stmt = static::getDB()->prepare($q);
         return $stmt->execute(['id' => $this->$pk]);
@@ -647,5 +720,58 @@ abstract class BaseModel
         $stmt = static::getDB()->prepare("SELECT {$pk} FROM {$table} WHERE {$pk} = :id LIMIT 1");
         $stmt->execute(['id' => $id]);
         return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * Load specified relationships into the current instance
+     */
+    public function loadRelations(array $relations): self
+    {
+        $ref = new \ReflectionClass(static::class);
+        foreach ($relations as $rel) {
+            if ($ref->hasProperty($rel)) {
+                $prop = $ref->getProperty($rel);
+
+                // HasMany
+                $hasMany = $prop->getAttributes(HasMany::class);
+                if (!empty($hasMany)) {
+                    $attr = $hasMany[0]->newInstance();
+                    $relatedClass = $attr->model;
+                    $fk = $attr->foreignKey;
+                    $lk = $attr->localKey;
+                    $this->$rel = $relatedClass::where($fk, '=', $this->$lk);
+                    continue;
+                }
+
+                // HasOne
+                $hasOne = $prop->getAttributes(HasOne::class);
+                if (!empty($hasOne)) {
+                    $attr = $hasOne[0]->newInstance();
+                    $relatedClass = $attr->model;
+                    $fk = $attr->foreignKey;
+                    $lk = $attr->localKey;
+                    $results = $relatedClass::where($fk, '=', $this->$lk);
+                    $this->$rel = !empty($results) ? $results[0] : null;
+                    continue;
+                }
+
+                // BelongsTo
+                $belongsTo = $prop->getAttributes(BelongsTo::class);
+                if (!empty($belongsTo)) {
+                    $attr = $belongsTo[0]->newInstance();
+                    $relatedClass = $attr->model;
+                    $fk = $attr->foreignKey; // e.g. user_id
+                    $ownerKey = $attr->ownerKey; // e.g. id
+                    $this->$rel = $relatedClass::where($ownerKey, '=', $this->$fk);
+                    if (!empty($this->$rel)) {
+                        $this->$rel = $this->$rel[0];
+                    } else {
+                        $this->$rel = null;
+                    }
+                    continue;
+                }
+            }
+        }
+        return $this;
     }
 }
