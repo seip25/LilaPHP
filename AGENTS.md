@@ -148,20 +148,22 @@ use Core\Translate;
 function dashboard(array $req, Response $res, Session $session, Config $config, Database $db, Translate $translate) {
     // 1. Session injected
     $lang = $session::get('lang') ?? $translate::getLang();
-    
+
     // 2. Config static properties (Loaded automatically from .env)
     $debugMode = $config::$DEBUG;
     $url = $config::$URL_PROJECT;
-    
+
     // 3. Database connection injected (defaults to .env settings implicitly)
     $pdo = $db->getConnection();
-    
+
     return $res->render('dashboard', ['lang' => $lang]);
 }
 ```
 
 ### Static Core Usage vs Injection
+
 Most core classes can be used globally via static scope OR injected cleanly into handlers:
+
 - **`Config`**: Exposes `.env` variables via static properties: `Config::$DEBUG`, `Config::$URL_PROJECT`, `Config::$PATH_LOGS`, `Config::$VERSION_PROJECT`, etc.
 - **`Translate`**: Dynamically accesses translations globally: `Translate::get('key')`, `Translate::getLang()`.
 - **`Database`**: When injected as `Database $db`, its constructor auto-resolves `.env` DB configuration. No manual instantiation needed.
@@ -236,7 +238,7 @@ $user = UserModel::find(1);
 $activeUsers = UserModel::where('is_active', '=', 1);
 $allUsers = UserModel::all();
 $user->save();
-$user->delete();
+$user->delete(logic: true);
 ```
 
 **Table naming**: `UserProfile` → `user_profiles` (snake_case + pluralized).
