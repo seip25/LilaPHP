@@ -471,7 +471,7 @@ abstract class BaseModel
             $dbUser = Config::Env("DB_USER") ?? 'root';
             $dbPassword = Config::Env("DB_PASSWORD") ?? '';
             $dbName = Config::Env("DB_NAME") ?? '';
-            $port = (int)(Config::Env("DB_PORT") ?? 3306);
+            $port = (int) (Config::Env("DB_PORT") ?? 3306);
 
             $database = new Database($provider, $host, $dbUser, $dbPassword, $dbName, $port);
             $db = $database->getConnection();
@@ -491,14 +491,15 @@ abstract class BaseModel
         $pk = 'id';
         foreach (static::getSchema() as $col => $def) {
             if ($def['primaryKey']) {
-                $pk = $col; break;
+                $pk = $col;
+                break;
             }
         }
-        
+
         $stmt = static::getDB()->prepare("SELECT * FROM {$table} WHERE {$pk} = :id LIMIT 1");
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($row) {
             $instance = clone (new \ReflectionClass(static::class))->newInstanceWithoutConstructor();
             foreach ($row as $key => $val) {
@@ -525,7 +526,7 @@ abstract class BaseModel
         $stmt = static::getDB()->prepare("SELECT * FROM {$table} WHERE {$column} {$operator} :val");
         $stmt->execute(['val' => $value]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $results = [];
         $ref = new \ReflectionClass(static::class);
         foreach ($rows as $row) {
@@ -550,7 +551,7 @@ abstract class BaseModel
         $table = static::getTableName();
         $stmt = static::getDB()->query("SELECT * FROM {$table}");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $results = [];
         $ref = new \ReflectionClass(static::class);
         foreach ($rows as $row) {
@@ -576,7 +577,8 @@ abstract class BaseModel
         $pk = 'id';
         foreach (static::getSchema() as $col => $def) {
             if ($def['primaryKey']) {
-                $pk = $col; break;
+                $pk = $col;
+                break;
             }
         }
 
@@ -592,10 +594,12 @@ abstract class BaseModel
             // Update
             $set = [];
             foreach ($data as $k => $v) {
-                if ($k === $pk) continue;
+                if ($k === $pk)
+                    continue;
                 $set[] = "{$k} = :{$k}";
             }
-            if (empty($set)) return true;
+            if (empty($set))
+                return true;
             $setString = implode(', ', $set);
             $stmt = static::getDB()->prepare("UPDATE {$table} SET {$setString} WHERE {$pk} = :_pk");
             $data['_pk'] = $this->$pk;
@@ -618,19 +622,23 @@ abstract class BaseModel
      * 
      * @return bool Success status
      */
-    public function delete(): bool
+    public function delete(bool $logic = true): bool
     {
         $table = static::getTableName();
         $pk = 'id';
         foreach (static::getSchema() as $col => $def) {
             if ($def['primaryKey']) {
-                $pk = $col; break;
+                $pk = $col;
+                break;
             }
         }
 
-        if (empty($this->$pk)) return false;
-
-        $stmt = static::getDB()->prepare("DELETE FROM {$table} WHERE {$pk} = :id");
+        if (empty($this->$pk))
+            return false;
+        $q = $logic ?
+            "UPDATE FROM {$table} SET is_active = 0 WHERE {$pk} = :id"
+            : "DELETE FROM {$table} WHERE {$pk} = :id";
+        $stmt = static::getDB()->prepare($q);
         return $stmt->execute(['id' => $this->$pk]);
     }
 
@@ -638,6 +646,6 @@ abstract class BaseModel
     {
         $stmt = static::getDB()->prepare("SELECT {$pk} FROM {$table} WHERE {$pk} = :id LIMIT 1");
         $stmt->execute(['id' => $id]);
-        return (bool)$stmt->fetchColumn();
+        return (bool) $stmt->fetchColumn();
     }
 }
