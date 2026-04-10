@@ -1,19 +1,13 @@
-<!DOCTYPE html>
-<html lang="{{langHtml}}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{titleHtml}}</title>
-    <link rel="icon" type="image/ico" href="{{ image('img/lila.png', 40, 0, 70, 'ico') }}" />
-    {{meta |raw}}
-    {{css |raw}}
-</head>
+{% extends "base.twig" %}
+{% block extra %}
+	<!-- Inject Vite assets -->
+	{{ vite_assets() }}
+	{{meta |raw}}
+	{{css |raw}}
+{% endblock %}
+{% block content %}
 
-<body>
-    <div id="root" data-react-component="{{component}}" data-props="{{props |raw}}"></div>
-    <!-- Inject Vite assets -->
-    {{ vite_assets() }}
-    {{scripts |raw}}
-</body>
+	<div id="root" data-react-component="{{component}}" data-props="{{props |raw}}"></div>
 
-</html>
+	{{scripts |raw}}
+{% endblock %}

@@ -57,6 +57,10 @@ class Template
             return "<div id=\"{$id}\" data-react-component=\"{$component}\" data-props='{$propsJson}'></div>";
         }, ['is_safe' => ['html']]));
 
+        self::$twig->addFunction(new TwigFunction('csrf_token', function (): string {
+            return Security::generateCsrfToken();
+        }));
+
         self::$twig->addFunction(new TwigFunction('vite_assets', function (): string {
             $isDev = Config::$DEBUG;
             if ($isDev) {
@@ -92,6 +96,9 @@ class Template
         $stylesHtml = "";
         $scriptsHtml = "";
         $metaHtml = "";
+        $descriptionMeta = Config::$DESCRIPTIONMETA;
+        $authorMeta = Config::$AUTHORMETA;
+        $keywordsMeta = Config::$KEYWORDSMETA;
         $lang = is_null($lang) ? Config::$LANGHTML : $lang;
         $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
         $propsJson = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
@@ -101,8 +108,15 @@ class Template
         foreach ($scripts as $script) {
             $scriptsHtml .= '<script src="' . rtrim($script) . '"></script>';
         }
-        foreach ($meta as $meta) {
-            $metaHtml .= '<meta name="' . $meta['name'] . '" content="' . $meta['content'] . '" />';
+        foreach ($meta as $meta_value) {
+            if ($meta_value["name"] == "description")
+                $descriptionMeta = $meta_value["content"];
+            elseif ($meta_value["name"] == "author")
+                $authorMeta = $meta_value["content"];
+            elseif ($meta_value["name"] == "keywords")
+                $keywordsMeta = $meta_value["content"];
+            else
+                $metaHtml .= '<meta name="' . $meta_value['name'] . '" content="' . $meta_value['content'] . '" />';
         }
         $titleHtml = $title ?? Config::$TITLE_PROJECT;
 
@@ -114,7 +128,10 @@ class Template
             "icon" => $icon,
             "scripts" => $scriptsHtml,
             "component" => $page,
-            "props" => $propsJson
+            "props" => $propsJson,
+            "descriptionMeta" => $descriptionMeta,
+            "authorMeta" => $authorMeta,
+            "keywordsMeta" => $keywordsMeta
         ];
         self::render(template: "lila/react_base", context: $context);
     }
@@ -123,6 +140,10 @@ class Template
     {
         return array_merge([
             "title" => Config::$TITLE_PROJECT,
+            "descriptionMeta" => Config::$DESCRIPTIONMETA,
+            "keywordsMeta" => Config::$KEYWORDSMETA,
+            "authorMeta" => Config::$AUTHORMETA,
+            "csrf_token" => Security::generateCsrfToken()
         ], $extra);
     }
 

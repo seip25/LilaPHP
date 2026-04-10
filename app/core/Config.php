@@ -19,6 +19,10 @@ class Config
 
     public static string $LANG;
 
+    public static string $DESCRIPTIONMETA;
+    public static string $KEYWORDSMETA;
+    public static string $AUTHORMETA;
+
     public static function load(): void
     {
         self::$DIR_PROJECT = dirname(__DIR__, 1);
@@ -35,7 +39,10 @@ class Config
         self::$SECRET_KEY = $_ENV['SECRET_KEY'] ?? bin2hex(random_bytes(32));
         self::$URL_PROJECT = self::getURLProject();
         self::$LANG = $_ENV['LANG'] ?? 'eng';
-        self::$LANGHTML= Config::convertLangForHtml( $_ENV['LANG'] ?? "eng");
+        self::$LANGHTML = Config::convertLangForHtml($_ENV['LANG'] ?? "eng");
+        self::$DESCRIPTIONMETA = $_ENV['DESCRIPTIONMETA'] ?? "";
+        self::$KEYWORDSMETA = $_ENV['KEYWORDSMETA'] ?? "";
+        self::$AUTHORMETA = $_ENV['AUTHORMETA'] ?? "";
     }
     public static function convertLangForHtml(string $lang): string
     {
@@ -56,6 +63,9 @@ class Config
             "VERSION_PROJECT" => self::$VERSION_PROJECT,
             "TITLE_PROJECT" => self::$TITLE_PROJECT,
             "VERSION_API" => (int) self::$VERSION_API,
+            "DESCRIPTIONMETA" => self::$DESCRIPTIONMETA,
+            "KEYWORDSMETA" => self::$KEYWORDSMETA,
+            "AUTHORMETA" => self::$AUTHORMETA,
 
         ];
     }

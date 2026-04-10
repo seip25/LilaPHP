@@ -66,7 +66,9 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
                 "lang" => "es",
                 "title" => "React full Page + LilaPHP",
                 "meta" => [
-                    ["name" => "description", "content" => "React full page render example meta description"]
+                    ["name" => "description", "content" => "React full page render example meta description"],
+                    ["name" => "author", "content" => "LilaPHP"],
+                    ["name" => "keywords", "content" => "React,LilaPHP"],
                 ],
 
                 "scripts" => [

@@ -6,13 +6,14 @@ include_once "../app/index.php";
 use Core\GET;
 use Core\Cache;
 use Core\App;
+use Core\Response;
 
 
 $app = new App();
 
 #[GET]
 #[Cache]
-function CacheResponse($req, $res)
+function CacheResponse(array $req, Response $res)
 {
 
     sleep(6);
