@@ -408,10 +408,8 @@ abstract class BaseModel
     {
         $className = (new \ReflectionClass(static::class))->getShortName();
 
-        // Convert PascalCase to snake_case
         $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $className));
 
-        // Simple pluralization (add 's' if doesn't end with 's')
         if (!str_ends_with($snakeCase, 's')) {
             $snakeCase .= 's';
         }
@@ -640,6 +638,109 @@ abstract class BaseModel
     }
 
     /**
+     * Count total records
+     * 
+     * @param string $search Search query
+     * @param array $searchColumns Columns to search in
+     * @param bool $activeOnly Whether to filter by is_active = 1
+     * @return int
+     */
+    public static function count(string $search = '', array $searchColumns = [], bool $activeOnly = true): int
+    {
+        $table = static::getTableName();
+        $schema = static::getSchema();
+        $sql = "SELECT COUNT(*) FROM {$table}";
+        $wheres = [];
+        $params = [];
+
+        if ($activeOnly && isset($schema['is_active'])) {
+            $wheres[] = "is_active = 1";
+        }
+
+        if (!empty($search) && !empty($searchColumns)) {
+            $searchWheres = [];
+            foreach ($searchColumns as $col) {
+                $searchWheres[] = "{$col} LIKE :search_{$col}";
+                $params["search_{$col}"] = "%{$search}%";
+            }
+            $wheres[] = "(" . implode(" OR ", $searchWheres) . ")";
+        }
+
+        if (!empty($wheres)) {
+            $sql .= " WHERE " . implode(" AND ", $wheres);
+        }
+
+        $stmt = static::getDB()->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Paginate records
+     * 
+     * @param int $page Current page
+     * @param int $perPage Records per page
+     * @param string $search Search query
+     * @param array $searchColumns Columns to search in
+     * @param bool $activeOnly Whether to filter by is_active = 1
+     * @return static[]
+     */
+    public static function paginate(int $page = 1, int $perPage = 15, string $search = '', array $searchColumns = [], bool $activeOnly = true): array
+    {
+        $table = static::getTableName();
+        $schema = static::getSchema();
+        $offset = ($page - 1) * $perPage;
+
+        $sql = "SELECT * FROM {$table}";
+        $wheres = [];
+        $params = [];
+
+        if ($activeOnly && isset($schema['is_active'])) {
+            $wheres[] = "is_active = 1";
+        }
+
+        if (!empty($search) && !empty($searchColumns)) {
+            $searchWheres = [];
+            foreach ($searchColumns as $col) {
+                $searchWheres[] = "{$col} LIKE :search_{$col}";
+                $params["search_{$col}"] = "%{$search}%";
+            }
+            $wheres[] = "(" . implode(" OR ", $searchWheres) . ")";
+        }
+
+        if (!empty($wheres)) {
+            $sql .= " WHERE " . implode(" AND ", $wheres);
+        }
+
+        $pk = 'id';
+        foreach ($schema as $col => $def) {
+            if ($def['primaryKey']) {
+                $pk = $col;
+                break;
+            }
+        }
+        $sql .= " ORDER BY {$pk} DESC";
+        $sql .= " LIMIT {$perPage} OFFSET {$offset}";
+
+        $stmt = static::getDB()->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $results = [];
+        $ref = new \ReflectionClass(static::class);
+        foreach ($rows as $row) {
+            $instance = clone $ref->newInstanceWithoutConstructor();
+            foreach ($row as $key => $val) {
+                if (property_exists($instance, $key)) {
+                    $instance->$key = $val;
+                }
+            }
+            $results[] = $instance;
+        }
+        return $results;
+    }
+
+    /**
      * Insert or update the record in the database
      * 
      * @return bool Success status
@@ -664,7 +765,7 @@ abstract class BaseModel
         }
 
         if (!empty($this->$pk) && $this->recordExistsInDB($table, $pk, $this->$pk)) {
-            // Update
+
             $set = [];
             foreach ($data as $k => $v) {
                 if ($k === $pk)
@@ -678,7 +779,6 @@ abstract class BaseModel
             $data['_pk'] = $this->$pk;
             return $stmt->execute($data);
         } else {
-            // Insert
             $cols = implode(', ', array_keys($data));
             $vals = implode(', ', array_map(fn($k) => ":{$k}", array_keys($data)));
             $stmt = static::getDB()->prepare("INSERT INTO {$table} ({$cols}) VALUES ({$vals})");
@@ -732,7 +832,6 @@ abstract class BaseModel
             if ($ref->hasProperty($rel)) {
                 $prop = $ref->getProperty($rel);
 
-                // HasMany
                 $hasMany = $prop->getAttributes(HasMany::class);
                 if (!empty($hasMany)) {
                     $attr = $hasMany[0]->newInstance();
@@ -743,7 +842,6 @@ abstract class BaseModel
                     continue;
                 }
 
-                // HasOne
                 $hasOne = $prop->getAttributes(HasOne::class);
                 if (!empty($hasOne)) {
                     $attr = $hasOne[0]->newInstance();
@@ -755,13 +853,12 @@ abstract class BaseModel
                     continue;
                 }
 
-                // BelongsTo
                 $belongsTo = $prop->getAttributes(BelongsTo::class);
                 if (!empty($belongsTo)) {
                     $attr = $belongsTo[0]->newInstance();
                     $relatedClass = $attr->model;
-                    $fk = $attr->foreignKey; // e.g. user_id
-                    $ownerKey = $attr->ownerKey; // e.g. id
+                    $fk = $attr->foreignKey;
+                    $ownerKey = $attr->ownerKey;
                     $this->$rel = $relatedClass::where($ownerKey, '=', $this->$fk);
                     if (!empty($this->$rel)) {
                         $this->$rel = $this->$rel[0];

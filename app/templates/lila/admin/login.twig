@@ -1,0 +1,57 @@
+{% extends 'base.twig' %}
+
+{% block title %}Admin Login - LilaPHP
+{% endblock %}
+
+{% block content %}
+	<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
+		<div class="max-w-md w-full space-y-8 p-8 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700">
+			<div>
+				<div class="mx-auto h-12 w-12 rounded-xl bg-primary-600 flex items-center justify-center text-white text-2xl font-bold">
+					L
+				</div>
+				<h2 class="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white">
+					Admin Portal
+				</h2>
+				<p class="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
+					Sign in to manage your application
+				</p>
+			</div>
+
+			{% if error %}
+				<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm flex items-center gap-3">
+					<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+					</svg>
+					{{ error }}
+				</div>
+			{% endif %}
+
+			<form class="mt-8 space-y-6" action="" method="POST">
+				<div class="rounded-md   -space-y-px">
+					<div class="mb-4">
+						<label for="username" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
+						<input id="username" name="username" autofocus="true" type="text" required class="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 placeholder-gray-500 text-slate-900 dark:text-white dark:bg-slate-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-colors" placeholder="Admin username">
+					</div>
+					<div>
+						<label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+						<input id="password" name="password" type="password" required class="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-slate-600 placeholder-gray-500 text-slate-900 dark:text-white dark:bg-slate-700 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-colors" placeholder="••••••••">
+					</div>
+				</div>
+
+				<div>
+					<button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-slate-900 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
+						Sign in
+					</button>
+				</div>
+			</form>
+
+			<div class="mt-4 flex items-center justify-between text-xs">
+				<span class="text-slate-500 dark:text-slate-400">Environment:
+					<strong>{{ debug ? 'Development' : 'Production' }}</strong>
+				</span>
+				<a href="{{url('/')}}" class="text-primary-600 hover:text-primary-500 font-medium">Back to site</a>
+			</div>
+		</div>
+	</div>
+{% endblock %}

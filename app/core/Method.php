@@ -79,3 +79,19 @@ class Validate
 {
     public function __construct(public string $modelClass, public string|bool $langParam = false) {}
 }
+
+/**
+ * Attribute to enable Admin Portal
+ * 
+ * @package Core
+ */
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+class Admin
+{
+    /**
+     * @param array $models Specific models to show (auto-discovery if empty)
+     * @param array $options Additional configuration
+     */
+    public function __construct(public array $models = [], public array $options = []) {}
+}
+

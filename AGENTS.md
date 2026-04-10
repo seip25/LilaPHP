@@ -123,13 +123,12 @@ $app->add('handleSubmit');
 
 ### Available Attributes
 
-| Attribute                                  | Purpose                             |
-| ------------------------------------------ | ----------------------------------- |
 | `#[GET]`, `#[POST]`, `#[PUT]`, `#[DELETE]` | HTTP method binding                 |
 | `#[CSRF]`                                  | Enable CSRF token validation        |
 | `#[Cache(seconds: 60)]`                    | Response caching middleware         |
 | `#[Validate(ModelClass::class)]`           | Auto-validate request against model |
 | `#[Middleware(callable)]`                  | Attach middleware to route          |
+| `#[Admin]`                                 | Protect route with Admin Portal     |
 
 ---
 
@@ -245,6 +244,34 @@ $user->delete(logic: true);
 
 ---
 
+## 🛠️ Admin Portal
+
+The Admin Portal is a built-in, zero-configuration dashboard that automatically discovers and manages your models.
+
+### Setup & Authentication
+
+1.  **Create Endpoint**: Create an `Admin/index.php` file using the `#[Admin]` attribute.
+2.  **Add User**: Run `php app/cli.php admin:add` to create the initial administrator.
+3.  **Automatic Discovery**: The portal uses Reflection to find all classes extending `BaseModel` (excluding internal ones like `Admin`) and provides a responsive dashboard with search and pagination.
+
+```php
+use Core\{Admin, Response};
+
+#[Admin]
+function adminPortal(array $req, Response $res) {
+    // AdminPortal::handle() is called automatically via Method middleware
+}
+$app->add('adminPortal');
+```
+
+### Features
+- **Auto-Discovery**: Displays all models found in `app/models/`.
+- **Sensitive Data Filtering**: Automatically hides fields like `password`, `token`, `hash`, `secret`, `key`.
+- **Search & Pagination**: Server-side filtering and slicing for large datasets.
+- **Mobile Drawer**: Fully responsive navigation for mobile devices.
+
+---
+
 ## 🎨 Frontend: Twig + React Islands
 
 ### Twig Helpers
@@ -300,10 +327,17 @@ php app/cli.php migrate:status     # Show migration status
 php app/cli.php model:create Name  # Generate model file
 php app/cli.php seed:create Name   # Generate seeder file
 php app/cli.php seed:run           # Run all seeders
-php app/cli.php test:run           # Run all unit tests
-php app/cli.php assets:minify      # Minify all assets
-php app/cli.php schedule:run       # Run scheduled tasks
+php app/cli.php test:run           # Run all unit tests (Recursive .test.php discovery)
+php app/cli.php assets:minify      # Minify all assets in assets/
+php app/cli.php schedule:run       # Run scheduled tasks defined in tasks.php
+php app/cli.php admin:add          # Create or update an admin user
 ```
+
+### Test Runner
+The Test Runner (`test:run`) looks for files ending in `.test.php` within the project. It handles exceptions and performance tracking for each test suite.
+
+### Scheduler
+The Scheduler (`schedule:run`) executes tasks defined in `tasks.php`. It should be hooked into a system Cron job (e.g., `* * * * * php /path/to/app/cli.php schedule:run`).
 
 ---
 
@@ -390,3 +424,4 @@ DB_PORT="3306"
 9. **CSRF for mutations** — POST/PUT/DELETE routes should use `csrf: true` or `#[CSRF]` attribute
 10. **Use named parameters** — LilaPHP code style uses PHP 8 named arguments extensively
 11. **Auto-wiring DI is the Standard** — Write fully independent endpoint controllers utilizing the native DI. Auto-wiring handles resolution regardless of parameter order.
+12. **Twig Block Convention** — Standard layouts (e.g., `base.twig`) use `{% block content %}` for the main body area. Avoid using `{% block body %}`. This is the default framework pattern to accelerate template development, although React full-page rendering remains a more flexible alternative.

@@ -17,7 +17,7 @@ class Schedule extends Command
     public function execute(array $args): void
     {
         $this->info("Running scheduler...");
-        $tasksFile = Config::$DIR_PROJECT . '/app/tasks.php';
+        $tasksFile = Config::$DIR_PROJECT . '/tasks.php';
         
         if (!file_exists($tasksFile)) {
             $this->warning("No tasks.php found in app/ directory.");

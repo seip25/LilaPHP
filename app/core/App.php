@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.24
+ * @version 1.25
  */
 class App
 {
@@ -457,6 +457,15 @@ class App
             if (!empty($validateAttr)) {
                 $instance = $validateAttr[0]->newInstance();
                 $middlewares[] = $this->createValidationMiddleware($instance->modelClass, $instance->langParam);
+            }
+
+            $adminAttr = $reflection->getAttributes(Admin::class);
+            if (!empty($adminAttr)) {
+                $instance = $adminAttr[0]->newInstance();
+                $middlewares[] = function ($req, $res) use ($instance) {
+                    $admin = new \Core\AdminPortal();
+                    $admin->handle($req, $res, $instance->models, $instance->options);
+                };
             }
 
             foreach ($reflection->getAttributes(Middleware::class) as $attr) {

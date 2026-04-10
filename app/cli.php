@@ -22,6 +22,7 @@ require_once __DIR__ . '/cli/Model.php';
 require_once __DIR__ . '/cli/Test.php';
 require_once __DIR__ . '/cli/Minify.php';
 require_once __DIR__ . '/cli/Schedule.php';
+require_once __DIR__ . '/cli/Admin.php';
 require_once __DIR__ . '/core/TestCase.php';
 require_once __DIR__ . '/core/Schedule.php';
 
@@ -31,6 +32,7 @@ use Cli\Model;
 use Cli\Test;
 use Cli\Minify;
 use Cli\Schedule;
+use Cli\Admin;
 
 // Parse command line arguments
 $command = $argv[1] ?? 'help';
@@ -115,6 +117,11 @@ try {
             $schedule->execute($args);
             break;
 
+        case 'admin:add':
+            $admin = new Admin();
+            $admin->execute($args);
+            break;
+
         case 'help':
         default:
             echo <<<HELP
@@ -136,6 +143,7 @@ try {
   \033[32mtest:run\033[0m            Run all test suites (*Test.php)
   \033[32massets:minify\033[0m       Minify CSS and JS files in assets/
   \033[32mschedule:run\033[0m        Execute scheduled tasks from app/tasks.php
+  \033[32madmin:add\033[0m           Create or update an admin user
 
   \033[32mhelp\033[0m                Show this help message
 
