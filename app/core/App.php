@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.26
+ * @version 1.27
  */
 class App
 {
@@ -45,6 +45,12 @@ class App
         'before' => [],
         'after' => []
     ];
+
+    /** @var array Cache for reflection objects */
+    protected static array $reflectionCache = [];
+
+    /** @var array Cache for DI parameter maps */
+    protected static array $diCache = [];
 
     /**
      * Initialize the application with configuration options
@@ -504,20 +510,30 @@ class App
      */
     protected function getReflection(mixed $callback): mixed
     {
+        $key = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : (is_object($callback) ? spl_object_hash($callback) : null));
+
+        if ($key && isset(self::$reflectionCache[$key])) {
+            return self::$reflectionCache[$key];
+        }
+
         try {
+            $reflection = null;
             if (is_array($callback)) {
-                return new ReflectionMethod($callback[0], $callback[1]);
+                $reflection = new ReflectionMethod($callback[0], $callback[1]);
+            } elseif (is_string($callback) && strpos($callback, '::') !== false) {
+                $reflection = new ReflectionMethod($callback);
+            } elseif (is_callable($callback)) {
+                $reflection = new ReflectionFunction($callback);
             }
-            if (is_string($callback) && strpos($callback, '::') !== false) {
-                return new ReflectionMethod($callback);
+
+            if ($key && $reflection) {
+                self::$reflectionCache[$key] = $reflection;
             }
-            if (is_callable($callback)) {
-                return new ReflectionFunction($callback);
-            }
+
+            return $reflection;
         } catch (Throwable $e) {
             return null;
         }
-        return null;
     }
 
 
@@ -618,16 +634,33 @@ class App
         }
 
         if ($isValidRequest) {
-            $reflection = $this->getReflection($route['callback']);
-            if ($reflection) {
-                $args = [];
-                foreach ($reflection->getParameters() as $param) {
-                    $type = $param->getType();
-                    $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
+            $callback = $route['callback'];
+            $reflection = $this->getReflection($callback);
 
-                    if ($typeName === 'array' || $param->getName() === 'req') {
+            if ($reflection) {
+                $cbKey = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : spl_object_hash($callback));
+
+                if (!isset(self::$diCache[$cbKey])) {
+                    $params = [];
+                    foreach ($reflection->getParameters() as $param) {
+                        $type = $param->getType();
+                        $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
+                        $params[] = [
+                            'name' => $param->getName(),
+                            'type' => $typeName
+                        ];
+                    }
+                    self::$diCache[$cbKey] = $params;
+                }
+
+                $args = [];
+                foreach (self::$diCache[$cbKey] as $paramData) {
+                    $typeName = $paramData['type'];
+                    $paramName = $paramData['name'];
+
+                    if ($typeName === 'array' || $paramName === 'req') {
                         $args[] = $req;
-                    } elseif ($typeName === Response::class || $typeName === 'Response' || $param->getName() === 'res') {
+                    } elseif ($typeName === Response::class || $typeName === 'Response' || $paramName === 'res') {
                         $args[] = $res;
                     } elseif ($typeName && class_exists($typeName)) {
                         $classRef = new \ReflectionClass($typeName);
@@ -640,9 +673,9 @@ class App
                         $args[] = null;
                     }
                 }
-                $route['callback'](...$args);
+                $callback(...$args);
             } else {
-                $route['callback']($req, $res);
+                $callback($req, $res);
             }
         }
 

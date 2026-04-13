@@ -168,7 +168,8 @@ abstract class BaseModel
 {
 
     protected array $messages = [];
-
+    protected static array $i18nCache = [];
+    protected static array $metadataCache = [];
     private string $lang;
 
     public function __construct(array $data = [], string|null $lang = null, bool $jsonResponse = true)
@@ -176,10 +177,11 @@ abstract class BaseModel
 
         $this->lang = in_array(needle: $lang, haystack: ['eng', 'esp', 'bra', 'por']) ? $lang : "eng";
 
-        $messagesFile = dirname(__DIR__) . "/locales/validation_{$this->lang}.php";
-        if (file_exists($messagesFile)) {
-            $this->messages = require $messagesFile;
+        if (!isset(self::$i18nCache[$this->lang])) {
+            $messagesFile = dirname(__DIR__) . "/locales/validation_{$this->lang}.php";
+            self::$i18nCache[$this->lang] = file_exists($messagesFile) ? require $messagesFile : [];
         }
+        $this->messages = self::$i18nCache[$this->lang];
 
         $ref = new \ReflectionClass($this);
         $errors = [];
@@ -441,7 +443,21 @@ abstract class BaseModel
      */
     public static function getSchema(): array
     {
-        $ref = new \ReflectionClass(static::class);
+        $className = static::class;
+        if (isset(self::$metadataCache[$className]['schema'])) {
+            return self::$metadataCache[$className]['schema'];
+        }
+
+        $cacheFile = Config::$DIR_PROJECT . '/lila/model_cache.php';
+        if (file_exists($cacheFile)) {
+            $allCaches = require $cacheFile;
+            if (isset($allCaches[$className]['schema'])) {
+                self::$metadataCache[$className]['schema'] = $allCaches[$className]['schema'];
+                return $allCaches[$className]['schema'];
+            }
+        }
+
+        $ref = new \ReflectionClass($className);
         $schema = [];
 
         foreach ($ref->getProperties() as $prop) {
@@ -468,6 +484,7 @@ abstract class BaseModel
             ];
         }
 
+        self::$metadataCache[$className]['schema'] = $schema;
         return $schema;
     }
 
@@ -478,7 +495,21 @@ abstract class BaseModel
      */
     public static function getDatabaseFields(): array
     {
-        $ref = new \ReflectionClass(static::class);
+        $className = static::class;
+        if (isset(self::$metadataCache[$className]['fields'])) {
+            return self::$metadataCache[$className]['fields'];
+        }
+
+        $cacheFile = Config::$DIR_PROJECT . '/lila/model_cache.php';
+        if (file_exists($cacheFile)) {
+            $allCaches = require $cacheFile;
+            if (isset($allCaches[$className]['fields'])) {
+                self::$metadataCache[$className]['fields'] = $allCaches[$className]['fields'];
+                return $allCaches[$className]['fields'];
+            }
+        }
+
+        $ref = new \ReflectionClass($className);
         $fields = [];
 
         foreach ($ref->getProperties() as $prop) {
@@ -489,6 +520,7 @@ abstract class BaseModel
             }
         }
 
+        self::$metadataCache[$className]['fields'] = $fields;
         return $fields;
     }
 

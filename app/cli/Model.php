@@ -31,7 +31,15 @@ class Model extends Command
      */
     public function execute(array $args): void
     {
-        $this->create($args);
+        $command = $args[0] ?? 'create';
+        unset($args[0]);
+        $args = array_values($args);
+
+        if ($command === 'cache') {
+            $this->cache($args);
+        } else {
+            $this->create($args);
+        }
     }
 
     /**
@@ -63,6 +71,68 @@ class Model extends Command
         $this->success("Created model: {$filename}");
         $this->info("Edit the file to customize your model fields.");
         $this->info("Documentation: https://seip25.github.io/LilaPHP/#cli_models");
+    }
+
+    /**
+     * Generate metadata cache for all models
+     * 
+     * @param array $args Command arguments
+     * @return void
+     */
+    public function cache(array $args): void
+    {
+        $this->info("Scanning models for metadata caching...");
+
+        if (!is_dir($this->modelsDir)) {
+            $this->error("Models directory not found: {$this->modelsDir}");
+            return;
+        }
+
+        $files = scandir($this->modelsDir);
+        $total = 0;
+        $cache = [];
+
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..' || !str_ends_with($file, '.php')) {
+                continue;
+            }
+
+            $className = "Models\\" . substr($file, 0, -4);
+            if (class_exists($className)) {
+                try {
+                    $this->info("Caching: {$className}");
+                    
+                    $schema = $className::getSchema();
+                    $fields = $className::getDatabaseFields();
+
+                    $cache[$className] = [
+                        'schema' => $schema,
+                        'fields' => $fields
+                    ];
+                    $total++;
+                } catch (\Throwable $e) {
+                    $this->error("Error caching {$className}: " . $e->getMessage());
+                }
+            }
+        }
+
+        if ($total > 0) {
+            $dir = dirname(__DIR__) . '/lila';
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            $cacheFile = $dir . '/model_cache.php';
+            $content = "<?php\n\nreturn " . var_export($cache, true) . ";\n";
+
+            if (file_put_contents($cacheFile, $content)) {
+                $this->success("Successfully cached {$total} models at app/lila/model_cache.php");
+            } else {
+                $this->error("Failed to write cache file.");
+            }
+        } else {
+            $this->info("No models found to cache.");
+        }
     }
 
     /**
