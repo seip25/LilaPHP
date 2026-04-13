@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.25
+ * @version 1.26
  */
 class App
 {

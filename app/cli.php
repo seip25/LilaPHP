@@ -23,6 +23,7 @@ require_once __DIR__ . '/cli/Test.php';
 require_once __DIR__ . '/cli/Minify.php';
 require_once __DIR__ . '/cli/Schedule.php';
 require_once __DIR__ . '/cli/Admin.php';
+require_once __DIR__ . '/cli/Config.php';
 require_once __DIR__ . '/core/TestCase.php';
 require_once __DIR__ . '/core/Schedule.php';
 
@@ -33,6 +34,7 @@ use Cli\Test;
 use Cli\Minify;
 use Cli\Schedule;
 use Cli\Admin;
+use Cli\Config as ConfigCmd;
 
 // Parse command line arguments
 $command = $argv[1] ?? 'help';
@@ -121,6 +123,16 @@ try {
             $admin = new Admin();
             $admin->execute($args);
             break;
+            
+        case 'config:cache':
+            $config = new ConfigCmd();
+            $config->cache($args);
+            break;
+
+        case 'config:clear':
+            $config = new ConfigCmd();
+            $config->clear($args);
+            break;
 
         case 'help':
         default:
@@ -144,6 +156,9 @@ try {
   \033[32massets:minify\033[0m       Minify CSS and JS files in assets/
   \033[32mschedule:run\033[0m        Execute scheduled tasks from app/tasks.php
   \033[32madmin:add\033[0m           Create or update an admin user
+
+  \033[32mconfig:cache\033[0m        Generate environment variables cache for production
+  \033[32mconfig:clear\033[0m        Clear environment variables cache
 
   \033[32mhelp\033[0m                Show this help message
 

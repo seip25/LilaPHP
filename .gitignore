@@ -15,3 +15,4 @@ app/lila/build_manifest.php
 assets/build
 assets/cache 
 /app/docs
+/app/lila/env_cache.php

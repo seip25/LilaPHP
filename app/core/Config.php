@@ -26,10 +26,22 @@ class Config
     public static function load(): void
     {
         self::$DIR_PROJECT = dirname(__DIR__, 1);
-        if (file_exists(self::$DIR_PROJECT . '/.env')) {
-            $dotenv = Dotenv::createImmutable(self::$DIR_PROJECT);
-            $dotenv->load();
+        $cacheFile = self::$DIR_PROJECT . '/lila/env_cache.php';
+
+        if (file_exists($cacheFile)) {
+            $cachedEnv = require $cacheFile;
+            foreach ($cachedEnv as $key => $value) {
+                $_ENV[$key] = $value;
+            }
+        } elseif (file_exists(self::$DIR_PROJECT . '/.env')) {
+            $dotenv = Dotenv::createMutable(self::$DIR_PROJECT);
+            $envVars = $dotenv->load();
+
+            if (isset($envVars['DEBUG']) && $envVars['DEBUG'] === 'false') {
+                self::saveCache($cacheFile, $envVars);
+            }
         }
+
         self::$TITLE_PROJECT = $_ENV['TITLE_PROJECT'] ?? 'Seip PHP Framework';
         self::$VERSION_PROJECT = $_ENV['VERSION_PROJECT'] ?? '0.1';
         self::$VERSION_API = (int) ($_ENV['VERSION_API'] ?? 1);
@@ -43,6 +55,16 @@ class Config
         self::$DESCRIPTIONMETA = $_ENV['DESCRIPTIONMETA'] ?? "";
         self::$KEYWORDSMETA = $_ENV['KEYWORDSMETA'] ?? "";
         self::$AUTHORMETA = $_ENV['AUTHORMETA'] ?? "";
+    }
+
+    public static function saveCache(string $path, array $data): bool
+    {
+        try {
+            $content = "<?php\n\nreturn " . var_export($data, true) . ";\n";
+            return (bool) file_put_contents($path, $content);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
     public static function convertLangForHtml(string $lang): string
     {
