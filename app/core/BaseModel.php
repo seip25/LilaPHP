@@ -192,7 +192,12 @@ abstract class BaseModel
             $attrs = $prop->getAttributes(Field::class);
             $field = !empty($attrs) ? $attrs[0]->newInstance() : null;
 
-            $value = $data[$name] ?? ($field?->default ?? null);
+            $hasData = array_key_exists($name, $data);
+            if (!$hasData && ($field === null || $field->default === null)) {
+                continue;
+            }
+
+            $value = $hasData ? $data[$name] : $field->default;
 
             if ($field) {
                 if ($field->required && ($value === null || $value === '')) {
@@ -363,8 +368,9 @@ abstract class BaseModel
             throw new ValidationException(errors: $errors, lang: $this->lang, jsonResponse: $jsonResponse);
         }
 
-        foreach ($ref->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
-            $prop->setValue($this, $validatedValues[$prop->getName()]);
+        foreach ($validatedValues as $name => $value) {
+            $prop = $ref->getProperty($name);
+            $prop->setValue($this, $value);
         }
     }
 
