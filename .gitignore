@@ -16,3 +16,4 @@ assets/build
 assets/cache 
 /app/docs
 /app/lila/env_cache.php
+app/lila/schema_cache.php
