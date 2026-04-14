@@ -208,7 +208,10 @@ You can trigger a re-render of your React islands from standard JavaScript (e.g.
 window.renderReactComponent();
 
 // Re-render only components named 'CartBadge'
-window.renderReactComponent('CartBadge');
+window.renderReactComponent('CartBadge', 'component');
+
+// Re-render a specific full page component
+window.renderReactComponent('ReactExample', 'page');
 ```
 
 This is incredibly useful for updating separate component roots when reading shared client endpoints (such as `localStorage`) from external areas.

@@ -288,10 +288,11 @@ $app->add('adminPortal');
 
 ### React Islands Architecture
 
-- Components live in `app/resources/pages/*.jsx`
-- Auto-discovered by `main.jsx` via `import.meta.glob('./pages/*.jsx')`
-- Mount to DOM via `data-react-component="ComponentName"` attribute
-- **Re-render from JS**: `window.renderReactComponent('ComponentName')` or `window.renderReactComponent()` for all
+- Components live in `app/resources/pages/*.jsx` and `app/resources/components/*.jsx`
+- Auto-discovered by `main.jsx` via `import.meta.glob`
+- Twig helpers mount them via `data-react-component="ComponentName"` attribute
+- Full page renders mount via `data-react-page="PageComponent"` attribute
+- **Re-render from JS**: `window.renderReactComponent('ComponentName', 'component')` or `window.renderReactComponent('PageComponent', 'page')`
 
 ### React Full Page Render
 
