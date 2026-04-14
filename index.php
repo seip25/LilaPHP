@@ -39,7 +39,7 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
     $page = $req['page'] ?? 'index';
 
     if ($page === 'react') {
-        //app/templates/react_integration.twig
+        //app/resources/templates/react_integration.twig
         return $res->render(
             template: "react_integration",
             context: [
@@ -51,7 +51,7 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
         );
     }
     if ($page === 'react-page') {
-        //app/resources/ReactExample.jsx
+        //app/resources/js/pages/ReactExample.jsx
         return $res->renderReact(
             page: "ReactExample",
             props: [
@@ -77,7 +77,7 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
             ]
         );
     }
-    //app/tempaltes/index.twig
+    //app/resources/templates/index.twig
     return $res->render("index");
 }
 

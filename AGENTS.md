@@ -61,12 +61,13 @@ project-root/
         └── cache/          ← Cache directory
     ├── cli.php             ← CLI entry point: php app/cli.php <command>
     ├── models/             ← Application models (namespace: Models)
-    ├── templates/          ← Twig templates
-    │   └── lila/           ← Framework internal templates (debug, react_base)
-    ├── resources/          ← React source (Vite root)
-    │   ├── main.jsx        ← React island bootstrapper
-    │   ├── components/     ← Reusable React components
-    │   └── pages/          ← React pages/islands (auto-discovered by name)
+    ├── resources/          ← Frontend source files (Vite root)
+    │   ├── js/             ← React logic
+    │   │   ├── main.jsx    ← React island bootstrapper
+    │   │   ├── components/ ← Reusable React components
+    │   │   └── pages/      ← React pages/islands (auto-discovered by name)
+    │   └── templates/      ← Twig templates
+    │       └── lila/       ← Framework internal templates (debug, react_base)
 ```
 
 ---
@@ -288,7 +289,7 @@ $app->add('adminPortal');
 
 ### React Islands Architecture
 
-- Components live in `app/resources/pages/*.jsx` and `app/resources/components/*.jsx`
+- Components live in `app/resources/js/pages/*.jsx` and `app/resources/js/components/*.jsx`
 - Auto-discovered by `main.jsx` via `import.meta.glob`
 - Twig helpers mount them via `data-react-component="ComponentName"` attribute
 - Full page renders mount via `data-react-page="PageComponent"` attribute
@@ -420,7 +421,7 @@ DB_PORT="3306"
 3. **Validation is automatic** — instantiating `new Model($data)` triggers validation in the constructor
 4. **Translations are separated** — app translations in `locales/{lang}.php`, validation messages in `locales/validation_{lang}.php`
 5. **Exceptions go in `app/lila/core/`** — e.g., `ValidationException.php`, to comply with PSR autoloading
-6. **React components go in `app/resources/pages/`** — they are auto-discovered by filename
+6. **React components go in `app/resources/js/pages/`** — they are auto-discovered by filename
 7. **Each endpoint has its own `index.php`** — do NOT create a centralized router
 8. **CSP matters** — when adding external scripts/CDNs, update the CSP directives in the `App` constructor
 9. **CSRF for mutations** — POST/PUT/DELETE routes should use `csrf: true` or `#[CSRF]` attribute

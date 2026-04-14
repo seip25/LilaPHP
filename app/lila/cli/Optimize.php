@@ -29,28 +29,67 @@ class Optimize extends Command
         $this->info("========================================");
 
         // 1. Environment Caching
-        $this->info("\n[1/4] Optimizing Environment Variables...");
+        $this->info("\n[1/5] Optimizing Environment Variables...");
         $configCmd = new Config();
         $configCmd->cache([]);
 
         // 2. Model Caching
-        $this->info("\n[2/4] Optimizing Model Metadata...");
+        $this->info("\n[2/5] Optimizing Model Metadata...");
         $modelCmd = new Model();
         $modelCmd->cache([]);
 
         // 3. Asset Minification
-        $this->info("\n[3/4] Minifying Assets...");
+        $this->info("\n[3/5] Minifying Assets...");
         $minifyCmd = new Minify();
         $minifyCmd->execute([]);
 
-        // 4. Health Check
-        $this->info("\n[4/4] Performing Production Health Check...");
+        // 4. Vite Compilation
+        $this->info("\n[4/5] Building Frontend Assets (React/Vite)...");
+        $this->runViteBuild();
+
+        // 5. Health Check
+        $this->info("\n[5/5] Performing Production Health Check...");
         $this->runHealthCheck();
 
         $this->info("\n========================================");
         $this->success("Optimization completed successfully!");
         $this->info("Your application is now ready for scale.");
         $this->info("========================================\n");
+    }
+
+    /**
+     * Build Vite frontend assets
+     * 
+     * @return void
+     */
+    private function runViteBuild(): void
+    {
+        $appDir = rtrim(CoreConfig::$DIR_PROJECT, '/');
+        $packageLock = $appDir . '/package-lock.json';
+        $packageJson = $appDir . '/package.json';
+
+        if (!file_exists($packageJson)) {
+            $this->warning("No package.json found. Skipping Vite build.");
+            return;
+        }
+
+        if (!file_exists($packageLock)) {
+            $this->info("Running npm install... (This may take a minute)");
+            shell_exec("cd " . escapeshellarg($appDir) . " && npm install 2>&1");
+            $this->success("Dependencies installed.");
+        } else {
+            $this->info("Dependencies detected (package-lock.json).");
+        }
+
+        $this->info("Running npm run build...");
+        $outputBuild = shell_exec("cd " . escapeshellarg($appDir) . " && npm run build 2>&1");
+        
+        if (strpos($outputBuild, 'built in') !== false || strpos($outputBuild, 'manifest.json') !== false) {
+            $this->success("Frontend assets compiled successfully!");
+        } else {
+            $this->warning("There might be an issue compiling frontend assets.");
+            $this->info($outputBuild);
+        }
     }
 
     /**

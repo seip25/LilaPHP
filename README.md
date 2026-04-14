@@ -99,7 +99,7 @@ npm run dev
 npm run build
 ```
 
-**Edit in app/resources/pages  :**
+**Edit in app/resources/js/pages  :**
 
 ## 📁 Project Structure
 
@@ -153,7 +153,7 @@ include_once __DIR__."/app/index.php";
 
 $app->get(callback: function($req, $res) use ($app) {
         
-        //Example render Twig and React Island app/templates/react_integration.twig
+        //Example render Twig and React Island app/resources/templates/react_integration.twig
         return $app->render(template:"react_integration", 
         context:
         [
@@ -162,7 +162,7 @@ $app->get(callback: function($req, $res) use ($app) {
             ]
         ]);
 
-        //Example render full page React app/resources/ReactExample.jsx
+        //Example render full page React app/resources/js/pages/ReactExample.jsx
         return $app->renderReact(
             page: "ReactExample",
             props: [

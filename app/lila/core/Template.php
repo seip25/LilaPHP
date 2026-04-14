@@ -73,14 +73,14 @@ class Template
                     window.__vite_plugin_react_preamble_installed__ = true;
                 </script>
                 <script type="module" src="http://localhost:5173/@vite/client"></script>
-                <script type="module" src="http://localhost:5173/main.jsx"></script>';
+                <script type="module" src="http://localhost:5173/js/main.jsx"></script>';
             }
             $html = '<!-- Vite Manifest not found --><script>console.log("Vite Manifest not found ")</script>';
 
             $manifest = require Config::$DIR_PROJECT . '/lila/build_manifest.php';
 
-            $file = $manifest['main.jsx']['file'] ?? "main.jsx";
-            $css = $manifest['main.jsx']['css'] ?? [];
+            $file = $manifest['js/main.jsx']['file'] ?? "js/main.jsx";
+            $css = $manifest['js/main.jsx']['css'] ?? [];
 
             $html = '<script type="module" src="' . rtrim(Config::$URL_PROJECT, '/') . '/assets/build/' . $file . '"></script>';
             foreach ($css as $cssFile) {
@@ -158,7 +158,7 @@ class Template
     public static function render(string $template, array $context = [], ?string $path = null): void
     {
         try {
-            $twig = self::loadTwig($path ? Config::$DIR_PROJECT . $path : Config::$DIR_PROJECT . "/templates");
+            $twig = self::loadTwig($path ? Config::$DIR_PROJECT . $path : Config::$DIR_PROJECT . "/resources/templates");
             $fullContext = self::getBaseContext(extra: $context);
             $html = $twig->render("$template.twig", $fullContext);
             $html = self::minifyHtml($html);
