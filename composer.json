@@ -5,10 +5,10 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Core\\": "app/core/",
+      "Core\\": "app/lila/core/",
       "App\\": "app/",
       "Models\\": "app/models/",
-      "Cli\\": "app/cli/"
+      "Cli\\": "app/lila/cli/"
     }
   },
   "require": {

@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 
-const componentModules = import.meta.glob('./pages/*.jsx');
+const componentModules = import.meta.glob('./components/*.jsx');
+const pageModules = import.meta.glob('./pages/*.jsx');
 const mountedRoots = new Map();
 
 /**
@@ -8,13 +9,14 @@ const mountedRoots = new Map();
  * 
  * @param {string} [name='all'] - The name of the component to render (matching data-react-component). Use "all" to render everything.
  */
-window.renderReactComponent = async (name = 'all') => {
-  document.querySelectorAll('[data-react-component]').forEach(async (el) => {
-    const componentName = el.dataset.reactComponent;
+window.renderReactComponent = async (name = 'all', type = 'component') => {
+  if (!name || name === '') name = 'all';
+  document.querySelectorAll(`[data-react-${type}]`).forEach(async (el) => {
+    const componentName = el.getAttribute(`data-react-${type}`);
     if (name !== 'all' && componentName !== name) return;
 
     const props = JSON.parse(el.dataset.props || '{}');
-    const importer = componentModules[`./pages/${componentName}.jsx`];
+    const importer = type === "component" ? componentModules[`./components/${componentName}.jsx`] : pageModules[`./pages/${componentName}.jsx`];
 
     if (importer) {
       try {
@@ -29,10 +31,14 @@ window.renderReactComponent = async (name = 'all') => {
         console.error(`Failed to render React component: ${componentName}`, error);
       }
     }
+    else {
+      console.log(`Component ${componentName} ${type} not found`);
+    }
   });
 };
 
 document.addEventListener('DOMContentLoaded', () => {
   window.renderReactComponent();
+  window.renderReactComponent('all', 'page');
 });
 

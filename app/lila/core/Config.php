@@ -23,9 +23,11 @@ class Config
     public static string $KEYWORDSMETA;
     public static string $AUTHORMETA;
 
+    public static string $PATH_CACHE;
+
     public static function load(): void
     {
-        self::$DIR_PROJECT = dirname(__DIR__, 1);
+        self::$DIR_PROJECT = dirname(__DIR__, 2);
         $cacheFile = self::$DIR_PROJECT . '/lila/env_cache.php';
 
         if (file_exists($cacheFile)) {
@@ -46,7 +48,7 @@ class Config
         self::$VERSION_PROJECT = $_ENV['VERSION_PROJECT'] ?? '0.1';
         self::$VERSION_API = (int) ($_ENV['VERSION_API'] ?? 1);
         self::$DEBUG = ($_ENV['DEBUG'] ?? 'true') === 'true';
-        self::$PATH_LOGS = self::normalizePath(env: 'PATH_LOGS', default: '/logs');
+        self::$PATH_LOGS = self::normalizePath(env: 'PATH_LOGS', default: '/lila/logs');
         self::$PATH_LOCALES = self::normalizePath(env: 'PATH_LOCALES', default: '/locales/');
         self::$SECRET_KEY = $_ENV['SECRET_KEY'] ?? bin2hex(random_bytes(32));
         self::$URL_PROJECT = self::getURLProject();
@@ -55,6 +57,7 @@ class Config
         self::$DESCRIPTIONMETA = $_ENV['DESCRIPTIONMETA'] ?? "";
         self::$KEYWORDSMETA = $_ENV['KEYWORDSMETA'] ?? "";
         self::$AUTHORMETA = $_ENV['AUTHORMETA'] ?? "";
+        self::$PATH_CACHE = self::normalizePath(env: 'PATH_CACHE', default: '/lila/cache');
     }
 
     public static function saveCache(string $path, array $data): bool

@@ -212,7 +212,7 @@ class Response
         return function (array $req, $res) use ($seconds) {
 
             $cacheKey = md5($_SERVER['REQUEST_URI'] . json_encode($req));
-            $cacheDir = Config::$DIR_PROJECT . '/cache/responses';
+            $cacheDir = Config::$PATH_CACHE . '/responses';
             $cacheFile = $cacheDir . '/' . $cacheKey . '.cache';
 
             if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $seconds)) {

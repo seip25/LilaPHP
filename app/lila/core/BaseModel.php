@@ -178,7 +178,7 @@ abstract class BaseModel
         $this->lang = in_array(needle: $lang, haystack: ['eng', 'esp', 'bra', 'por']) ? $lang : "eng";
 
         if (!isset(self::$i18nCache[$this->lang])) {
-            $messagesFile = dirname(__DIR__) . "/locales/validation_{$this->lang}.php";
+            $messagesFile = Config::$DIR_PROJECT . "/locales/validation_{$this->lang}.php";
             self::$i18nCache[$this->lang] = file_exists($messagesFile) ? require $messagesFile : [];
         }
         $this->messages = self::$i18nCache[$this->lang];

@@ -35,26 +35,30 @@ project-root/
     ├── index.php           ← Bootstrap: autoload + new App()
     ├── vite.config.js      ← Vite + React HMR config
     ├── package.json        ← Node dependencies (React, Vite)
-    ├── core/               ← Framework core classes (namespace: Core)
-    │   ├── App.php         ← Main application (routing, dispatch, rendering)
-    │   ├── BaseModel.php   ← Abstract model: validation + DB schema via Attributes
-    │   ├── Config.php      ← Dotenv loader, static config
-    │   ├── Database.php    ← PDO wrapper (MySQL, PostgreSQL, SQLite) + retry logic
-    │   ├── Debug.php       ← SQLite-based request tracker (dev mode)
-    │   ├── ImageOptimizer.php ← WebP/ICO on-demand image optimization via GD
-    │   ├── Logger.php      ← File-based logger (Y/M/D directory structure)
-    │   ├── Method.php      ← PHP Attributes: GET, POST, PUT, DELETE, CSRF, Cache, Validate, Middleware
-    │   ├── Response.php    ← Response helpers: JSON, HTML, File, Stream, Text, Redirect, cacheResponse()
-    │   ├── Security.php    ← CORS, CSP, CSRF, rate limiting, sanitization, payload XSS check
-    │   ├── Session.php     ← Secure sessions with AES-256-GCM encryption, IP/UA binding, auto-regeneration
-    │   ├── Template.php    ← Twig renderer + React full-page render + Vite asset injection
-    │   ├── Translate.php   ← i18n: loads locale files from app/locales/
-    │   └── ValidationException.php ← Renders validation errors as JSON or HTML
-    ├── cli/                ← CLI commands (namespace: Cli)
-    │   ├── Command.php     ← Base CLI command class
-    │   ├── Migrate.php     ← Migration commands (create, run, rollback, fresh, status)
-    │   ├── Seed.php        ← Seeder commands
-    │   └── Model.php       ← Model generator command
+    ├── locales/            ← Translation files (eng.php, esp.php, bra.php + validation_*.php)
+    └── lila/               ← Internal: debug.sqlite, build_manifest.php, and core framework
+        ├── core/           ← Framework core classes (namespace: Core)
+        │   ├── App.php         ← Main application (routing, dispatch, rendering)
+        │   ├── BaseModel.php   ← Abstract model: validation + DB schema via Attributes
+        │   ├── Config.php      ← Dotenv loader, static config
+        │   ├── Database.php    ← PDO wrapper (MySQL, PostgreSQL, SQLite) + retry logic
+        │   ├── Debug.php       ← SQLite-based request tracker (dev mode)
+        │   ├── ImageOptimizer.php ← WebP/ICO on-demand image optimization via GD
+        │   ├── Logger.php      ← File-based logger (Y/M/D directory structure)
+        │   ├── Method.php      ← PHP Attributes: GET, POST, PUT, DELETE, CSRF, Cache, Validate, Middleware
+        │   ├── Response.php    ← Response helpers: JSON, HTML, File, Stream, Text, Redirect, cacheResponse()
+        │   ├── Security.php    ← CORS, CSP, CSRF, rate limiting, sanitization, payload XSS check
+        │   ├── Session.php     ← Secure sessions with AES-256-GCM encryption, IP/UA binding, auto-regeneration
+        │   ├── Template.php    ← Twig renderer + React full-page render + Vite asset injection
+        │   ├── Translate.php   ← i18n: loads locale files from app/locales/
+        │   └── ValidationException.php ← Renders validation errors as JSON or HTML
+        ├── cli/            ← CLI commands (namespace: Cli)
+        │   ├── Command.php     ← Base CLI command class
+        │   ├── Migrate.php     ← Migration commands (create, run, rollback, fresh, status)
+        │   ├── Seed.php        ← Seeder commands
+        │   └── Model.php       ← Model generator command
+        ├── logs/           ← Log files (auto-organized by date)
+        └── cache/          ← Cache directory
     ├── cli.php             ← CLI entry point: php app/cli.php <command>
     ├── models/             ← Application models (namespace: Models)
     ├── templates/          ← Twig templates
@@ -63,9 +67,6 @@ project-root/
     │   ├── main.jsx        ← React island bootstrapper
     │   ├── components/     ← Reusable React components
     │   └── pages/          ← React pages/islands (auto-discovered by name)
-    ├── locales/            ← Translation files (eng.php, esp.php, bra.php + validation_*.php)
-    ├── logs/               ← Log files (auto-organized by date)
-    └── lila/               ← Internal: debug.sqlite, build_manifest.php
 ```
 
 ---
@@ -417,7 +418,7 @@ DB_PORT="3306"
 2. **Leverage Auto-wiring for Dependencies** — Never use `global $app` or instantiate `Database` directly in routes. Inject dependencies via handler arguments: `function(Database $db, Config $config)` which replaces older patterns like `$app->getDatabaseConnection()`.
 3. **Validation is automatic** — instantiating `new Model($data)` triggers validation in the constructor
 4. **Translations are separated** — app translations in `locales/{lang}.php`, validation messages in `locales/validation_{lang}.php`
-5. **Exceptions go in `app/core/`** — e.g., `ValidationException.php`, to comply with PSR autoloading
+5. **Exceptions go in `app/lila/core/`** — e.g., `ValidationException.php`, to comply with PSR autoloading
 6. **React components go in `app/resources/pages/`** — they are auto-discovered by filename
 7. **Each endpoint has its own `index.php`** — do NOT create a centralized router
 8. **CSP matters** — when adding external scripts/CDNs, update the CSP directives in the `App` constructor

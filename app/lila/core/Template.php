@@ -17,7 +17,7 @@ class Template
         if (self::$twig === null) {
             $loader = new FilesystemLoader($pathHtml);
             self::$twig = new Environment($loader, [
-                'cache' => Config::$DEBUG ? false : Config::$DIR_PROJECT . '/cache/twig',
+                'cache' => Config::$DEBUG ? false : Config::$PATH_CACHE,
                 'debug' => Config::$DEBUG,
                 'autoescape' => 'html'
             ]);

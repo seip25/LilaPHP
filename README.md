@@ -106,12 +106,14 @@ npm run build
 ```
 LilaPHP/
 ├── app/
-│   ├── core/          # Core framework files (router, response, validator)
 │   ├── templates/     # Twig templates
 │   ├── locales/       # Language files (eng, esp, bra, por)
 │   ├── vendor/        # Composer dependencies
 │   ├── .env           # Environment configuration
-│   └── index.php      # Framework bootstrap
+│   ├── index.php      # Framework bootstrap
+│   └── lila/          # Framework core and CLI
+│       ├── core/      # Core framework files (router, response, validator)
+│       └── cli/       # CLI commands
 │
 ├── public/            # Public assets (CSS, JS, images)
 ├── index.php          # Main entry point
@@ -483,7 +485,7 @@ Generate a seeder template:
 php cli.php seed:create UserSeeder
 ```
 
-This creates `app/cli/seeders/UserSeeder.php`:
+This creates `app/lila/cli/seeders/UserSeeder.php`:
 
 ```php
 <?php
@@ -539,7 +541,7 @@ php cli.php migrate:create
 
 # 4. Create and run seeders
 php cli.php seed:create UserSeeder
-# Edit app/cli/seeders/UserSeeder.php
+# Edit app/lila/cli/seeders/UserSeeder.php
 php cli.php seed:run
 
 # 5. Verify

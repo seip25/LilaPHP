@@ -15,18 +15,18 @@
  */
 
 require_once __DIR__ . '/index.php';
-require_once __DIR__ . '/cli/Command.php';
-require_once __DIR__ . '/cli/Migrate.php';
-require_once __DIR__ . '/cli/Seed.php';
-require_once __DIR__ . '/cli/Model.php';
-require_once __DIR__ . '/cli/Test.php';
-require_once __DIR__ . '/cli/Minify.php';
-require_once __DIR__ . '/cli/Schedule.php';
-require_once __DIR__ . '/cli/Admin.php';
-require_once __DIR__ . '/cli/Config.php';
-require_once __DIR__ . '/cli/Optimize.php';
-require_once __DIR__ . '/core/TestCase.php';
-require_once __DIR__ . '/core/Schedule.php';
+require_once __DIR__ . '/lila/cli/Command.php';
+require_once __DIR__ . '/lila/cli/Migrate.php';
+require_once __DIR__ . '/lila/cli/Seed.php';
+require_once __DIR__ . '/lila/cli/Model.php';
+require_once __DIR__ . '/lila/cli/Test.php';
+require_once __DIR__ . '/lila/cli/Minify.php';
+require_once __DIR__ . '/lila/cli/Schedule.php';
+require_once __DIR__ . '/lila/cli/Admin.php';
+require_once __DIR__ . '/lila/cli/Config.php';
+require_once __DIR__ . '/lila/cli/Optimize.php';
+require_once __DIR__ . '/lila/core/TestCase.php';
+require_once __DIR__ . '/lila/core/Schedule.php';
 
 use Cli\Migrate;
 use Cli\Seed;
@@ -130,7 +130,7 @@ try {
             $admin = new Admin();
             $admin->execute($args);
             break;
-            
+
         case 'config:cache':
             $config = new ConfigCmd();
             $config->cache($args);

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Button from "../components/Button";
 
-export default function ReactIsland({ csrf, translations }) {
+export default function ReactExample({ csrf, translations }) {
   console.log(csrf);
   console.log(translations);
 

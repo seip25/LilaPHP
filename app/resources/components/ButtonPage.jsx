@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '../components/Button';
+import Button from './Button';
 
 export default function ButtonPage({ label }) {
   const [newLabel, setNewLabel] = useState(label);
