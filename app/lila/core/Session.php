@@ -13,17 +13,17 @@ class Session
             return;
         $secure = Config::$DEBUG == false || isset($_SERVER['HTTPS']) ? true : false;
         session_set_cookie_params([
-            'lifetime' => 0,
+            'lifetime' => 604800,
             'path' => '/',
             'secure' => $secure,
             'httponly' => true,
-            'samesite' => 'Strict'
+            'samesite' => 'Lax'
         ]);
 
         session_start();
         self::$started = true;
 
-        if (!isset($_SESSION['regenerated_at']) || (time() - $_SESSION['regenerated_at'] > 300)) {
+        if (!isset($_SESSION['regenerated_at']) || (time() - $_SESSION['regenerated_at'] > 1800)) {
             session_regenerate_id(true);
             $_SESSION['regenerated_at'] = time();
         }
@@ -35,7 +35,7 @@ class Session
      */
     protected static function validate(): void
     {
-        if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
+        if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 7200)) {
             self::destroy();
             return;
         }
@@ -92,7 +92,7 @@ class Session
     private static function encrypt(mixed $value): string
     {
         $key = self::getKey();
-        $iv  = random_bytes(12);
+        $iv = random_bytes(12);
         $tag = '';
 
         $ciphertext = openssl_encrypt(
@@ -106,13 +106,13 @@ class Session
 
         return base64_encode($iv . $tag . $ciphertext);
     }
-     
+
     private static function decrypt(string $payload): mixed
     {
         $key = self::getKey();
         $data = base64_decode($payload);
 
-        $iv  = substr($data, 0, 12);
+        $iv = substr($data, 0, 12);
         $tag = substr($data, 12, 16);
         $ciphertext = substr($data, 28);
 
@@ -127,7 +127,7 @@ class Session
 
         return $decrypted !== false ? json_decode($decrypted, true) : null;
     }
-   
+
     private static function getKey(): string
     {
         $key = Config::Env('SECRET_KEY');
