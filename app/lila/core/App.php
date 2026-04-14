@@ -620,13 +620,15 @@ class App
         }
 
         foreach ($this->middlewares['before'] as $fn) {
-            if (is_callable($fn))
-                $fn($req, $res);
+            if (is_callable($fn)) {
+                if ($fn($req, $res) === false) return;
+            }
         }
 
         foreach ($route['middlewares'] as $fn) {
-            if (is_callable($fn))
-                $fn($req, $res);
+            if (is_callable($fn)) {
+                if ($fn($req, $res) === false) return;
+            }
         }
         $isValidRequest = true;
         if (in_array(needle: strtolower(string: $method), haystack: ['post', 'put', 'delete']) && (isset($route['csrf']) && $route['csrf'])) {
