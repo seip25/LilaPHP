@@ -38,17 +38,22 @@ class Optimize extends Command
         $modelCmd = new Model();
         $modelCmd->cache([]);
 
-        // 3. Asset Minification
-        $this->info("\n[3/5] Minifying Assets...");
+        // 3. Route Caching (On the fly in production, we just clear it)
+        $this->info("\n[3/6] Optimizing Route Cache...");
+        $routeCmd = new RouteCache();
+        $routeCmd->execute(['clear']);
+
+        // 4. Asset Minification
+        $this->info("\n[4/6] Minifying Assets...");
         $minifyCmd = new Minify();
         $minifyCmd->execute([]);
 
-        // 4. Vite Compilation
-        $this->info("\n[4/5] Building Frontend Assets (React/Vite)...");
+        // 5. Vite Compilation
+        $this->info("\n[5/6] Building Frontend Assets (React/Vite)...");
         $this->runViteBuild();
 
-        // 5. Health Check
-        $this->info("\n[5/5] Performing Production Health Check...");
+        // 6. Health Check
+        $this->info("\n[6/6] Performing Production Health Check...");
         $this->runHealthCheck();
 
         $this->info("\n========================================");

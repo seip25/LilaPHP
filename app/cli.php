@@ -140,6 +140,18 @@ try {
             $config = new ConfigCmd();
             $config->clear($args);
             break;
+            
+        case 'route:cache':
+        case 'route:clear':
+            $route = new \Cli\RouteCache();
+            $route->execute(['clear']);
+            break;
+
+        case 'queue:work':
+            require_once __DIR__ . '/lila/cli/QueueWork.php';
+            $queue = new \Cli\QueueWork();
+            $queue->execute($args);
+            break;
 
         case 'app:optimize':
             $optimize = new Optimize();
@@ -173,6 +185,7 @@ try {
   \033[32mconfig:cache\033[0m        Generate environment variables cache for production
   \033[32mconfig:clear\033[0m        Clear environment variables cache
   \033[32mapp:optimize\033[0m        Unified production optimization (config + models + assets)
+  \033[32mqueue:work\033[0m          Start the queue worker to process background jobs
 
   \033[32mhelp\033[0m                Show this help message
 

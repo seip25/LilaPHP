@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.30
+ * @version 1.31
  */
 class App
 {
@@ -119,18 +119,12 @@ class App
     {
         $this->options = $options;
         Config::load();
+        if (isset($options['debug'])) {
+            Config::$DEBUG = (bool) $options['debug'];
+        }
         $this->registerErrorHandler();
         $this->registerExceptionHandler();
-        Session::start();
-        if (Session::has(key: 'lang') == false) {
-            $newLang = Config::$LANG;
-            Session::set(key: 'lang', value: $newLang);
-        }
         $this->security = new Security($options['security'] ?? []);
-
-        if (isset($options['translate']) && $options['translate']) {
-            Translate::load();
-        }
     }
     /**
      * Get environment variable value
@@ -621,13 +615,15 @@ class App
 
         foreach ($this->middlewares['before'] as $fn) {
             if (is_callable($fn)) {
-                if ($fn($req, $res) === false) return;
+                if ($fn($req, $res) === false)
+                    return;
             }
         }
 
         foreach ($route['middlewares'] as $fn) {
             if (is_callable($fn)) {
-                if ($fn($req, $res) === false) return;
+                if ($fn($req, $res) === false)
+                    return;
             }
         }
         $isValidRequest = true;
@@ -643,16 +639,33 @@ class App
                 $cbKey = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : spl_object_hash($callback));
 
                 if (!isset(self::$diCache[$cbKey])) {
-                    $params = [];
-                    foreach ($reflection->getParameters() as $param) {
-                        $type = $param->getType();
-                        $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
-                        $params[] = [
-                            'name' => $param->getName(),
-                            'type' => $typeName
-                        ];
+                    $cacheFile = Config::$DIR_PROJECT . '/lila/route_di_cache.php';
+
+                    if (!Config::$DEBUG && is_string($cbKey) && file_exists($cacheFile)) {
+                        $loadedCache = require $cacheFile;
+                        if (isset($loadedCache[$cbKey])) {
+                            self::$diCache[$cbKey] = $loadedCache[$cbKey];
+                        }
                     }
-                    self::$diCache[$cbKey] = $params;
+
+                    if (!isset(self::$diCache[$cbKey])) {
+                        $params = [];
+                        foreach ($reflection->getParameters() as $param) {
+                            $type = $param->getType();
+                            $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
+                            $params[] = [
+                                'name' => $param->getName(),
+                                'type' => $typeName
+                            ];
+                        }
+                        self::$diCache[$cbKey] = $params;
+
+                        if (!Config::$DEBUG && is_string($cbKey)) {
+                            $allCache = file_exists($cacheFile) ? require $cacheFile : [];
+                            $allCache[$cbKey] = $params;
+                            @file_put_contents($cacheFile, "<?php\n\nreturn " . var_export($allCache, true) . ";\n");
+                        }
+                    }
                 }
 
                 $args = [];

@@ -29,13 +29,23 @@ class Config
     {
         self::$DIR_PROJECT = dirname(__DIR__, 2);
         $cacheFile = self::$DIR_PROJECT . '/lila/env_cache.php';
+        $envFile = self::$DIR_PROJECT . '/.env';
+
+        $cacheExists = false;
 
         if (file_exists($cacheFile)) {
-            $cachedEnv = require $cacheFile;
-            foreach ($cachedEnv as $key => $value) {
-                $_ENV[$key] = $value;
+            if (file_exists($envFile) && filemtime($envFile) > filemtime($cacheFile)) {
+                @unlink($cacheFile);
+            } else {
+                $cacheExists = true;
+                $cachedEnv = require $cacheFile;
+                foreach ($cachedEnv as $key => $value) {
+                    $_ENV[$key] = $value;
+                }
             }
-        } elseif (file_exists(self::$DIR_PROJECT . '/.env')) {
+        }
+
+        if (!$cacheExists && file_exists($envFile)) {
             $dotenv = Dotenv::createMutable(self::$DIR_PROJECT);
             $envVars = $dotenv->load();
 

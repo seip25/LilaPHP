@@ -61,10 +61,19 @@ class Template
             return Security::generateCsrfToken();
         }));
 
+        self::$twig->addFunction(new TwigFunction('hot_reload', function (): string {
+            if (Config::$DEBUG) {
+                return self::hotReload();
+            }
+            return '';
+        }, ['is_safe' => ['html']]));
+
         self::$twig->addFunction(new TwigFunction('vite_assets', function (): string {
             $isDev = Config::$DEBUG;
             if ($isDev) {
-                return '
+
+                $html = self::hotReload();
+                $html .= '
                 <script type="module">
                     import RefreshRuntime from "http://localhost:5173/@react-refresh";
                     RefreshRuntime.injectIntoGlobalHook(window);
@@ -72,8 +81,8 @@ class Template
                     window.$RefreshSig$ = () => (type) => type;
                     window.__vite_plugin_react_preamble_installed__ = true;
                 </script>
-                <script type="module" src="http://localhost:5173/@vite/client"></script>
                 <script type="module" src="http://localhost:5173/js/main.jsx"></script>';
+                return $html;
             }
             $html = '<!-- Vite Manifest not found --><script>console.log("Vite Manifest not found ")</script>';
 
@@ -88,6 +97,16 @@ class Template
             }
             return $html;
         }, ['is_safe' => ['html']]));
+    }
+
+    public static function hotReload(): string
+    {
+        $appDir = rtrim(Config::$DIR_PROJECT, '/');
+        $packageLock = $appDir . '/package-lock.json';
+        if (file_exists($packageLock)) {
+            return '<script type="module" src="http://localhost:5173/@vite/client"></script>';
+        }
+        return '';
     }
 
     public static function react(string $page, array $props = [], ?string $lang = null, ?string $title = null, array $meta = [], array $scripts = [], array $styles = []): void
