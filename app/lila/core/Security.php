@@ -63,8 +63,11 @@ class Security
     public function runBeforeMiddlewares(array &$req, string $method = "GET"): bool
     {
         if ($this->options['logger']) {
-            if (!$this->loggerMiddleware($req)) return false;
+            if (!$this->loggerMiddleware($req))
+                return false;
         }
+        $this->applyGeneralSecurityHeaders();
+
         if ($this->options['cors'])
             $this->corsHeaders();
         if ($this->options['csp'])
@@ -177,7 +180,8 @@ class Security
     protected function cspHeaders(): void
     {
         $csp = $this->options['csp'];
-        if (empty($csp['enabled'])) return;
+        if (empty($csp['enabled']))
+            return;
 
         $directives = $csp['directives'] ?? [];
         $policy = '';
@@ -188,14 +192,33 @@ class Security
         if (!empty($policy)) {
             header("Content-Security-Policy: " . rtrim($policy));
         }
+    }
 
-        header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
-
-        header("Cross-Origin-Opener-Policy: same-origin");
-
+    /**
+     * Apply general security headers to every response.
+     * These headers are independent of CSP and provide baseline protection.
+     * 
+     * @return void
+     */
+    protected function applyGeneralSecurityHeaders(): void
+    {
         header("X-Frame-Options: SAMEORIGIN");
 
         header("X-Content-Type-Options: nosniff");
+
+        header("X-XSS-Protection: 0");
+
+        header("Cross-Origin-Opener-Policy: same-origin-allow-popups");
+
+        if (!Config::$DEBUG) {
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                ($_SERVER['SERVER_PORT'] == 443) ||
+                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+            if ($isHttps) {
+                header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+            }
+        }
     }
 
 
