@@ -15,7 +15,7 @@ use Core\FieldDatabase;
 class JobModel extends BaseModel
 {
     #[FieldDatabase(type: 'int', primaryKey: true, autoIncrement: true, unsigned: true)]
-    protected int $id;
+    public int $id;
 
     #[FieldDatabase(type: 'varchar', length: 255, comment: 'The class name of the job handler')]
     public string $handler;

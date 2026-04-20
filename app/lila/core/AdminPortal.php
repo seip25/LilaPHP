@@ -30,12 +30,11 @@ class AdminPortal
      */
     public function handle(array $req, Response $res, array $models = [], array $options = []): void
     {
-        $url = Config::$URL_PROJECT;
         // Handle Logout
         if (isset($req['logout']) && $req['logout'] === 'true') {
             Session::remove('admin_logged_in');
             Session::remove('admin_user');
-            $res->redirect($url . 'Admin/');
+            $res->redirect('Admin/');
             return;
         }
 
@@ -106,7 +105,6 @@ class AdminPortal
     private function handleLogin(array $req, Response $res): void
     {
         $error = null;
-        $url = Config::$URL_PROJECT;
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($req['username'], $req['password'])) {
             $admin = AdminModel::where('username', '=', $req['username'], activeOnly: false);
 
@@ -115,7 +113,7 @@ class AdminPortal
                 if (password_verify($req['password'], $user->password)) {
                     Session::set('admin_logged_in', true);
                     Session::set('admin_user', $user->username);
-                    $res->redirect($url . 'Admin/');
+                    $res->redirect('Admin/');
                     return;
                 }
             }
@@ -134,7 +132,7 @@ class AdminPortal
     private function discoverModels(): array
     {
         $models = [];
-        $appDir = dirname(__DIR__); // app/ folder
+        $appDir = Config::$DIR_PROJECT; // app/ folder
 
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($appDir, RecursiveDirectoryIterator::SKIP_DOTS)

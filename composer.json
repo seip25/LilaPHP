@@ -8,7 +8,8 @@
       "Core\\": "app/lila/core/",
       "App\\": "app/",
       "Models\\": "app/models/",
-      "Cli\\": "app/lila/cli/"
+      "Cli\\": "app/lila/cli/",
+      "Jobs\\": "app/jobs/"
     }
   },
   "require": {

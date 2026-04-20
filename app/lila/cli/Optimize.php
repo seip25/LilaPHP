@@ -115,8 +115,8 @@ class Optimize extends Command
 
         $dirs = [
             CoreConfig::$DIR_PROJECT . '/lila',
-            CoreConfig::$DIR_PROJECT . '/logs',
-            CoreConfig::$DIR_PROJECT . '/cache',
+            CoreConfig::$DIR_PROJECT . '/lila/logs',
+            CoreConfig::$DIR_PROJECT . '/lila/cache',
             dirname(CoreConfig::$DIR_PROJECT) . '/assets'
         ];
 

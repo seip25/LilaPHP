@@ -803,19 +803,18 @@ abstract class BaseModel
         }
 
         if (!empty($this->$pk) && $this->recordExistsInDB($table, $pk, $this->$pk)) {
-
             $set = [];
+            $params = [];
             foreach ($data as $k => $v) {
-                if ($k === $pk)
-                    continue;
+                if ($k === $pk) continue;
                 $set[] = "{$k} = :{$k}";
+                $params[$k] = $v;
             }
-            if (empty($set))
-                return true;
+            if (empty($set)) return true;
             $setString = implode(', ', $set);
             $stmt = static::getDB()->prepare("UPDATE {$table} SET {$setString} WHERE {$pk} = :_pk");
-            $data['_pk'] = $this->$pk;
-            return $stmt->execute($data);
+            $params['_pk'] = $this->$pk;
+            return $stmt->execute($params);
         } else {
             $cols = implode(', ', array_keys($data));
             $vals = implode(', ', array_map(fn($k) => ":{$k}", array_keys($data)));

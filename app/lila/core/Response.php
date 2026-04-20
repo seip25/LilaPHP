@@ -98,9 +98,12 @@ class Response
      * @param int $status HTTP status code
      * @return void
      */
-    public function redirect(string $url, int $status = 302): void
+    public function redirect(string $url, bool $into_to_project = true, int $status = 302): void
     {
         http_response_code($status);
+        if ($into_to_project) {
+            $url = rtrim(Config::$URL_PROJECT, '/') . '/' . ltrim($url, '/');
+        }
         header("Location: {$url}");
         exit;
     }
