@@ -177,18 +177,27 @@ class Security
     protected function cspHeaders(): void
     {
         $csp = $this->options['csp'];
-        if (empty($csp['enabled']))
-            return;
+        if (empty($csp['enabled'])) return;
 
         $directives = $csp['directives'] ?? [];
         $policy = '';
         foreach ($directives as $directive => $sources) {
             $policy .= $directive . ' ' . implode(' ', $sources) . '; ';
         }
+
         if (!empty($policy)) {
             header("Content-Security-Policy: " . rtrim($policy));
         }
+
+        header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+
+        header("Cross-Origin-Opener-Policy: same-origin");
+
+        header("X-Frame-Options: SAMEORIGIN");
+
+        header("X-Content-Type-Options: nosniff");
     }
+
 
 
     public static function generateCsrfToken(): string
