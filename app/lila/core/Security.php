@@ -228,10 +228,10 @@ class Security
         if (session_status() === PHP_SESSION_ACTIVE)
             Session::start();
         if (Session::has(key: '_csrf'))
-            return Session::get(key: '_csrf');
+            return Session::get(key: '_csrf', decrypt: true);
 
         $token = bin2hex(string: random_bytes(length: 32));
-        Session::set(key: '_csrf', value: $token);
+        Session::set(key: '_csrf', value: $token, encrypt: true);
         return $token;
     }
 
@@ -246,7 +246,7 @@ class Security
         if (session_status() === PHP_SESSION_ACTIVE)
             Session::start();
         $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($request['_csrf'] ?? '');
-        $sessionToken = Session::get(key: '_csrf');
+        $sessionToken = Session::get(key: '_csrf', decrypt: true);
 
         if (!$headerToken || !$sessionToken || !hash_equals(known_string: $sessionToken, user_string: $headerToken)) {
             $data = Config::$DEBUG ? [
@@ -286,7 +286,7 @@ class Security
         $rateData = Session::get('__rate_limit', [
             'count' => 0,
             'start' => $now
-        ]);
+        ], decrypt: true);
 
         if ($now - $rateData['start'] >= 60) {
             $rateData['start'] = $now;
@@ -294,7 +294,7 @@ class Security
         }
 
         $rateData['count']++;
-        Session::set('__rate_limit', $rateData);
+        Session::set('__rate_limit', $rateData, encrypt: true);
 
         $remaining = max(0, $limit - $rateData['count']);
         $reset = max(0, 60 - ($now - $rateData['start']));

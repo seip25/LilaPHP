@@ -13,7 +13,8 @@ LilaPHP is a **lightweight PHP micro-framework** using PHP 8+, Twig, Dotenv, and
 
 - **Micro-App Pattern**: Each endpoint directory has its own `index.php` that includes `app/index.php` (bootstrap) and instantiates `Core\App`. There is **NO single global router file**. Each endpoint independently defines its GET/POST/PUT/DELETE handlers.
 - **Middleware Flow**: Script execution must flow through `before` → route middlewares → handler → `after` callbacks. **DO NOT** use `exit;` or `die()` inside helpers like `jsonResponse` or model constructors. Let the dispatch loop complete to execute `after` callbacks properly.
-- **PHP 8 Attributes**: Routing, CSRF, caching, and validation are configured via PHP Attributes (`#[GET]`, `#[POST]`, `#[CSRF]`, `#[Cache]`, `#[Validate]`, `#[Middleware]`).
+- **PHP 8 Attributes**: Routing, CSRF, caching, validation, and SEO are configured via PHP Attributes (`#[GET]`, `#[POST]`, `#[CSRF]`, `#[Cache]`, `#[Validate]`, `#[Middleware]`, `#[SEO]`).
+- **Virtual Language Routing**: The framework supports URL-based language detection (e.g., `/es/dashboard`). This automatically sets the session language and routes to the appropriate endpoint without physical subdirectories.
 - **Dual Registration**: Routes can be registered either via closures (`$app->get(...)`, `$app->post(...)`) or via named functions with Attributes and `$app->add('functionName')`.
 
 ### File Layout
@@ -131,6 +132,7 @@ $app->add('handleSubmit');
 | `#[Validate(ModelClass::class)]`           | Auto-validate request against model |
 | `#[Middleware(callable)]`                  | Attach middleware to route          |
 | `#[Admin]`                                 | Protect route with Admin Portal     |
+| `#[SEO(title: "...", description: "...", keywords: "...", image: "...")]` | Define page metadata for SEO |
 
 ---
 
@@ -332,7 +334,7 @@ php app/cli.php seed:create Name   # Generate seeder file
 php app/cli.php seed:run           # Run all seeders
 php app/cli.php test:run           # Run all unit tests (Recursive .test.php discovery)
 php app/cli.php assets:minify      # Minify all assets in assets/
-php app/cli.php schedule:run       # Run scheduled tasks defined in tasks.php
+php app/cli.php sitemap:generate      # Generate multilingual sitemap.xml
 php app/cli.php admin:add          # Create or update an admin user
 ```
 
@@ -428,3 +430,4 @@ DB_PORT="3306"
 10. **Use named parameters** — LilaPHP code style uses PHP 8 named arguments extensively
 11. **Auto-wiring DI is the Standard** — Write fully independent endpoint controllers utilizing the native DI. Auto-wiring handles resolution regardless of parameter order.
 12. **Twig Block Convention** — Standard layouts (e.g., `base.twig`) use `{% block content %}` for the main body area. Avoid using `{% block body %}`. This is the default framework pattern to accelerate template development, although React full-page rendering remains a more flexible alternative.
+13. **SEO and Localization** — Use standardized 2-letter ISO codes (e.g., `en`, `es`, `pt`) for translations. Always use the `url()` helper to benefit from automatic language-prefix routing. Use the `#[SEO]` attribute on main public-facing routes to provide metadata.

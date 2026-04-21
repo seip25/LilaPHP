@@ -50,14 +50,16 @@ class Session
 
     public static function set(string $key, mixed $value, bool $encrypt = false): void
     {
-        if (!self::$started) self::start();
+        if (!self::$started)
+            self::start();
         $_SESSION[$key] = $encrypt
             ? ['__enc' => true, 'value' => self::encrypt($value)]
             : $value;
     }
     public static function get(string $key, mixed $default = null, bool $decrypt = false): mixed
     {
-        if (!self::$started) self::start();
+        if (!self::$started)
+            self::start();
         if (!isset($_SESSION[$key])) {
             return $default;
         }
@@ -73,19 +75,22 @@ class Session
 
     public static function has(string $key): bool
     {
-        if (!self::$started) self::start();
+        if (!self::$started)
+            self::start();
         return isset($_SESSION[$key]);
     }
 
     public static function remove(string $key): void
     {
-        if (!self::$started) self::start();
+        if (!self::$started)
+            self::start();
         unset($_SESSION[$key]);
     }
 
     public static function destroy(): void
     {
-        if (!self::$started) self::start();
+        if (!self::$started)
+            self::start();
         $_SESSION = [];
         if (session_id() !== '' || isset($_COOKIE[session_name()])) {
             setcookie(session_name(), '', time() - 3600, '/');
