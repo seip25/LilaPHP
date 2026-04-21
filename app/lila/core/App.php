@@ -599,10 +599,37 @@ class App
                 $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
                 exit;
             } else {
-                http_response_code(302);
-                $back = $_SERVER['HTTP_REFERER'] ?? '/';
-                $this->redirect(url: $back);
-                exit;
+                if ($method === "GET") {
+                    http_response_code(302);
+                    $back = $_SERVER['HTTP_REFERER'] ?? '/';
+                    $this->redirect(url: $back);
+                    exit;
+                } else {
+                    $this->jsonResponse(data: ['changeLang' => true, 'lang' => $newLang], code: 302);
+                    exit;
+                }
+            }
+        } else {
+            $currentUri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+            $basePath = parse_url($this->getEnv('URL_PROJECT') ?? '/', PHP_URL_PATH) ?? '';
+            $basePath = rtrim($basePath, '/');
+
+            if ($basePath !== '' && str_starts_with($currentUri, $basePath)) {
+                $relativePath = substr($currentUri, strlen($basePath));
+            } else {
+                $relativePath = $currentUri;
+            }
+
+            $segments = explode('/', trim($relativePath, '/'));
+            $firstSegment = strtolower($segments[0] ?? '');
+
+            if ($firstSegment !== '' && preg_match('/^[a-z]{2,3}(-[a-z]{2})?$/', $firstSegment)) {
+                $localeFile = Config::$DIR_PROJECT . "/locales/{$firstSegment}.php";
+                if (file_exists($localeFile)) {
+                    if ($this->getSession('lang') !== $firstSegment) {
+                        $this->setSession(key: "lang", value: $firstSegment);
+                    }
+                }
             }
         }
 
