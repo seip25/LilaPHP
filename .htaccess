@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Ensure RewriteBase matches the project folder if not in root
+    # RewriteBase /LilaPHP/
+
+    # SEO friendly language prefixing
+    # Matches /es/..., /en/..., /pt-br/... etc.
+    # Captures the ISO code (2 letters) or pt-br format
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^([a-z]{2}(?:-[a-z]{2})?)/(.*)$ $2 [L,QSA]
+    
+    # Handle the case where ONLY the language is provided (e.g. /es)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^([a-z]{2}(?:-[a-z]{2})?)$ index.php [L,QSA]
+</IfModule>

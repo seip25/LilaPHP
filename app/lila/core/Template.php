@@ -29,8 +29,24 @@ class Template
 
     private static function registerFunctions(): void
     {
-        self::$twig->addFunction(new TwigFunction('url', function (string $path = ''): string {
-            return rtrim(Config::$URL_PROJECT, '/') . '/' . ltrim($path, '/');
+        self::$twig->addFunction(new TwigFunction('url', function (string $path = '', bool $ignoreLang = false): string {
+            $baseUrl = rtrim(Config::$URL_PROJECT, '/');
+            $fullPath = ltrim($path, '/');
+
+            if (!$ignoreLang) {
+                $lang = Session::get('lang') ?? Config::$LANG;
+
+                // Exclude Admin, AJAX and non-GET requests from auto-prefixing
+                $isAdmin = str_starts_with(needle: strtolower($fullPath), haystack: 'admin') || str_contains(haystack: strtolower($_SERVER['REQUEST_URI'] ?? ''), needle: '/admin');
+                $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+                $isGet = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET';
+
+                if (!$isAdmin && !$isAjax && $isGet) {
+                    return $baseUrl . '/' . $lang . '/' . $fullPath;
+                }
+            }
+
+            return $baseUrl . '/' . $fullPath;
         }));
 
 
@@ -115,10 +131,12 @@ class Template
         $stylesHtml = "";
         $scriptsHtml = "";
         $metaHtml = "";
-        $descriptionMeta = Config::$DESCRIPTIONMETA;
+        $seo = App::$activeRoute['seo'] ?? null;
+        $titleHtml = $title ?? ($seo['title'] ?? Config::$TITLE_PROJECT);
+        $descriptionMeta = $seo['description'] ?? Config::$DESCRIPTIONMETA;
         $authorMeta = Config::$AUTHORMETA;
-        $keywordsMeta = Config::$KEYWORDSMETA;
-        $lang = is_null($lang) ? Config::$LANGHTML : $lang;
+        $keywordsMeta = $seo['keywords'] ?? Config::$KEYWORDSMETA;
+        $lang = is_null($lang) ? (Session::get('lang') ?? Config::$LANGHTML) : $lang;
         $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
         $propsJson = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
         foreach ($styles as $style) {
@@ -128,16 +146,8 @@ class Template
             $scriptsHtml .= '<script src="' . rtrim($script) . '"></script>';
         }
         foreach ($meta as $meta_value) {
-            if ($meta_value["name"] == "description")
-                $descriptionMeta = $meta_value["content"];
-            elseif ($meta_value["name"] == "author")
-                $authorMeta = $meta_value["content"];
-            elseif ($meta_value["name"] == "keywords")
-                $keywordsMeta = $meta_value["content"];
-            else
-                $metaHtml .= '<meta name="' . $meta_value['name'] . '" content="' . $meta_value['content'] . '" />';
+            $metaHtml .= '<meta name="' . $meta_value['name'] . '" content="' . $meta_value['content'] . '" />';
         }
-        $titleHtml = $title ?? Config::$TITLE_PROJECT;
 
         $context = [
             "langHtml" => $lang,
@@ -157,12 +167,14 @@ class Template
 
     private static function getBaseContext(array $extra = []): array
     {
+        $seo = App::$activeRoute['seo'] ?? null;
         return array_merge([
-            "title" => Config::$TITLE_PROJECT,
-            "descriptionMeta" => Config::$DESCRIPTIONMETA,
-            "keywordsMeta" => Config::$KEYWORDSMETA,
+            "title" => $seo['title'] ?? Config::$TITLE_PROJECT,
+            "descriptionMeta" => $seo['description'] ?? Config::$DESCRIPTIONMETA,
+            "keywordsMeta" => $seo['keywords'] ?? Config::$KEYWORDSMETA,
             "authorMeta" => Config::$AUTHORMETA,
-            "csrf_token" => Security::generateCsrfToken()
+            "csrf_token" => Security::generateCsrfToken(),
+            "lang" => Session::get('lang') ?? Config::$LANG
         ], $extra);
     }
 
@@ -230,7 +242,7 @@ HTML;
     {
         $html = <<<HTML
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head> 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

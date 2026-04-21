@@ -8,6 +8,7 @@ use Core\GET;
 use Core\Response;
 use Core\Session;
 use Core\Translate;
+use Core\SEO;
 
 
 $app = new App([
@@ -20,6 +21,11 @@ $app = new App([
 ]);
 
 #[GET]
+#[SEO(
+    title: "LilaPHP Framework - Modern SEO",
+    description: "Welcome to the modernized LilaPHP framework with improved SEO and localization support.",
+    keywords: "php, framework, seo, localization, micro-framework"
+)]
 function get($req, Response $res, Session $session, Config $config, Translate $translate)
 {
 
@@ -45,7 +51,6 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
             context: [
                 "app" => [
                     "debug" => $debug,
-                    "lang" => $lang
                 ]
             ]
         );
@@ -57,20 +62,11 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
             props: [
                 "app" => [
                     "debug" => $debug,
-                    "lang" => $lang
                 ],
                 "csrf" => $res->generateCSRF(),
                 "translations" => $res->translations()
             ],
             options: [
-                "lang" => "es",
-                "title" => "React full Page + LilaPHP",
-                "meta" => [
-                    ["name" => "description", "content" => "React full page render example meta description"],
-                    ["name" => "author", "content" => "LilaPHP"],
-                    ["name" => "keywords", "content" => "React,LilaPHP"],
-                ],
-
                 "scripts" => [
                     "https://cdn.tailwindcss.com"
                 ]

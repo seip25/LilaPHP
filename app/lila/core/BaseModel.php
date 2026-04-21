@@ -175,7 +175,7 @@ abstract class BaseModel
     public function __construct(array $data = [], string|null $lang = null, bool $jsonResponse = true)
     {
 
-        $this->lang = in_array(needle: $lang, haystack: ['eng', 'esp', 'bra', 'por']) ? $lang : "eng";
+        $this->lang = in_array(needle: $lang, haystack: ['en', 'es', 'pt-br', 'pt']) ? $lang : "en";
 
         if (!isset(self::$i18nCache[$this->lang])) {
             $messagesFile = Config::$DIR_PROJECT . "/locales/validation_{$this->lang}.php";

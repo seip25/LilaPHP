@@ -35,7 +35,7 @@ project-root/
     ├── index.php           ← Bootstrap: autoload + new App()
     ├── vite.config.js      ← Vite + React HMR config
     ├── package.json        ← Node dependencies (React, Vite)
-    ├── locales/            ← Translation files (eng.php, esp.php, bra.php + validation_*.php)
+    ├── locales/            ← Translation files (en.php, es.php, pt-br.php + validation_*.php)
     └── lila/               ← Internal: debug.sqlite, build_manifest.php, and core framework
         ├── core/           ← Framework core classes (namespace: Core)
         │   ├── App.php         ← Main application (routing, dispatch, rendering)
@@ -203,7 +203,7 @@ Models extend `Core\BaseModel` and use two attribute systems:
 
 ### `#[Field(...)]` — Request Validation
 
-Triggered automatically when instantiating: `new ModelClass(data: $req, lang: 'esp')`
+Triggered automatically when instantiating: `new ModelClass(data: $req, lang: 'es')`
 Throws `ValidationException` on failure.
 
 ```php
@@ -391,7 +391,7 @@ $app->translate('key');       // PHP
 {{ __('key') }}               // Twig shorthand
 ```
 
-Language switching: `?set-lang=true&lang=esp` (auto-handled by framework).
+Language switching: `?set-lang=true&lang=es` (auto-handled by framework).
 
 ---
 
@@ -403,7 +403,7 @@ DEBUG=true                    # true=dev mode, false=production (Twig cache, min
 VERSION_PROJECT="0.1"
 SECRET_KEY="your-secret-key"  # Used for session encryption
 URL_PROJECT="http://localhost/project"
-LANG="esp"                    # Default language (eng, esp, bra, por)
+LANG="es"                    # Default language (en, es, pt-br, pt)
 DB_PROVIDER="mysql"           # mysql, pgsql, sqlite
 DB_NAME="dbname"
 DB_USER="root"

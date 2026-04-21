@@ -95,3 +95,25 @@ class Admin
     public function __construct(public array $models = [], public array $options = []) {}
 }
 
+
+/**
+ * Attribute to define SEO metadata for a route
+ * 
+ * @package Core
+ */
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+class SEO
+{
+    /**
+     * @param string|null $title Page title
+     * @param string|null $description Meta description
+     * @param string|null $keywords Meta keywords
+     * @param string|null $image OG/Share image URL
+     */
+    public function __construct(
+        public ?string $title = null,
+        public ?string $description = null,
+        public ?string $keywords = null,
+        public ?string $image = null
+    ) {}
+}

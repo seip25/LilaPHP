@@ -25,6 +25,7 @@ require_once __DIR__ . '/lila/cli/Schedule.php';
 require_once __DIR__ . '/lila/cli/Admin.php';
 require_once __DIR__ . '/lila/cli/Config.php';
 require_once __DIR__ . '/lila/cli/Optimize.php';
+require_once __DIR__ . '/lila/cli/Sitemap.php';
 require_once __DIR__ . '/lila/core/TestCase.php';
 require_once __DIR__ . '/lila/core/Schedule.php';
 
@@ -37,6 +38,7 @@ use Cli\Schedule;
 use Cli\Admin;
 use Cli\Config as ConfigCmd;
 use Cli\Optimize;
+use Cli\Sitemap;
 
 // Parse command line arguments
 $command = $argv[1] ?? 'help';
@@ -158,6 +160,11 @@ try {
             $optimize->execute($args);
             break;
 
+        case 'sitemap:generate':
+            $sitemap = new Sitemap();
+            $sitemap->execute($args);
+            break;
+
         case 'help':
         default:
             echo <<<HELP
@@ -181,6 +188,7 @@ try {
   \033[32massets:minify\033[0m       Minify CSS and JS files in assets/
   \033[32mschedule:run\033[0m        Execute scheduled tasks from app/tasks.php
   \033[32madmin:add\033[0m           Create or update an admin user
+  \033[32msitemap:generate\033[0m    Generate a multilingual sitemap.xml for SEO
 
   \033[32mconfig:cache\033[0m        Generate environment variables cache for production
   \033[32mconfig:clear\033[0m        Clear environment variables cache

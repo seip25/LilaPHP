@@ -62,8 +62,8 @@ class Config
         self::$PATH_LOCALES = self::normalizePath(env: 'PATH_LOCALES', default: '/locales/');
         self::$SECRET_KEY = $_ENV['SECRET_KEY'] ?? bin2hex(random_bytes(32));
         self::$URL_PROJECT = self::getURLProject();
-        self::$LANG = $_ENV['LANG'] ?? 'eng';
-        self::$LANGHTML = Config::convertLangForHtml($_ENV['LANG'] ?? "eng");
+        self::$LANG = $_ENV['LANG'] ?? 'en';
+        self::$LANGHTML = Config::convertLangForHtml($_ENV['LANG'] ?? "en");
         self::$DESCRIPTIONMETA = $_ENV['DESCRIPTIONMETA'] ?? "";
         self::$KEYWORDSMETA = $_ENV['KEYWORDSMETA'] ?? "";
         self::$AUTHORMETA = $_ENV['AUTHORMETA'] ?? "";
