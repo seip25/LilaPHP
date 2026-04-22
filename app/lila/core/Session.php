@@ -67,7 +67,8 @@ class Session
         $stored = $_SESSION[$key];
 
         if ($decrypt && is_array($stored) && ($stored['__enc'] ?? false)) {
-            return self::decrypt($stored['value']);
+            $decrypted = self::decrypt($stored['value']);
+            return $decrypted ?? $default;
         }
 
         return $stored;
@@ -140,9 +141,9 @@ class Session
 
     private static function getKey(): string
     {
-        $key = Config::Env('SECRET_KEY');
+        $key = Config::getSecretKey();
 
-        if (str_starts_with($key, 'base64:')) {
+        if ($key && str_starts_with($key, 'base64:')) {
             return base64_decode(substr($key, 7));
         }
 
