@@ -228,7 +228,7 @@ class Security
         if (session_status() === PHP_SESSION_ACTIVE)
             Session::start();
         if (Session::has(key: '_csrf'))
-            return Session::get(key: '_csrf', decrypt: true);
+            return Session::get(key: '_csrf', default: '', decrypt: true);
 
         $token = bin2hex(string: random_bytes(length: 32));
         Session::set(key: '_csrf', value: $token, encrypt: true);
@@ -287,6 +287,15 @@ class Security
             'count' => 0,
             'start' => $now
         ], decrypt: true);
+
+
+        if (!is_array($rateData) || !isset($rateData['start'])) {
+            $rateData = [
+                'count' => 0,
+                'start' => $now
+            ];
+        }
+
 
         if ($now - $rateData['start'] >= 60) {
             $rateData['start'] = $now;
