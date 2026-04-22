@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.36
+ * @version 1.37
  */
 class App
 {
@@ -125,6 +125,8 @@ class App
     {
         $this->options = $options;
         Config::load();
+        Session::start();
+
         if (isset($options['debug'])) {
             Config::$DEBUG = (bool) $options['debug'];
         }
@@ -237,9 +239,10 @@ class App
 
         if ($validateReferer) {
             if (!str_starts_with($newUrl, '/') && !str_starts_with($newUrl, $baseUrl)) {
-                $newUrl = '/';
+                $newUrl = "{$baseUrl}";
             }
         }
+
         header(header: "Location: $newUrl");
         exit;
     }
@@ -659,7 +662,6 @@ class App
             $lang = $this->getSession("lang") ?? $this->getLangDefault();
             $newLang = $_GET["lang"] ?? $this->getLangDefault();
             $this->setSession(key: "lang", value: $newLang);
-
             if (isset($_GET['redirect']) && $_GET['redirect'] === 'false') {
                 $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
                 exit;
@@ -667,7 +669,8 @@ class App
                 if ($method === "GET") {
                     http_response_code(302);
                     $back = $_SERVER['HTTP_REFERER'] ?? '/';
-                    $back = str_replace($lang, $newLang, $back);
+                    $back = str_replace("/{$lang}", "/{$newLang}", $back);
+
                     $this->redirect(url: $back);
                     exit;
                 } else {
