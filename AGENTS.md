@@ -1,6 +1,6 @@
 # LilaPHP — AI Assistant Guidelines
 
-> **Version:** 1.33 | **Author:** Andrés Paiva (Seip25)  
+> **Version:** 1.36 | **Author:** Andrés Paiva (Seip25)  
 > This file provides context and rules for AI assistants working on the **LilaPHP** codebase.
 
 ---
