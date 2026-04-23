@@ -1,6 +1,6 @@
 # LilaPHP — AI Assistant Guidelines
 
-> **Version:** 1.36 | **Author:** Andrés Paiva (Seip25)  
+> **Version:** 1.40 | **Author:** Andrés Paiva (Seip25)  
 > This file provides context and rules for AI assistants working on the **LilaPHP** codebase.
 
 ---
@@ -132,7 +132,7 @@ $app->add('handleSubmit');
 | `#[Validate(ModelClass::class)]`           | Auto-validate request against model |
 | `#[Middleware(callable)]`                  | Attach middleware to route          |
 | `#[Admin]`                                 | Protect route with Admin Portal     |
-| `#[SEO(title: "...", description: "...", keywords: "...", image: "...")]` | Define page metadata for SEO |
+| `#[SEO(key: "...")]`                       | Define page metadata. Resolves automatically from `app/locales/seo.php` based on session language |
 
 ---
 
@@ -293,8 +293,8 @@ $app->add('adminPortal');
 
 - Components live in `app/resources/js/pages/*.jsx` and `app/resources/js/components/*.jsx`
 - Auto-discovered by `main.jsx` via `import.meta.glob`
-- Twig helpers mount them via `data-react-component="ComponentName"` attribute
-- Full page renders mount via `data-react-page="PageComponent"` attribute
+- Twig helpers `{{ react('ComponentName') }}` mount islands via `data-react-component="ComponentName"`. These files are searched for **strictly within `app/resources/js/components/`**.
+- Full page renders `$res->renderReact('PageComponent')` mount via `data-react-page="PageComponent"`. These files are searched for **strictly within `app/resources/js/pages/`**.
 - **Re-render from JS**: `window.renderReactComponent('ComponentName', 'component')` or `window.renderReactComponent('PageComponent', 'page')`
 
 ### React Full Page Render
@@ -430,4 +430,4 @@ DB_PORT="3306"
 10. **Use named parameters** — LilaPHP code style uses PHP 8 named arguments extensively
 11. **Auto-wiring DI is the Standard** — Write fully independent endpoint controllers utilizing the native DI. Auto-wiring handles resolution regardless of parameter order.
 12. **Twig Block Convention** — Standard layouts (e.g., `base.twig`) use `{% block content %}` for the main body area. Avoid using `{% block body %}`. This is the default framework pattern to accelerate template development, although React full-page rendering remains a more flexible alternative.
-13. **SEO and Localization** — Use standardized 2-letter ISO codes (e.g., `en`, `es`, `pt`) for translations. Always use the `url()` helper to benefit from automatic language-prefix routing. Use the `#[SEO]` attribute on main public-facing routes to provide metadata.
+13. **SEO and Localization** — Use standardized 2-letter ISO codes (e.g., `en`, `es`, `pt`) for translations. Always use the `url()` helper to benefit from automatic language-prefix routing. Use the `#[SEO(key: "...")]` attribute on main public-facing routes to resolve metadata from the array defined in `app/locales/seo.php`.
