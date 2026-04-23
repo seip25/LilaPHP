@@ -18,21 +18,21 @@ return [
             "keywordsMeta" => "framework php, framework leve, lilaphp, desenvolvimento web"
         ]
     ],
-    "docs" => [
+    "login" => [
         "en" => [
-            "title" => "Documentation - LilaPHP",
-            "descriptionMeta" => "Official documentation for LilaPHP. Learn how to build fast and secure applications.",
-            "keywordsMeta" => "lilaphp docs, php documentation, learn lilaphp"
+            "title" => "Login",
+            "descriptionMeta" => "Login to your account",
+            "keywordsMeta" => "login, account, user"
         ],
         "es" => [
-            "title" => "Documentación - LilaPHP",
-            "descriptionMeta" => "Documentación oficial de LilaPHP. Aprende a construir aplicaciones rápidas y seguras.",
-            "keywordsMeta" => "documentacion lilaphp, documentacion php, aprender lilaphp"
+            "title" => "Inicio de Sesión",
+            "descriptionMeta" => "Inicia sesión en tu cuenta",
+            "keywordsMeta" => "inicio de sesión, cuenta, usuario"
         ],
         "pt-br" => [
-            "title" => "Documentação - LilaPHP",
-            "descriptionMeta" => "Documentação oficial do LilaPHP. Aprenda a construir aplicações rápidas e seguras.",
-            "keywordsMeta" => "documentacao lilaphp, documentacao php, aprender lilaphp"
+            "title" => "Login",
+            "descriptionMeta" => "Faça login na sua conta",
+            "keywordsMeta" => "login, conta, usuario"
         ]
     ]
 ];
