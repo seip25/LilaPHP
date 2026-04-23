@@ -32,11 +32,13 @@ class Template
         self::$twig->addFunction(new TwigFunction('url', function (string $path = '', bool $ignoreLang = false): string {
             $baseUrl = rtrim(Config::$URL_PROJECT, '/');
             $fullPath = ltrim($path, '/');
-
+            $isAssetsOrFavicon = str_starts_with(needle: strtolower($path), haystack: 'assets') || str_contains(haystack: strtolower($path), needle: 'favicon.ico');
+            if ($isAssetsOrFavicon) {
+                return $baseUrl . '/' . $path;
+            }
             if (!$ignoreLang) {
                 $lang = Session::get('lang') ?? Config::$LANG;
 
-                // Exclude Admin, AJAX and non-GET requests from auto-prefixing
                 $isAdmin = str_starts_with(needle: strtolower($fullPath), haystack: 'admin') || str_contains(haystack: strtolower($_SERVER['REQUEST_URI'] ?? ''), needle: '/admin');
                 $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
                 $isGet = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET';
