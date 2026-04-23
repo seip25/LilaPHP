@@ -493,7 +493,7 @@ class App
             $adminAttr = $reflection->getAttributes(Admin::class);
             if (!empty($adminAttr)) {
                 $instance = $adminAttr[0]->newInstance();
-                $cachedMiddlewares[] = 'ADMIN_PORTAL'; // Marker for closure creation below
+                $cachedMiddlewares[] = 'ADMIN_PORTAL';
             }
 
             foreach ($reflection->getAttributes(Middleware::class) as $attr) {
@@ -507,11 +507,11 @@ class App
                     'title' => $instance->title,
                     'description' => $instance->description,
                     'keywords' => $instance->keywords,
-                    'image' => $instance->image
+                    'image' => $instance->image,
+                    'key' => $instance->key
                 ];
             }
 
-            // Save to cache if not debug
             if (!Config::$DEBUG && is_string($cbKey)) {
                 $cacheFile = Config::$DIR_PROJECT . '/lila/route_attribute_cache.php';
                 self::$attributeCache[$cbKey] = [
@@ -522,7 +522,6 @@ class App
                 @file_put_contents($cacheFile, "<?php\n\nreturn " . var_export(self::$attributeCache, true) . ";\n");
             }
 
-            // Re-inflate middlewares (closures cannot be serialized easily)
             $finalMiddlewares = $middlewares;
             foreach ($cachedMiddlewares as $mw) {
                 if ($mw === 'ADMIN_PORTAL') {

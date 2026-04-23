@@ -21,11 +21,7 @@ $app = new App([
 ]);
 
 #[GET]
-#[SEO(
-    title: "LilaPHP Framework - Modern SEO",
-    description: "Welcome to the modernized LilaPHP framework with improved SEO and localization support.",
-    keywords: "php, framework, seo, localization, micro-framework"
-)]
+#[SEO(key: "index")]// key in app/locales/seo.php
 function get($req, Response $res, Session $session, Config $config, Translate $translate)
 {
 

@@ -132,6 +132,14 @@ class Template
         $scriptsHtml = "";
         $metaHtml = "";
         $seo = App::$activeRoute['seo'] ?? null;
+        if (isset($seo['key']) && $seo['key'] !== null) {
+            $seoDynamic = Translate::getSeo($seo['key']);
+            if ($seoDynamic) {
+                $seo['title'] = $seoDynamic['title'] ?? $seo['title'];
+                $seo['description'] = $seoDynamic['descriptionMeta'] ?? $seoDynamic['description'] ?? $seo['description'];
+                $seo['keywords'] = $seoDynamic['keywordsMeta'] ?? $seoDynamic['keywords'] ?? $seo['keywords'];
+            }
+        }
         $titleHtml = $title ?? ($seo['title'] ?? Config::$TITLE_PROJECT);
         $descriptionMeta = $seo['description'] ?? Config::$DESCRIPTIONMETA;
         $authorMeta = Config::$AUTHORMETA;
@@ -168,6 +176,14 @@ class Template
     private static function getBaseContext(array $extra = []): array
     {
         $seo = App::$activeRoute['seo'] ?? null;
+        if (isset($seo['key']) && $seo['key'] !== null) {
+            $seoDynamic = Translate::getSeo($seo['key']);
+            if ($seoDynamic) {
+                $seo['title'] = $seoDynamic['title'] ?? $seo['title'];
+                $seo['description'] = $seoDynamic['descriptionMeta'] ?? $seoDynamic['description'] ?? $seo['description'];
+                $seo['keywords'] = $seoDynamic['keywordsMeta'] ?? $seoDynamic['keywords'] ?? $seo['keywords'];
+            }
+        }
         return array_merge([
             "title" => $seo['title'] ?? Config::$TITLE_PROJECT,
             "descriptionMeta" => $seo['description'] ?? Config::$DESCRIPTIONMETA,

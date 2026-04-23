@@ -109,11 +109,13 @@ class SEO
      * @param string|null $description Meta description
      * @param string|null $keywords Meta keywords
      * @param string|null $image OG/Share image URL
+     * @param string|null $key Centralized SEO translation key
      */
     public function __construct(
         public ?string $title = null,
         public ?string $description = null,
         public ?string $keywords = null,
-        public ?string $image = null
+        public ?string $image = null,
+        public ?string $key = null
     ) {}
 }
