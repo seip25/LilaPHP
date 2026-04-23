@@ -8,6 +8,7 @@ use Core\Field;
 use Core\CSRF;
 use Core\GET;
 use Core\POST;
+use Core\SEO;
 use Core\Session;
 use Core\Validate;
 use Core\App;
@@ -28,6 +29,7 @@ class LoginModel extends BaseModel
 $lang = $app->getSession(key: "lang", default: "es");
 
 #[GET]
+#[SEO(key: "login")]
 function login($req, Response $res)
 {
     return $res->render("login");

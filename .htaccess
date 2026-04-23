@@ -4,6 +4,11 @@
     # Ensure RewriteBase matches the project folder if not in root
     # RewriteBase /LilaPHP/
 
+    # Force trailing slash for virtual language routes to prevent mod_dir from stripping the lang prefix
+    RewriteCond %{REQUEST_URI} !/$
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^([a-z]{2}(?:-[a-z]{2})?)/(.+)$ %{REQUEST_URI}/ [L,R=301]
+
     # SEO friendly language prefixing
     # Matches /es/..., /en/..., /pt-br/... etc.
     # Captures the ISO code (2 letters) or pt-br format
