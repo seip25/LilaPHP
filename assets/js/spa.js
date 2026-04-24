@@ -118,11 +118,23 @@
           oldScript.remove();
         });
 
-        window.scrollTo(0, 0);
+       window.scrollTo(0, 0);
       }
  
       if (push) {
-        window.history.pushState({ url }, data.meta?.title || '', url);
+        let finalUrl = response.url || url;
+        try {
+          const urlObj = new URL(finalUrl);
+          urlObj.searchParams.delete('source');
+          urlObj.searchParams.delete('set-lang');
+           if (urlObj.searchParams.has('set-lang')) {
+            urlObj.searchParams.delete('lang');
+          }
+          finalUrl = urlObj.pathname + urlObj.search + urlObj.hash;
+        } catch (e) {
+          finalUrl = finalUrl.replace(/[?&]source=frontend/, '').replace(/[?&]set-lang=true/, '');
+        }
+        window.history.pushState({ url: finalUrl }, data.meta?.title || '', finalUrl);
       }
  
       document.dispatchEvent(new CustomEvent('lila:navigation', {
