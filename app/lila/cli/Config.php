@@ -67,17 +67,12 @@ class Config extends Command
      */
     public function clear(array $args): void
     {
-        $this->info("Clearing environment cache...");
-        $cacheFile = CoreConfig::$DIR_PROJECT . '/lila/env_cache.php';
-
-        if (file_exists($cacheFile)) {
-            if (unlink($cacheFile)) {
-                $this->success("Configuration cache cleared successfully.");
-            } else {
-                $this->error("Failed to delete cache file. Check permissions.");
-            }
-        } else {
-            $this->info("No cache file found to clear.");
+        $this->info("Clearing application cache...");
+        try {
+            CoreConfig::deleteCache(CoreConfig::$DIR_PROJECT);
+            $this->success("All application caches cleared successfully (env, routes, manifest, and twig cache).");
+        } catch (\Throwable $e) {
+            $this->error("Failed to clear cache: " . $e->getMessage());
         }
     }
 }

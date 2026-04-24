@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.42
+ * @version 1.43
  */
 class App
 {
@@ -779,19 +779,35 @@ class App
                 } else {
                     if ($method === "GET") {
                         http_response_code(302);
-                        $back = $_SERVER['HTTP_REFERER'] ?? '/';
-
-                        $parsedUrl = parse_url($back);
+                        $referer = $_SERVER['HTTP_REFERER'] ?? '/';
+                        $parsedUrl = parse_url($referer);
                         $path = $parsedUrl['path'] ?? '/';
+
                         $basePath = parse_url($this->getEnv('URL_PROJECT') ?? '/', PHP_URL_PATH) ?? '';
                         $basePath = rtrim($basePath, '/');
                         $pattern = '#^' . preg_quote($basePath, '#') . '/([a-z]{2,3}(-[a-z]{2})?)(/|$)#i';
 
                         if (preg_match($pattern, $path, $matches)) {
-                            $newPath = preg_replace($pattern, $basePath . '/' . $newLang . '$3', $path);
-                            $back = str_replace($path, $newPath, $back);
+                            $path = preg_replace($pattern, $basePath . '/' . $newLang . '$3', $path);
                         } else {
-                            $back = str_replace("/{$lang}", "/{$newLang}", $back);
+                            $path = str_replace("/{$lang}", "/{$newLang}", $path);
+                        }
+
+                        $queryParams = [];
+                        if (isset($parsedUrl['query'])) {
+                            parse_str($parsedUrl['query'], $queryParams);
+                            unset($queryParams['set-lang'], $queryParams['lang']);
+                        }
+
+                        $newQuery = !empty($queryParams) ? '?' . http_build_query($queryParams) : '';
+                        $fragment = isset($parsedUrl['fragment']) ? '#' . $parsedUrl['fragment'] : '';
+
+                        if (isset($parsedUrl['host'])) {
+                            $scheme = $parsedUrl['scheme'] ?? 'http';
+                            $port = isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
+                            $back = "{$scheme}://{$parsedUrl['host']}{$port}{$path}{$newQuery}{$fragment}";
+                        } else {
+                            $back = "{$path}{$newQuery}{$fragment}";
                         }
 
                         $this->redirect(url: $back);

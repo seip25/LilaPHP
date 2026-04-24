@@ -50,9 +50,15 @@ class Config
             $dotenv = Dotenv::createMutable(self::$DIR_PROJECT);
             $envVars = $dotenv->load();
 
-            if (isset($envVars['DEBUG']) && $envVars['DEBUG'] === 'false') {
+            if (isset($envVars['DEBUG']) && ($envVars['DEBUG'] === 'false' || $envVars['DEBUG'] === false)) {
                 self::saveCache($cacheFile, $envVars);
+            } else {
+                self::deleteCache(self::$DIR_PROJECT);
             }
+        }
+
+        if ($cacheExists && (($_ENV['DEBUG'] ?? 'true') === 'true')) {
+            self::deleteCache(self::$DIR_PROJECT);
         }
 
         self::$TITLE_PROJECT = $_ENV['TITLE_PROJECT'] ?? 'Seip PHP Framework';
@@ -70,6 +76,40 @@ class Config
         self::$KEYWORDSMETA = $_ENV['KEYWORDSMETA'] ?? "";
         self::$AUTHORMETA = $_ENV['AUTHORMETA'] ?? "";
         self::$PATH_CACHE = self::normalizePath(env: 'PATH_CACHE', default: '/lila/cache');
+    }
+
+    public static function deleteCache(string $DIR_PROJECT): void
+    {
+        $lilaDir = rtrim($DIR_PROJECT, '/') . '/lila';
+
+        $files = [
+            $lilaDir . '/build_manifest.php',
+            $lilaDir . '/env_cache.php',
+            $lilaDir . '/route_attribute_cache.php',
+            $lilaDir . '/route_di_cache.php'
+        ];
+
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }
+
+        $cacheDir = $lilaDir . '/cache';
+        if (is_dir($cacheDir)) {
+            self::recursiveRmdir($cacheDir);
+        }
+    }
+
+    private static function recursiveRmdir(string $dir): void
+    {
+        if (!is_dir($dir))
+            return;
+        $files = array_diff(scandir($dir), array('.', '..'));
+        foreach ($files as $file) {
+            (is_dir("$dir/$file")) ? self::recursiveRmdir("$dir/$file") : @unlink("$dir/$file");
+        }
+        @rmdir($dir);
     }
 
     public static function saveCache(string $path, array $data): bool

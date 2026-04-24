@@ -44,11 +44,13 @@ class Template
                 $isGet = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET';
 
                 if (!$isAdmin && !$isAjax && $isGet) {
-                    return $baseUrl . '/' . $lang . '/' . $fullPath;
+                    $slash = ($fullPath !== '' && !str_contains($fullPath, '?') && !str_contains($fullPath, '#') && !str_ends_with($fullPath, '/')) ? '/' : '';
+                    return $baseUrl . '/' . $lang . '/' . $fullPath . $slash;
                 }
             }
 
-            return $baseUrl . '/' . $fullPath;
+            $slash = ($fullPath !== '' && !str_contains($fullPath, '?') && !str_contains($fullPath, '#') && !str_ends_with($fullPath, '/')) ? '/' : '';
+            return $baseUrl . '/' . $fullPath . $slash;
         }));
 
 
@@ -109,7 +111,8 @@ class Template
      */
     private static function isFrontendRequest(): bool
     {
-        return isset($_GET['source']) && $_GET['source'] === 'frontend';
+        return (isset($_GET['source']) && $_GET['source'] === 'frontend') ||
+            (isset($_SERVER['HTTP_X_LILA_SPA']) && $_SERVER['HTTP_X_LILA_SPA'] === 'true');
     }
 
     /**
@@ -217,11 +220,13 @@ class Template
 
             $bodyHtml = "<div id=\"root\" data-react-page=\"{$page}\" data-props='" . htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8') . "'></div>";
             self::renderJsonResponse($bodyHtml, $context);
-            return;
+
+        } else {
+            $context["props"] = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
+            self::render(template: "lila/react_base", context: $context);
         }
 
-        $context["props"] = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
-        self::render(template: "lila/react_base", context: $context);
+
     }
 
     private static function getBaseContext(array $extra = []): array
@@ -275,17 +280,17 @@ class Template
 
             if ($isFrontend) {
                 self::renderJsonResponse($html, $fullContext);
-                return;
-            }
-
-            header('Cache-Control: no-cache, must-revalidate');
-
-            if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
-                header('Content-Encoding: gzip');
-                echo gzencode($html, 6);
             } else {
-                echo $html;
+                header('Cache-Control: no-cache, must-revalidate');
+
+                if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
+                    header('Content-Encoding: gzip');
+                    echo gzencode($html, 6);
+                } else {
+                    echo $html;
+                }
             }
+
         } catch (\Throwable $exc) {
             $message = "General error";
             if (Config::$DEBUG) {
@@ -421,7 +426,8 @@ HTML;
         }
 
         $manifestFile = Config::$DIR_PROJECT . '/lila/build_manifest.php';
-        if (!file_exists($manifestFile)) return $data;
+        if (!file_exists($manifestFile))
+            return $data;
 
         $manifest = require $manifestFile;
         $file = $manifest['js/main.jsx']['file'] ?? "js/main.jsx";

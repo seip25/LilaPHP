@@ -18,9 +18,22 @@
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      const separator = url.includes('?') ? '&' : '?';
-      const response = await fetch(`${url}${separator}source=frontend`, {
-        signal: controller.signal
+      let requestUrl = url;
+      if (!requestUrl.includes('?') && !requestUrl.includes('#') && !requestUrl.endsWith('/')) {
+        const parts = requestUrl.split('/');
+        const lastPart = parts[parts.length - 1];
+        if (lastPart && !lastPart.includes('.')) {
+          requestUrl += '/';
+        }
+      }
+
+      const separator = requestUrl.includes('?') ? '&' : '?';
+      const response = await fetch(`${requestUrl}${separator}source=frontend`, {
+        signal: controller.signal,
+        headers: {
+          'X-Lila-SPA': 'true',
+          'Accept': 'application/json'
+        }
       });
 
       clearTimeout(timeoutId);

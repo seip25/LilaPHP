@@ -16,7 +16,7 @@ class Security
                 'enabled' => true,
                 'origins' => ['*'],
                 'methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-                'headers' => ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+                'headers' => ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'HTTP_X_LILA_SPA'],
                 'credentials' => false
             ],
             'payloadCheck' => true,
