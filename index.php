@@ -11,14 +11,7 @@ use Core\Translate;
 use Core\SEO;
 
 
-$app = new App([
-    "security" => [
-        "logger" => false,
-        "cors" => true,
-        "rateLimit" => 200,
-    ],
-    "translate" => true
-]);
+$app = new App();
 
 #[GET]
 #[SEO(key: "index")]// key in app/locales/seo.php

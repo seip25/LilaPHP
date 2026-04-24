@@ -118,7 +118,17 @@
           oldScript.remove();
         });
 
-       window.scrollTo(0, 0);
+        if (!url.includes('set-lang=true')) {
+          const hash = url.split('#')[1];
+          if (hash) {
+            const element = document.getElementById(hash);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            }
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }
       }
  
       if (push) {

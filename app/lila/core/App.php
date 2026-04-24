@@ -133,6 +133,7 @@ class App
         if (isset($options['translate'])) {
             Config::$TRANSLATE = (bool) $options['translate'];
         }
+
         $this->registerErrorHandler();
         $this->registerExceptionHandler();
         $this->security = new Security($options['security'] ?? []);
@@ -721,8 +722,8 @@ class App
     protected function dispatch(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        if ($this->options['translate'] == false) {
-            $this->setSession(key: "lang", value: Config::$LANG);
+        if (($this->options['translate'] ?? Config::$TRANSLATE) == false) {
+            Session::remove("lang");
         }
         if (Config::$DEBUG) {
             Debug::init();

@@ -29,7 +29,7 @@ class Template
 
     private static function registerFunctions(): void
     {
-        self::$twig->addFunction(new TwigFunction('url', function (string $path = '', bool $ignoreLang = false): string {
+        self::$twig->addFunction(new TwigFunction('url', function (string $path = '', bool $ignoreLang = true): string {
             $baseUrl = rtrim(Config::$URL_PROJECT, '/');
             $fullPath = ltrim($path, '/');
             $isAssetsOrFavicon = str_starts_with(haystack: strtolower($fullPath), needle: 'assets') || str_contains(haystack: strtolower($fullPath), needle: 'favicon.ico');
