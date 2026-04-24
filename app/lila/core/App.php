@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.40
+ * @version 1.41
  */
 class App
 {
@@ -129,6 +129,9 @@ class App
 
         if (isset($options['debug'])) {
             Config::$DEBUG = (bool) $options['debug'];
+        }
+        if (isset($options['translate'])) {
+            Config::$TRANSLATE = (bool) $options['translate'];
         }
         $this->registerErrorHandler();
         $this->registerExceptionHandler();
@@ -460,9 +463,29 @@ class App
 
             if (isset(self::$attributeCache[$cbKey])) {
                 $cached = self::$attributeCache[$cbKey];
+                $resolvedMiddlewares = [];
+                foreach (($cached['middlewares'] ?? []) as $mw) {
+                    if ($mw === 'ADMIN_PORTAL') {
+                        $resolvedMiddlewares[] = function ($req, $res) {
+                            $admin = new \Core\AdminPortal();
+                            $admin->handle($req, $res);
+                        };
+                    } elseif (is_array($mw) && isset($mw['type'])) {
+                        if ($mw['type'] === 'VALIDATE') {
+                            $resolvedMiddlewares[] = $this->createValidationMiddleware($mw['model'], $mw['lang']);
+                        } elseif ($mw['type'] === 'AUTH') {
+                            $resolvedMiddlewares[] = $this->createAuthMiddleware($mw['key'], $mw['decrypt'], $mw['redirect']);
+                        } elseif ($mw['type'] === 'CACHE') {
+                            $resolvedMiddlewares[] = Response::cacheResponse($mw['seconds']);
+                        }
+                    } else {
+                        $resolvedMiddlewares[] = $mw;
+                    }
+                }
+
                 $this->routes[$method] = [
                     'callback' => $callback,
-                    'middlewares' => array_merge($middlewares, $cached['middlewares'] ?? []),
+                    'middlewares' => array_merge($middlewares, $resolvedMiddlewares),
                     'csrf' => $cached['csrf'] ?? $csrf,
                     'seo' => $cached['seo'] ?? null
                 ];
@@ -481,7 +504,10 @@ class App
             $cacheAttr = $reflection->getAttributes(Cache::class);
             if (!empty($cacheAttr)) {
                 $seconds = $cacheAttr[0]->newInstance()->seconds;
-                $cachedMiddlewares[] = Response::cacheResponse($seconds);
+                $cachedMiddlewares[] = [
+                    'type' => 'CACHE',
+                    'seconds' => $seconds
+                ];
             }
 
             $validateAttr = $reflection->getAttributes(Validate::class);
@@ -529,12 +555,24 @@ class App
 
             if (!Config::$DEBUG && is_string($cbKey)) {
                 $cacheFile = Config::$DIR_PROJECT . '/lila/route_attribute_cache.php';
-                self::$attributeCache[$cbKey] = [
-                    'csrf' => $csrf,
-                    'middlewares' => $cachedMiddlewares,
-                    'seo' => $seoData
-                ];
-                @file_put_contents($cacheFile, "<?php\n\nreturn " . var_export(self::$attributeCache, true) . ";\n");
+
+                // Check if any middleware is a closure, if so, we can't cache this route's attributes
+                $canCache = true;
+                foreach ($cachedMiddlewares as $mw) {
+                    if (is_object($mw) && $mw instanceof \Closure) {
+                        $canCache = false;
+                        break;
+                    }
+                }
+
+                if ($canCache) {
+                    self::$attributeCache[$cbKey] = [
+                        'csrf' => $csrf,
+                        'middlewares' => $cachedMiddlewares,
+                        'seo' => $seoData
+                    ];
+                    @file_put_contents($cacheFile, "<?php\n\nreturn " . var_export(self::$attributeCache, true) . ";\n");
+                }
             }
 
             $finalMiddlewares = $middlewares;
@@ -549,6 +587,8 @@ class App
                         $finalMiddlewares[] = $this->createValidationMiddleware($mw['model'], $mw['lang']);
                     } elseif ($mw['type'] === 'AUTH') {
                         $finalMiddlewares[] = $this->createAuthMiddleware($mw['key'], $mw['decrypt'], $mw['redirect']);
+                    } elseif ($mw['type'] === 'CACHE') {
+                        $finalMiddlewares[] = Response::cacheResponse($mw['seconds']);
                     }
                 } else {
                     $finalMiddlewares[] = $mw;
@@ -658,7 +698,9 @@ class App
     protected function dispatch(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-
+        if ($this->options['translate'] == false) {
+            $this->setSession(key: "lang", value: Config::$LANG);
+        }
         if (Config::$DEBUG) {
             Debug::init();
             Debug::start();
@@ -703,45 +745,59 @@ class App
 
         $req = array_merge($_GET, $_POST, $data, $_FILES);
 
-        if (isset($_GET['set-lang'])) {
-            $lang = $this->getSession("lang") ?? $this->getLangDefault();
-            $newLang = $_GET["lang"] ?? $this->getLangDefault();
-            $this->setSession(key: "lang", value: $newLang);
-            if (isset($_GET['redirect']) && $_GET['redirect'] === 'false') {
-                $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
-                exit;
-            } else {
-                if ($method === "GET") {
-                    http_response_code(302);
-                    $back = $_SERVER['HTTP_REFERER'] ?? '/';
-                    $back = str_replace("/{$lang}", "/{$newLang}", $back);
-
-                    $this->redirect(url: $back);
+        if ($this->options['translate'] ?? Config::$TRANSLATE) {
+            if (isset($_GET['set-lang'])) {
+                $lang = $this->getSession("lang") ?? $this->getLangDefault();
+                $newLang = $_GET["lang"] ?? $this->getLangDefault();
+                $this->setSession(key: "lang", value: $newLang);
+                if (isset($_GET['redirect']) && $_GET['redirect'] === 'false') {
+                    $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
                     exit;
                 } else {
-                    $this->jsonResponse(data: ['changeLang' => true, 'lang' => $newLang], code: 302);
-                    exit;
+                    if ($method === "GET") {
+                        http_response_code(302);
+                        $back = $_SERVER['HTTP_REFERER'] ?? '/';
+
+                        $parsedUrl = parse_url($back);
+                        $path = $parsedUrl['path'] ?? '/';
+                        $basePath = parse_url($this->getEnv('URL_PROJECT') ?? '/', PHP_URL_PATH) ?? '';
+                        $basePath = rtrim($basePath, '/');
+                        $pattern = '#^' . preg_quote($basePath, '#') . '/([a-z]{2,3}(-[a-z]{2})?)(/|$)#i';
+
+                        if (preg_match($pattern, $path, $matches)) {
+                            $newPath = preg_replace($pattern, $basePath . '/' . $newLang . '$3', $path);
+                            $back = str_replace($path, $newPath, $back);
+                        } else {
+                            $back = str_replace("/{$lang}", "/{$newLang}", $back);
+                        }
+
+                        $this->redirect(url: $back);
+                        exit;
+                    } else {
+                        $this->jsonResponse(data: ['changeLang' => true, 'lang' => $newLang], code: 302);
+                        exit;
+                    }
                 }
-            }
-        } else {
-            $currentUri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-            $basePath = parse_url($this->getEnv('URL_PROJECT') ?? '/', PHP_URL_PATH) ?? '';
-            $basePath = rtrim($basePath, '/');
-
-            if ($basePath !== '' && str_starts_with($currentUri, $basePath)) {
-                $relativePath = substr($currentUri, strlen($basePath));
             } else {
-                $relativePath = $currentUri;
-            }
+                $currentUri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+                $basePath = parse_url($this->getEnv('URL_PROJECT') ?? '/', PHP_URL_PATH) ?? '';
+                $basePath = rtrim($basePath, '/');
 
-            $segments = explode('/', trim($relativePath, '/'));
-            $firstSegment = strtolower($segments[0] ?? '');
+                if ($basePath !== '' && str_starts_with($currentUri, $basePath)) {
+                    $relativePath = substr($currentUri, strlen($basePath));
+                } else {
+                    $relativePath = $currentUri;
+                }
 
-            if ($firstSegment !== '' && preg_match('/^[a-z]{2,3}(-[a-z]{2})?$/', $firstSegment)) {
-                $localeFile = Config::$DIR_PROJECT . "/locales/{$firstSegment}.php";
-                if (file_exists($localeFile)) {
-                    if ($this->getSession('lang') !== $firstSegment) {
-                        $this->setSession(key: "lang", value: $firstSegment);
+                $segments = explode('/', trim($relativePath, '/'));
+                $firstSegment = strtolower($segments[0] ?? '');
+
+                if ($firstSegment !== '' && preg_match('/^[a-z]{2,3}(-[a-z]{2})?$/', $firstSegment)) {
+                    $localeFile = Config::$DIR_PROJECT . "/locales/{$firstSegment}.php";
+                    if (file_exists($localeFile)) {
+                        if ($this->getSession('lang') !== $firstSegment) {
+                            $this->setSession(key: "lang", value: $firstSegment);
+                        }
                     }
                 }
             }

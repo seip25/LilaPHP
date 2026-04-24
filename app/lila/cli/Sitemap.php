@@ -35,7 +35,7 @@ class Sitemap extends Command
         $this->info("Generating sitemap...");
 
         $baseUrl = rtrim(Config::$URL_PROJECT, '/');
-        $locales = $this->discoverLocales();
+        $locales = Config::$TRANSLATE ? $this->discoverLocales() : [Config::$LANG];
         $routes = $this->discoverRoutes();
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
@@ -43,20 +43,22 @@ class Sitemap extends Command
 
         foreach ($routes as $route) {
             foreach ($locales as $lang) {
-                $url = $baseUrl . '/' . $lang . '/' . ltrim($route, '/');
+                $url = $baseUrl . '/' . (Config::$TRANSLATE ? $lang . '/' : '') . ltrim($route, '/');
                 $xml .= '  <url>' . PHP_EOL;
                 $xml .= '    <loc>' . htmlspecialchars($url) . '</loc>' . PHP_EOL;
                 $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . PHP_EOL;
                 $xml .= '    <changefreq>weekly</changefreq>' . PHP_EOL;
                 $xml .= '    <priority>0.8</priority>' . PHP_EOL;
 
-                foreach ($locales as $altLang) {
-                    $altUrl = $baseUrl . '/' . $altLang . '/' . ltrim($route, '/');
-                    $xml .= '    <xhtml:link rel="alternate" hreflang="' . $altLang . '" href="' . htmlspecialchars($altUrl) . '" />' . PHP_EOL;
-                }
+                if (Config::$TRANSLATE) {
+                    foreach ($locales as $altLang) {
+                        $altUrl = $baseUrl . '/' . $altLang . '/' . ltrim($route, '/');
+                        $xml .= '    <xhtml:link rel="alternate" hreflang="' . $altLang . '" href="' . htmlspecialchars($altUrl) . '" />' . PHP_EOL;
+                    }
 
-                $defaultUrl = $baseUrl . '/' . Config::$LANG . '/' . ltrim($route, '/');
-                $xml .= '    <xhtml:link rel="alternate" hreflang="x-default" href="' . htmlspecialchars($defaultUrl) . '" />' . PHP_EOL;
+                    $defaultUrl = $baseUrl . '/' . Config::$LANG . '/' . ltrim($route, '/');
+                    $xml .= '    <xhtml:link rel="alternate" hreflang="x-default" href="' . htmlspecialchars($defaultUrl) . '" />' . PHP_EOL;
+                }
 
                 $xml .= '  </url>' . PHP_EOL;
             }

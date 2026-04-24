@@ -11,6 +11,7 @@ class Config
     public static string $VERSION_PROJECT;
     public static string $VERSION_API;
     public static bool $DEBUG;
+    public static bool $TRANSLATE;
     public static string $PATH_LOGS;
     public static string $PATH_LOCALES;
     private static string $SECRET_KEY;
@@ -58,6 +59,7 @@ class Config
         self::$VERSION_PROJECT = $_ENV['VERSION_PROJECT'] ?? '0.1';
         self::$VERSION_API = (int) ($_ENV['VERSION_API'] ?? 1);
         self::$DEBUG = ($_ENV['DEBUG'] ?? 'true') === 'true';
+        self::$TRANSLATE = ($_ENV['TRANSLATE'] ?? 'true') === 'true';
         self::$PATH_LOGS = self::normalizePath(env: 'PATH_LOGS', default: '/lila/logs');
         self::$PATH_LOCALES = self::normalizePath(env: 'PATH_LOCALES', default: '/locales/');
         self::$SECRET_KEY = $_ENV['SECRET_KEY'] ?? bin2hex(random_bytes(32));

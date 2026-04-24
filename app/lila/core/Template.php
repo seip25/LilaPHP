@@ -36,7 +36,7 @@ class Template
             if ($isAssetsOrFavicon) {
                 return $baseUrl . '/' . $path;
             }
-            if (!$ignoreLang) {
+            if (!$ignoreLang && Config::$TRANSLATE) {
                 $lang = Session::get('lang') ?? Config::$LANG;
 
                 $isAdmin = str_starts_with(haystack: strtolower($fullPath), needle: 'admin') || str_contains(haystack: strtolower($_SERVER['REQUEST_URI'] ?? ''), needle: '/admin');

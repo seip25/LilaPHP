@@ -75,7 +75,8 @@ Edit `.env` and update the base URL:
 ```env
 URL_PROJECT=http://localhost/LilaPHP #or "http://localhost:8000/" 
 DEBUG=true
-LANG="eng"
+LANG="en"
+TRANSLATE=true # Set to false for single-language apps
 ```
 
 ### Run the Application or visit http://localhost/LilaPHP in LAMPP ,XAMPP,WAMP
@@ -335,6 +336,17 @@ $app->get(callback: function($req, $res) use ($app) {
 });
 ```
 
+### 🎯 Single Language Mode
+If your application only supports one language, you can disable the translation system to remove URL prefixes and simplify routing.
+
+- **Global**: Set `TRANSLATE=false` in `.env`.
+- **Per Instance**: Pass `['translate' => false]` to `new App()`.
+
+**Key effects:**
+- **Clean URLs**: The `url()` helper will NOT include language prefixes (e.g., `/es/`).
+- **Standard Routing**: Virtual language detection and `set-lang` are disabled.
+- **Single Sitemap**: The sitemap generator will only include URLs without prefixes.
+
 ---
 
 ## 🔒 Security & CSRF Protection
@@ -367,7 +379,7 @@ $app->post(
 LilaPHP extends Twig with powerful built-in helpers:
 
 - **`image(file, width, height, quality, type)`** — Generates optimized WebP or ICO images
-- **`url(path)`** — Returns the full absolute project URL
+- **`url(path)`** — Returns the full absolute project URL. Automatically handles language prefixes if `TRANSLATE` is enabled.
 - **`csrf_input()`** — Outputs the hidden CSRF token field
 - **`translate(key)`** or **`__(key)`** — Returns translated strings
 
