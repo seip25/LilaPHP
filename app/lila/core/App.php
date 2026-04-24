@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.41
+ * @version 1.42
  */
 class App
 {
@@ -453,7 +453,7 @@ class App
     {
         include_once __DIR__ . '/Method.php';
         $seoData = null;
-        $cbKey = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : (is_object($callback) ? spl_object_hash($callback) : null));
+        $cbKey = $this->generateCallbackKey($callback);
 
         if (!Config::$DEBUG && is_string($cbKey)) {
             $cacheFile = Config::$DIR_PROJECT . '/lila/route_attribute_cache.php';
@@ -647,6 +647,29 @@ class App
 
 
     /**
+     * Generate a unique key for a callback
+     * 
+     * @param mixed $callback
+     * @return string|null
+     */
+    protected function generateCallbackKey(mixed $callback): ?string
+    {
+        if (is_string($callback)) {
+            return $_SERVER['SCRIPT_FILENAME'] . '::' . $callback;
+        }
+
+        if (is_array($callback)) {
+            return (is_object($callback[0]) ? spl_object_hash($callback[0]) : $callback[0]) . '::' . $callback[1];
+        }
+
+        if (is_object($callback)) {
+            return spl_object_hash($callback);
+        }
+
+        return null;
+    }
+
+    /**
      * Get reflection object for a callback
      * 
      * @param mixed $callback
@@ -654,7 +677,7 @@ class App
      */
     protected function getReflection(mixed $callback): mixed
     {
-        $key = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : (is_object($callback) ? spl_object_hash($callback) : null));
+        $key = $this->generateCallbackKey($callback);
 
         if ($key && isset(self::$reflectionCache[$key])) {
             return self::$reflectionCache[$key];
@@ -833,7 +856,7 @@ class App
             $reflection = $this->getReflection($callback);
 
             if ($reflection) {
-                $cbKey = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : spl_object_hash($callback));
+                $cbKey = $this->generateCallbackKey($callback);
 
                 if (!isset(self::$diCache[$cbKey])) {
                     $cacheFile = Config::$DIR_PROJECT . '/lila/route_di_cache.php';

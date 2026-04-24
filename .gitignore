@@ -17,3 +17,6 @@ assets/build
 assets/cache 
 public/build 
 /app/docs
+app/lila/route_di_cache.php
+assets/js/spa.min.js
+app/lila/route_attribute_cache.php
