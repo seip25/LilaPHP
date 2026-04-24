@@ -25,6 +25,11 @@
 
       clearTimeout(timeoutId);
 
+      if (response.status === 401 || response.status === 403) {
+        window.location.href = url;
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

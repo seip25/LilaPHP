@@ -133,6 +133,7 @@ $app->add('handleSubmit');
 | `#[Middleware(callable)]`                  | Attach middleware to route          |
 | `#[Admin]`                                 | Protect route with Admin Portal     |
 | `#[SEO(key: "...")]`                       | Define page metadata. Resolves automatically from `app/locales/seo.php` based on session language |
+| `#[AUTH(key: "auth", decrypt: true, redirect: "/login")]` | Verify session existence before executing route. Redirects to /login or returns 401 if failed |
 
 ---
 
@@ -308,6 +309,39 @@ $res->renderReact('PageComponent', $props, [
     'styles' => []
 ]);
 ```
+
+---
+
+## 🚀 Single Page Application (SPA) Support
+
+LilaPHP features a native SPA engine (`assets/js/spa.js`) that enables instant transitions between Twig views and React islands without full page reloads.
+
+### How it works
+1. **Interceptor**: `spa.js` intercepts internal link clicks.
+2. **Partial Request**: It appends `?source=frontend` to the URL.
+3. **JSON Response**: The `Template` core detects the source and returns a JSON containing `body` (HTML partial), `meta`, `scripts`, `css`, and `props`.
+4. **DOM Update**: `spa.js` updates `#lila-spa-content`, injects missing assets into `<head>`, and executes embedded scripts.
+5. **React Re-sync**: Automatically triggers `window.renderReactComponent()` if available.
+
+### Usage & Conventions
+- **Container**: The main content must be wrapped in `<main id="lila-spa-content">` in `base.twig`.
+- **Dynamic Layout**: All Twig templates must use `{% extends layout | default("base.twig") %}`.
+- **Exclusion**: Add `data-no-spa` attribute to any link to force a full page reload.
+- **Error Handling**: If the server returns 401/403 (Unauthorized/Forbidden), the SPA engine performs a full reload to allow proper session handling (e.g., redirecting to login).
+
+### Authentication Attribute `#[AUTH]`
+Automatically protects routes by checking for a session key. Fully compatible with `app:optimize` attribute caching.
+
+```php
+use Core\{GET, AUTH, Response};
+
+#[GET]
+#[AUTH(key: 'auth', decrypt: true, redirect: '/login')]
+function dashboard(array $req, Response $res) {
+    return $res->render('dashboard');
+}
+```
+If the session key is missing, it will redirect to `/login` (default). If `redirect` is set to `false`, it returns a 401 response (which triggers a full reload in SPA mode).
 
 ---
 

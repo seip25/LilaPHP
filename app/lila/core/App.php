@@ -487,7 +487,22 @@ class App
             $validateAttr = $reflection->getAttributes(Validate::class);
             if (!empty($validateAttr)) {
                 $instance = $validateAttr[0]->newInstance();
-                $cachedMiddlewares[] = $this->createValidationMiddleware($instance->modelClass, $instance->langParam);
+                $cachedMiddlewares[] = [
+                    'type' => 'VALIDATE',
+                    'model' => $instance->modelClass,
+                    'lang' => $instance->langParam
+                ];
+            }
+
+            $authAttr = $reflection->getAttributes(AUTH::class);
+            if (!empty($authAttr)) {
+                $instance = $authAttr[0]->newInstance();
+                $cachedMiddlewares[] = [
+                    'type' => 'AUTH',
+                    'key' => $instance->key,
+                    'decrypt' => $instance->decrypt,
+                    'redirect' => $instance->redirect
+                ];
             }
 
             $adminAttr = $reflection->getAttributes(Admin::class);
@@ -529,6 +544,12 @@ class App
                         $admin = new \Core\AdminPortal();
                         $admin->handle($req, $res);
                     };
+                } elseif (is_array($mw) && isset($mw['type'])) {
+                    if ($mw['type'] === 'VALIDATE') {
+                        $finalMiddlewares[] = $this->createValidationMiddleware($mw['model'], $mw['lang']);
+                    } elseif ($mw['type'] === 'AUTH') {
+                        $finalMiddlewares[] = $this->createAuthMiddleware($mw['key'], $mw['decrypt'], $mw['redirect']);
+                    }
                 } else {
                     $finalMiddlewares[] = $mw;
                 }
@@ -556,6 +577,31 @@ class App
         return function (array $req, Response $res) use ($modelClass, $langParam) {
             $lang = $langParam === false ? (Session::get('lang') ?? $this->getLangDefault()) : $langParam;
             new $modelClass(data: $req, lang: $lang, jsonResponse: true);
+        };
+    }
+
+    /**
+     * Create authentication middleware
+     * 
+     * @param string $key Session key to check
+     * @param bool $decrypt Whether to decrypt the session value
+     * @param string|bool|null $redirect Redirect path on failure
+     * @return callable Middleware closure
+     */
+    protected function createAuthMiddleware(string $key, bool $decrypt, string|bool|null $redirect = '/login'): callable
+    {
+        return function (array $req, Response $res) use ($key, $decrypt, $redirect) {
+            $session = Session::get($key, null, $decrypt);
+            if (!$session) {
+                if (is_string($redirect)) {
+                    $res->redirect($redirect);
+                } else {
+                    http_response_code(401);
+                    echo "401 Unauthorized";
+                }
+                return false;
+            }
+            return true;
         };
     }
 

@@ -119,3 +119,22 @@ class SEO
         public ?string $key = null
     ) {}
 }
+/**
+ * Attribute to enable Session Authentication check
+ * 
+ * @package Core
+ */
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+class AUTH
+{
+    /**
+     * @param string $key Session key to check (default: 'auth')
+     * @param bool $decrypt Whether to decrypt the session value
+     * @param string|bool|null $redirect Redirect path on failure (default: '/login'). Use false for pure 401.
+     */
+    public function __construct(
+        public string $key = 'auth',
+        public bool $decrypt = true,
+        public string|bool|null $redirect = '/login'
+    ) {}
+}

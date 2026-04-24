@@ -36,6 +36,7 @@ LilaPHP was designed with one clear purpose — to give developers **full contro
 - 🧠 **Developer experience first** — Instant setup, clear routing, and intuitive Twig integration
 - 🚀 **Performance oriented** — Minimal I/O, cached helpers, and pre-optimized rendering for production
 - 🌐 **Multi-language support** — Built-in localization system with English, Spanish, Portuguese, and Brazilian Portuguese
+- ⚡ **SPA Ready** — Built-in Single Page Application engine for instant transitions between Twig and React views
 
 ### 🔥 Modular Architecture
 
@@ -239,6 +240,38 @@ $app->post(
     csrf: true
 );
 ```
+
+### 🚀 Single Page Application (SPA)
+
+LilaPHP includes a native SPA engine (`assets/js/spa.js`) that intercepts links and performs partial DOM updates.
+
+- **Twig & React hybrid**: Seamlessly switch between static Twig templates and dynamic React islands.
+- **Smart Loading**: Automatically detects and injects missing CSS or JS assets during transitions.
+- **Dynamic Layouts**: Uses a conditional layout system to return only the necessary HTML fragment.
+- **Fail-safe**: Automatic fallback to traditional navigation on timeout or server error.
+
+To use it, ensure your main content is inside `<main id="lila-spa-content">` and your templates extend the dynamic layout:
+```twig
+{% extends layout | default("base.twig") %}
+```
+
+### 🔐 Authentication Attribute
+
+Secure your routes declaratively using PHP 8 Attributes. By default, it redirects to `/login` if no session is found.
+
+```php
+use Core\{GET, AUTH, Response};
+
+#[GET]
+#[AUTH(key: "auth", decrypt: true, redirect: "/login")]
+function dashboard($req, $res) {
+    return $res->render("dashboard");
+}
+```
+
+- **Default behavior**: Redirects to `/login`.
+- **Pure 401**: Use `redirect: false` to return a 401 Unauthorized status.
+- **Cache Ready**: Fully compatible with the `app:optimize` attribute caching system.
 
 ### Sessions
 
