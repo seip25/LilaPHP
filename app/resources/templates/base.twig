@@ -31,10 +31,13 @@ sans: ["Inter", "sans-serif"]
 }
 };
 		</script>
+		<script src="{{ url('assets/js/spa.js') }}"></script>
 		{{ hot_reload() }}
 		{% block extra %}{% endblock %}
 	</head>
-	<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300 min-h-screen flex flex-col"> {% block content %}{% endblock %}
-
-		</body>
-	</html>
+	<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300 min-h-screen flex flex-col">
+		<main id="lila-spa-content">
+			{% block content %}{% endblock %}
+		</main>
+	</body>
+</html>

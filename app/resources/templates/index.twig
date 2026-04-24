@@ -1,4 +1,4 @@
-{% extends "base.twig" %}
+{% extends layout | default("base.twig") %}
 
 {% block content %}
 	<main class="flex-grow container mx-auto px-4 py-12 text-center">
@@ -68,7 +68,7 @@
 			</div>
 
 			<div class="flex justify-center mt-4">
-				<a href="login/" target="_blank" class="text-blue-600 dark:text-blue-400 underline">Example GET and POST Login
+				<a href="login/" class="text-blue-600 dark:text-blue-400 underline">Example GET and POST Login
 				</a>
 
 			</div>
