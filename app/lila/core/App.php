@@ -22,7 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
- * @version 1.43
+ * @version 1.44
  */
 class App
 {
@@ -125,7 +125,6 @@ class App
     {
         $this->options = $options;
         Config::load();
-        Session::start();
 
         if (isset($options['debug'])) {
             Config::$DEBUG = (bool) $options['debug'];
@@ -458,8 +457,18 @@ class App
 
         if (!Config::$DEBUG && is_string($cbKey)) {
             $cacheFile = Config::$DIR_PROJECT . '/lila/route_attribute_cache.php';
-            if (empty(self::$attributeCache) && file_exists($cacheFile)) {
-                self::$attributeCache = require $cacheFile;
+            if (empty(self::$attributeCache)) {
+                if (function_exists('apcu_fetch')) {
+                    $cached = apcu_fetch('lila_route_attributes');
+                    if ($cached !== false) {
+                        self::$attributeCache = $cached;
+                    }
+                }
+                if (empty(self::$attributeCache) && file_exists($cacheFile)) {
+                    self::$attributeCache = require $cacheFile;
+                    if (function_exists('apcu_store'))
+                        apcu_store('lila_route_attributes', self::$attributeCache);
+                }
             }
 
             if (isset(self::$attributeCache[$cbKey])) {
@@ -477,7 +486,7 @@ class App
                         } elseif ($mw['type'] === 'AUTH') {
                             $resolvedMiddlewares[] = $this->createAuthMiddleware($mw['key'], $mw['decrypt'], $mw['redirect']);
                         } elseif ($mw['type'] === 'CACHE') {
-                            $resolvedMiddlewares[] = Response::cacheResponse($mw['seconds']);
+                            $resolvedMiddlewares[] = Response::cacheResponse($mw['seconds'], $mw['tag'] ?? null);
                         }
                     } else {
                         $resolvedMiddlewares[] = $mw;
@@ -504,10 +513,11 @@ class App
 
             $cacheAttr = $reflection->getAttributes(Cache::class);
             if (!empty($cacheAttr)) {
-                $seconds = $cacheAttr[0]->newInstance()->seconds;
+                $instance = $cacheAttr[0]->newInstance();
                 $cachedMiddlewares[] = [
                     'type' => 'CACHE',
-                    'seconds' => $seconds
+                    'seconds' => $instance->seconds,
+                    'tag' => $instance->tag ?? null
                 ];
             }
 
@@ -589,7 +599,7 @@ class App
                     } elseif ($mw['type'] === 'AUTH') {
                         $finalMiddlewares[] = $this->createAuthMiddleware($mw['key'], $mw['decrypt'], $mw['redirect']);
                     } elseif ($mw['type'] === 'CACHE') {
-                        $finalMiddlewares[] = Response::cacheResponse($mw['seconds']);
+                        $finalMiddlewares[] = Response::cacheResponse($mw['seconds'], $mw['tag'] ?? null);
                     }
                 } else {
                     $finalMiddlewares[] = $mw;

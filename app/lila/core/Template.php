@@ -229,6 +229,142 @@ class Template
 
     }
 
+    /**
+     * Render HTML directly via native PHP (bypasses Twig)
+     * 
+     * @param string|array $html Content to render
+     * @param array $options Options (renderFull, cache, title, meta, scripts, styles, lang)
+     * @return void
+     * @example 
+     * ```php
+     * $res->renderHtml("<h2>Hi!</h2>", [
+     *     "renderFull" => true,
+     *     "title" => "My title",
+     *     "cache" => 900
+     * ]);
+     * ```
+     */
+    public static function renderHtml(string|array $html, array $options = []): void
+    {
+        $renderFull = $options['renderFull'] ?? true;
+
+        if (is_array($html)) {
+            $html = implode("\n", $html);
+        }
+
+        if (!$renderFull) {
+            echo $html;
+            return;
+        }
+
+        $seo = App::$activeRoute['seo'] ?? null;
+        if (isset($seo['key']) && $seo['key'] !== null) {
+            $seoDynamic = Translate::getSeo($seo['key']);
+            if ($seoDynamic) {
+                $seo['title'] = $seoDynamic['title'] ?? $seo['title'];
+                $seo['description'] = $seoDynamic['descriptionMeta'] ?? $seoDynamic['description'] ?? $seo['description'];
+                $seo['keywords'] = $seoDynamic['keywordsMeta'] ?? $seoDynamic['keywords'] ?? $seo['keywords'];
+            }
+        }
+
+        $title = $options['title'] ?? ($seo['title'] ?? Config::$TITLE_PROJECT);
+        $description = $seo['description'] ?? Config::$DESCRIPTIONMETA;
+        $keywords = $seo['keywords'] ?? Config::$KEYWORDSMETA;
+        $lang = $options['lang'] ?? (Session::get('lang') ?? Config::$LANGHTML);
+        $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
+
+        $metaHtml = "";
+        foreach ($options['meta'] ?? [] as $meta_value) {
+            $metaHtml .= '<meta name="' . ($meta_value['name'] ?? '') . '" content="' . ($meta_value['content'] ?? '') . '" />' . "\n";
+        }
+
+        $stylesHtml = "";
+        foreach ($options['styles'] ?? [] as $style) {
+            $stylesHtml .= '<link rel="stylesheet" href="' . rtrim($style) . '" />' . "\n";
+        }
+
+        $scriptsHtml = "";
+        foreach ($options['scripts'] ?? [] as $script) {
+            $scriptsHtml .= '<script src="' . rtrim($script) . '"></script>' . "\n";
+        }
+
+        $isFrontend = self::isFrontendRequest();
+
+        if ($isFrontend) {
+            $context = [
+                "titleHtml" => $title,
+                "descriptionMeta" => $description,
+                "keywordsMeta" => $keywords,
+                "langHtml" => $lang,
+                "scripts_array" => $options['scripts'] ?? [],
+                "styles_array" => $options['styles'] ?? [],
+                "props_array" => []
+            ];
+
+            $viteAssets = self::getViteAssetsData();
+            $context['scripts_array'] = array_merge($context['scripts_array'], $viteAssets['scripts']);
+            $context['styles_array'] = array_merge($context['styles_array'], $viteAssets['css']);
+
+            self::renderJsonResponse($html, $context);
+            return;
+        }
+
+        $viteHtml = "";
+        $viteAssets = self::getViteAssetsData();
+        foreach ($viteAssets['css'] as $href) {
+            $viteHtml .= '<link rel="stylesheet" href="' . $href . '">' . "\n";
+        }
+        foreach ($viteAssets['scripts'] as $script) {
+            if (isset($script['src'])) {
+                $viteHtml .= '<script type="' . ($script['type'] ?? 'text/javascript') . '" src="' . $script['src'] . '"></script>' . "\n";
+            } elseif (isset($script['content'])) {
+                $viteHtml .= '<script type="' . ($script['type'] ?? 'text/javascript') . '">' . $script['content'] . '</script>' . "\n";
+            }
+        }
+        $viteHtml .= self::hotReload();
+
+        $cacheControl = '';
+        if (isset($options['cache'])) {
+            $seconds = is_array($options['cache']) ? ($options['cache']['time'] ?? 900) : (int) $options['cache'];
+            $cacheControl = '<meta name="cache-control" content="max-age=' . $seconds . '">';
+        }
+
+        header('Content-Type: text/html; charset=utf-8');
+
+        $finalHtml = <<<HTML
+<!DOCTYPE html>
+<html lang="{$lang}">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{$title}</title>
+    <meta name="description" content="{$description}" />
+    <meta name="keywords" content="{$keywords}" />
+    {$cacheControl}
+    <link rel="icon" type="image/ico" href="{$icon}" />
+    {$metaHtml}
+    {$stylesHtml}
+    {$viteHtml}
+</head>
+<body>
+    <main id="lila-spa-content">
+        {$html}
+    </main>
+    {$scriptsHtml}
+</body>
+</html>
+HTML;
+
+        $finalHtml = self::minifyHtml($finalHtml);
+
+        if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
+            header('Content-Encoding: gzip');
+            echo gzencode($finalHtml, 6);
+        } else {
+            echo $finalHtml;
+        }
+    }
+
     private static function getBaseContext(array $extra = []): array
     {
         $seo = App::$activeRoute['seo'] ?? null;

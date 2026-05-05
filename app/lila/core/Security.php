@@ -10,7 +10,7 @@ class Security
     {
         $this->options = array_replace_recursive([
             'logger' => false,
-            'rateLimit' => 200,
+            'rateLimit' => false,
             'sanitize' => true,
             'cors' => [
                 'enabled' => true,
@@ -21,7 +21,7 @@ class Security
             ],
             'payloadCheck' => true,
             'csp' => [
-                'enabled' => true,
+                'enabled' => false,
                 'directives' => [
                     'default-src' => ["'self'"],
                     'script-src' => [

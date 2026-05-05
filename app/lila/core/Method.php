@@ -66,7 +66,7 @@ class Middleware
 #[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
 class Cache
 {
-    public function __construct(public int $seconds = 60) {}
+    public function __construct(public int $seconds = 60, public ?string $tag = null) {}
 }
 
 /**
