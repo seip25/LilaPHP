@@ -12,11 +12,13 @@ namespace Cli;
 class Model extends Command
 {
     private string $modelsDir;
+    private string $cacheDir;
 
     public function __construct()
     {
         parent::__construct();
-        $this->modelsDir = dirname(__DIR__) . '/models';
+        $this->modelsDir = dirname(__DIR__) . '/../models';
+        $this->cacheDir = dirname(__DIR__) . '/../lila';
 
         if (!is_dir($this->modelsDir)) {
             mkdir($this->modelsDir, 0755, true);
@@ -101,7 +103,7 @@ class Model extends Command
             if (class_exists($className)) {
                 try {
                     $this->info("Caching: {$className}");
-                    
+
                     $schema = $className::getSchema();
                     $fields = $className::getDatabaseFields();
 
@@ -117,11 +119,7 @@ class Model extends Command
         }
 
         if ($total > 0) {
-            $dir = dirname(__DIR__) . '/lila';
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-
+            $dir = $this->cacheDir;
             $cacheFile = $dir . '/model_cache.php';
             $content = "<?php\n\nreturn " . var_export($cache, true) . ";\n";
 

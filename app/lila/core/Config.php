@@ -86,7 +86,8 @@ class Config
             $lilaDir . '/build_manifest.php',
             $lilaDir . '/env_cache.php',
             $lilaDir . '/route_attribute_cache.php',
-            $lilaDir . '/route_di_cache.php'
+            $lilaDir . '/route_di_cache.php',
+            $lilaDir . '/model_cache.php'
         ];
 
         foreach ($files as $file) {
