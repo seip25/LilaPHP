@@ -738,13 +738,12 @@ class App
         if (Config::$DEBUG) {
             Debug::init();
             Debug::start();
-            $this->addMiddlewares([
-                'before' => [
-                    function () {
-                        Debug::end(http_response_code() ?: 200);
-                    }
-                ]
-            ]);
+
+            if (!isset($_GET['debug'])) {
+                register_shutdown_function(function () {
+                    Debug::end(http_response_code() ?: 200);
+                });
+            }
 
             if ($method === 'GET' && isset($_GET['debug']) && Config::$DEBUG) {
                 if (isset($_GET['clear']))

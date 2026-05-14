@@ -38,7 +38,7 @@ class Debug
         }
 
         try {
-            $path = Config::$DIR_PROJECT . "/lila/cache";
+            $path = Config::$DIR_PROJECT . "/lila/";
             if (!is_dir($path)) {
                 mkdir($path, 0777, true);
             }
@@ -58,6 +58,7 @@ class Debug
                 trace TEXT
             )");
         } catch (PDOException $e) {
+            error_log("Debug system init failed: " . $e->getMessage());
             Logger::error("Debug system init failed: " . $e->getMessage());
         }
     }
@@ -90,28 +91,36 @@ class Debug
      */
     public static function end(int $responseCode = 200): void
     {
-        if (!Config::$DEBUG || !self::$db) {
+        if (!Config::$DEBUG) {
+            return;
+        }
+
+        if (!self::$db) {
+            self::init();
+        }
+
+        if (!self::$db) {
             return;
         }
 
         try {
-            $duration = (microtime(true) - self::$startTime) * 1000; // ms
+            $duration = (microtime(true) - self::$startTime) * 1000;
             $memoryPeak = memory_get_peak_usage(true);
             $method = $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN';
             $uri = $_SERVER['REQUEST_URI'] ?? '/';
 
-            // Basic trace of the request flow (simplified)
             $trace = json_encode([
                 'memory_initial' => self::$startMemory,
                 'memory_final' => memory_get_usage(),
-                'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
+                'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+                'php_sapi' => PHP_SAPI
             ]);
 
             $stmt = self::$db->prepare("INSERT INTO debug_requests 
                 (method, uri, duration, memory_peak, response_code, trace) 
                 VALUES (?, ?, ?, ?, ?, ?)");
 
-            $stmt->execute([
+            $success = $stmt->execute([
                 $method,
                 $uri,
                 $duration,
@@ -119,7 +128,12 @@ class Debug
                 $responseCode,
                 $trace
             ]);
+            if (!$success) {
+                Logger::error("Debug system logging failed");
+            }
+
         } catch (PDOException $e) {
+            error_log("Debug system logging failed: " . $e->getMessage());
             Logger::error("Debug system logging failed: " . $e->getMessage());
         }
     }

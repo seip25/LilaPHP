@@ -27,6 +27,10 @@ class Dispatcher
 
     private static function dispatch(string $dirLilaPHP, string $dirRoutes): void
     {
+        if (Config::$DEBUG) {
+            Debug::init();
+            Debug::start();
+        }
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
 
@@ -63,6 +67,10 @@ class Dispatcher
             require_once $targetFile;
         } else {
             http_response_code(404);
+
+            if (Config::$DEBUG) {
+                Debug::end(404);
+            }
             if (file_exists($dirRoutes . "/404.php")) {
                 require_once $dirRoutes . "/404.php";
             } else {
