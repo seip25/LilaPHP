@@ -42,10 +42,7 @@ class Dispatcher
             Debug::init();
             Debug::start();
         }
-
-        header("X-Content-Type-Options: nosniff");
-        header("X-Frame-Options: SAMEORIGIN");
-        header("X-XSS-Protection: 1; mode=block");
+        Security::applyGeneralSecurityHeaders();
 
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';

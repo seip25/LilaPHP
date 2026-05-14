@@ -66,7 +66,6 @@ class Security
             if (!$this->loggerMiddleware($req))
                 return false;
         }
-        $this->applyGeneralSecurityHeaders();
 
         if ($this->options['cors'])
             $this->corsHeaders();
@@ -200,7 +199,7 @@ class Security
      * 
      * @return void
      */
-    protected function applyGeneralSecurityHeaders(): void
+    public static function applyGeneralSecurityHeaders(): void
     {
         header("X-Frame-Options: SAMEORIGIN");
 
