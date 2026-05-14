@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PHP Application (Core engine)
+  app:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    container_name: lila-app
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./:/var/www
+    networks:
+      - lila-network
+
+  # Nginx Web Server
+  web:
+    image: nginx:alpine
+    container_name: lila-web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+      - "5173:5173" # Vite HMR port
+    volumes:
+      - ./:/var/www
+      - ./docker/dev/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - lila-network
+    depends_on:
+      - app
+
+  # Database (Optional, can use SQLite by default)
+  db:
+    image: mysql:8.0
+    container_name: lila-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-lila}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USER:-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - lila-db-data:/var/lib/mysql
+    networks:
+      - lila-network
+
+networks:
+  lila-network:
+    driver: bridge
+
+volumes:
+  lila-db-data:
