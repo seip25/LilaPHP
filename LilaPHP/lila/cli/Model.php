@@ -100,6 +100,12 @@ class Model extends Command
             }
 
             $className = "Models\\" . substr($file, 0, -4);
+            
+            if (!class_exists($className)) {
+                $filePath = $this->modelsDir . '/' . $file;
+                require_once $filePath;
+            }
+
             if (class_exists($className)) {
                 try {
                     $this->info("Caching: {$className}");
@@ -115,6 +121,8 @@ class Model extends Command
                 } catch (\Throwable $e) {
                     $this->error("Error caching {$className}: " . $e->getMessage());
                 }
+            } else {
+                $this->warning("Class {$className} not found in file {$file}");
             }
         }
 

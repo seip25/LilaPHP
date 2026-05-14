@@ -28,39 +28,59 @@ class Optimize extends Command
         $this->info("   LilaPHP Production Optimization      ");
         $this->info("========================================");
 
-        // 0. Preliminary Cleanup
-        $this->clearCache();
+        try {
+            $this->clearCache();
+        } catch (\Throwable $e) {
+            $this->error("Cache clear failed: " . $e->getMessage());
+        }
 
-        // 1. Environment Caching
-        $this->info("\n[1/6] Optimizing Environment Variables...");
-        $configCmd = new Config();
-        $configCmd->cache([]);
+        try {
+            $this->info("\n[1/6] Optimizing Environment Variables...");
+            $configCmd = new Config();
+            $configCmd->cache([]);
+        } catch (\Throwable $e) {
+            $this->error("Config optimization failed: " . $e->getMessage());
+        }
 
-        // 2. Model Caching
-        $this->info("\n[2/6] Optimizing Model Metadata...");
-        $modelCmd = new Model();
-        $modelCmd->cache([]);
+        try {
+            $this->info("\n[2/6] Optimizing Model Metadata...");
+            $modelCmd = new Model();
+            $modelCmd->cache([]);
+        } catch (\Throwable $e) {
+            $this->error("Model optimization failed: " . $e->getMessage());
+        }
 
-        // 3. Route Caching
-        $this->info("\n[3/6] Optimizing Route Cache...");
-        $this->success("Route attribute and DI cache cleared.");
+        try {
+            $this->info("\n[3/6] Optimizing Route Cache...");
+            $this->success("Route attribute and DI cache cleared (Generated on-the-fly).");
+        } catch (\Throwable $e) {
+            $this->error("Route optimization failed: " . $e->getMessage());
+        }
 
-        // 4. Asset Minification
-        $this->info("\n[4/6] Minifying Assets...");
-        $minifyCmd = new Minify();
-        $minifyCmd->execute([]);
+        try {
+            $this->info("\n[4/6] Minifying Assets...");
+            $minifyCmd = new Minify();
+            $minifyCmd->execute([]);
+        } catch (\Throwable $e) {
+            $this->error("Minification failed: " . $e->getMessage());
+        }
 
-        // 5. Vite Compilation
-        $this->info("\n[5/6] Building Frontend Assets (React/Vite)...");
-        $this->runViteBuild();
+        try {
+            $this->info("\n[5/6] Building Frontend Assets (React/Vite)...");
+            $this->runViteBuild();
+        } catch (\Throwable $e) {
+            $this->warning("Vite build skipped or failed: " . $e->getMessage());
+        }
 
-        // 6. Health Check
-        $this->info("\n[6/6] Performing Production Health Check...");
-        $this->runHealthCheck();
+        try {
+            $this->info("\n[6/6] Performing Production Health Check...");
+            $this->runHealthCheck();
+        } catch (\Throwable $e) {
+            $this->error("Health check failed: " . $e->getMessage());
+        }
 
         $this->info("\n========================================");
-        $this->success("Optimization completed successfully!");
-        $this->info("Your application is now ready for scale.");
+        $this->success("  OPTIMIZATION PROCESS COMPLETE!      ");
         $this->info("========================================\n");
     }
 
@@ -84,7 +104,8 @@ class Optimize extends Command
      */
     private function removeDirectory(string $path): void
     {
-        if (!is_dir($path)) return;
+        if (!is_dir($path))
+            return;
         $files = array_diff(scandir($path), ['.', '..']);
         foreach ($files as $file) {
             $fullPath = $path . DIRECTORY_SEPARATOR . $file;
@@ -119,7 +140,7 @@ class Optimize extends Command
 
         $this->info("Running npm run build...");
         $outputBuild = shell_exec("cd " . escapeshellarg($appDir) . " && npm run build 2>&1");
-        
+
         if (strpos($outputBuild, 'built in') !== false || strpos($outputBuild, 'manifest.json') !== false) {
             $this->success("Frontend assets compiled successfully!");
         } else {
