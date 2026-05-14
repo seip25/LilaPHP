@@ -1,0 +1,20 @@
+{
+  "name": "seip25/lila-php",
+  "description": "Modern PHP framework , built for developing scalable web applications and APIs. React integration, Twig templating, internationalization (i18n), request validation, flexible environment configuration,Seeders,Migrations and more. ",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Core\\": "lila/core/",
+      "App\\": "./",
+      "Models\\": "models/",
+      "Cli\\": "lila/cli/",
+      "Jobs\\": "jobs/"
+    }
+  },
+  "require": {
+    "php": ">=8.1",
+    "twig/twig": "^3.21",
+    "vlucas/phpdotenv": "^5.6"
+  }
+}
