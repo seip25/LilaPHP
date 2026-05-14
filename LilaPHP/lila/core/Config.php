@@ -6,25 +6,25 @@ use Dotenv\Dotenv;
 
 class Config
 {
-    public static string $DIR_PROJECT;
-    public static string $TITLE_PROJECT;
-    public static string $VERSION_PROJECT;
-    public static string $VERSION_API;
-    public static bool $DEBUG;
-    public static bool $TRANSLATE;
-    public static string $PATH_LOGS;
-    public static string $PATH_LOCALES;
-    private static string $SECRET_KEY;
-    public static string $URL_PROJECT;
-    public static string $LANGHTML;
+    public static string $DIR_PROJECT = '';
+    public static string $TITLE_PROJECT = 'LilaPHP';
+    public static string $VERSION_PROJECT = '1.0.0';
+    public static string $VERSION_API = '1';
+    public static bool $DEBUG = true;
+    public static bool $TRANSLATE = true;
+    public static string $PATH_LOGS = '/lila/logs';
+    public static string $PATH_LOCALES = '/locales';
+    private static string $SECRET_KEY = '';
+    public static string $URL_PROJECT = 'http://localhost';
+    public static string $LANGHTML = 'en';
 
-    public static string $LANG;
+    public static string $LANG = 'en';
 
-    public static string $DESCRIPTIONMETA;
-    public static string $KEYWORDSMETA;
-    public static string $AUTHORMETA;
+    public static string $DESCRIPTIONMETA = '';
+    public static string $KEYWORDSMETA = '';
+    public static string $AUTHORMETA = 'LilaPHP';
 
-    public static string $PATH_CACHE;
+    public static string $PATH_CACHE = '/lila/cache';
 
     public static function load(): void
     {

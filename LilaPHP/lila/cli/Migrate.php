@@ -235,10 +235,14 @@ class Migrate extends Command
     private function discoverModels(): array
     {
         $models = [];
-        $appDir = Config::$DIR_PROJECT;
+        $modelsDir = Config::$DIR_PROJECT . '/models';
+
+        if (!is_dir($modelsDir)) {
+            return [];
+        }
 
         $files = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($appDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+            new \RecursiveDirectoryIterator($modelsDir, \RecursiveDirectoryIterator::SKIP_DOTS)
         );
 
         foreach ($files as $file) {

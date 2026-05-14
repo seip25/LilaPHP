@@ -12,11 +12,6 @@ class Session
         if (self::$started)
             return;
 
-        if (PHP_SAPI === 'cli') {
-            self::$started = true;
-            return;
-        }
-
         $secure = Config::$DEBUG == false || isset($_SERVER['HTTPS']) ? true : false;
         session_set_cookie_params([
             'lifetime' => 604800,
