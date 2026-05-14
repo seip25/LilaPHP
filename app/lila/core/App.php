@@ -456,7 +456,7 @@ class App
         $cbKey = $this->generateCallbackKey($callback);
 
         if (!Config::$DEBUG && is_string($cbKey)) {
-            $cacheFile = Config::$DIR_PROJECT . '/lila/route_attribute_cache.php';
+            $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_attribute_cache.php';
             if (empty(self::$attributeCache)) {
                 if (function_exists('apcu_fetch')) {
                     $cached = apcu_fetch('lila_route_attributes');
@@ -565,7 +565,7 @@ class App
             }
 
             if (!Config::$DEBUG && is_string($cbKey)) {
-                $cacheFile = Config::$DIR_PROJECT . '/lila/route_attribute_cache.php';
+                $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_attribute_cache.php';
 
                 // Check if any middleware is a closure, if so, we can't cache this route's attributes
                 $canCache = true;
@@ -886,7 +886,7 @@ class App
                 $cbKey = $this->generateCallbackKey($callback);
 
                 if (!isset(self::$diCache[$cbKey])) {
-                    $cacheFile = Config::$DIR_PROJECT . '/lila/route_di_cache.php';
+                    $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_di_cache.php';
 
                     if (!Config::$DEBUG && is_string($cbKey) && file_exists($cacheFile)) {
                         $loadedCache = require $cacheFile;

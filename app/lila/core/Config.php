@@ -29,7 +29,7 @@ class Config
     public static function load(): void
     {
         self::$DIR_PROJECT = dirname(__DIR__, 2);
-        $cacheFile = self::$DIR_PROJECT . '/lila/env_cache.php';
+        $cacheFile = self::$DIR_PROJECT . '/lila/cache/env_cache.php';
         $envFile = self::$DIR_PROJECT . '/.env';
 
         $cacheExists = false;
@@ -51,6 +51,10 @@ class Config
             $envVars = $dotenv->load();
 
             if (isset($envVars['DEBUG']) && ($envVars['DEBUG'] === 'false' || $envVars['DEBUG'] === false)) {
+                $cacheDir = self::$DIR_PROJECT . '/lila/cache';
+                if (!is_dir($cacheDir)) {
+                    @mkdir($cacheDir, 0755, true);
+                }
                 self::saveCache($cacheFile, $envVars);
             } else {
                 self::deleteCache(self::$DIR_PROJECT);
@@ -80,26 +84,14 @@ class Config
 
     public static function deleteCache(string $DIR_PROJECT): void
     {
-        $lilaDir = rtrim($DIR_PROJECT, '/') . '/lila';
+        $cacheDir = rtrim($DIR_PROJECT, '/') . '/lila/cache';
 
-        $files = [
-            $lilaDir . '/build_manifest.php',
-            $lilaDir . '/env_cache.php',
-            $lilaDir . '/route_attribute_cache.php',
-            $lilaDir . '/route_di_cache.php',
-            $lilaDir . '/model_cache.php'
-        ];
-
-        foreach ($files as $file) {
-            if (file_exists($file)) {
-                @unlink($file);
-            }
-        }
-
-        $cacheDir = $lilaDir . '/cache';
         if (is_dir($cacheDir)) {
             self::recursiveRmdir($cacheDir);
         }
+
+        // Recreate the directory so the app can write new cache files immediately
+        @mkdir($cacheDir, 0755, true);
     }
 
     private static function recursiveRmdir(string $dir): void

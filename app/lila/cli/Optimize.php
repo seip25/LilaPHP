@@ -72,31 +72,8 @@ class Optimize extends Command
     private function clearCache(): void
     {
         $this->info("\n[0/6] Clearing existing cache files...");
-        $lilaDir = rtrim(CoreConfig::$DIR_PROJECT, '/') . '/lila';
-        
-        $files = [
-            $lilaDir . '/build_manifest.php',
-            $lilaDir . '/env_cache.php',
-            $lilaDir . '/route_attribute_cache.php',
-            $lilaDir . '/route_di_cache.php'
-        ];
-
-        foreach ($files as $file) {
-            if (file_exists($file)) {
-                if (@unlink($file)) {
-                    $this->info("✓ Deleted: " . basename($file));
-                }
-            }
-        }
-
-        $cacheDir = $lilaDir . '/cache';
-        if (is_dir($cacheDir)) {
-            $this->removeDirectory($cacheDir);
-            if (!is_dir($cacheDir)) {
-                @mkdir($cacheDir, 0755, true);
-            }
-            $this->info("✓ Cleared: cache/ directory");
-        }
+        CoreConfig::deleteCache(CoreConfig::$DIR_PROJECT);
+        $this->info("✓ Cleared: app/lila/cache/ directory");
     }
 
     /**

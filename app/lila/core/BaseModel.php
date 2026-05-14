@@ -454,7 +454,7 @@ abstract class BaseModel
             return self::$metadataCache[$className]['schema'];
         }
 
-        $cacheFile = Config::$DIR_PROJECT . '/lila/model_cache.php';
+        $cacheFile = Config::$DIR_PROJECT . '/lila/cache/model_cache.php';
         if (file_exists($cacheFile)) {
             $allCaches = require $cacheFile;
             if (isset($allCaches[$className]['schema'])) {
@@ -506,7 +506,7 @@ abstract class BaseModel
             return self::$metadataCache[$className]['fields'];
         }
 
-        $cacheFile = Config::$DIR_PROJECT . '/lila/model_cache.php';
+        $cacheFile = Config::$DIR_PROJECT . '/lila/cache/model_cache.php';
         if (file_exists($cacheFile)) {
             $allCaches = require $cacheFile;
             if (isset($allCaches[$className]['fields'])) {

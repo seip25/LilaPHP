@@ -561,7 +561,7 @@ HTML;
             return $data;
         }
 
-        $manifestFile = Config::$DIR_PROJECT . '/lila/build_manifest.php';
+        $manifestFile = Config::$DIR_PROJECT . '/lila/cache/build_manifest.php';
         if (!file_exists($manifestFile))
             return $data;
 

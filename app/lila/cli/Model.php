@@ -18,7 +18,7 @@ class Model extends Command
     {
         parent::__construct();
         $this->modelsDir = dirname(__DIR__) . '/../models';
-        $this->cacheDir = dirname(__DIR__) . '/../lila';
+        $this->cacheDir = dirname(__DIR__) . '/../lila/cache';
 
         if (!is_dir($this->modelsDir)) {
             mkdir($this->modelsDir, 0755, true);
@@ -124,7 +124,7 @@ class Model extends Command
             $content = "<?php\n\nreturn " . var_export($cache, true) . ";\n";
 
             if (file_put_contents($cacheFile, $content)) {
-                $this->success("Successfully cached {$total} models at app/lila/model_cache.php");
+                $this->success("Successfully cached {$total} models at app/lila/cache/model_cache.php");
             } else {
                 $this->error("Failed to write cache file.");
             }

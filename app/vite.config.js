@@ -13,7 +13,7 @@ function generatePhpManifest() {
       );
       const phpOutputPath = path.resolve(
         __dirname,
-        "../app/lila/build_manifest.php",
+        "../app/lila/cache/build_manifest.php",
       );
 
       if (!fs.existsSync(manifestPath)) {

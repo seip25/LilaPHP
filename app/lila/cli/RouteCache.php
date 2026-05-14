@@ -38,7 +38,7 @@ class RouteCache extends Command
     public function clear(): void
     {
         CoreConfig::load();
-        $cacheFile = CoreConfig::$DIR_PROJECT . '/lila/route_di_cache.php';
+        $cacheFile = CoreConfig::$DIR_PROJECT . '/lila/cache/route_di_cache.php';
 
         if (file_exists($cacheFile)) {
             if (unlink($cacheFile)) {
