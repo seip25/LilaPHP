@@ -14,7 +14,12 @@ class Translate
     {
         if (self::$loaded)
             return;
-        self::$lang = Session::has(key: 'lang') ? Session::get('lang') : Config::$LANG;
+
+        if (PHP_SAPI === 'cli') {
+            self::$lang = Config::$LANG;
+        } else {
+            self::$lang = Session::has(key: 'lang') ? Session::get('lang') : Config::$LANG;
+        }
         $file = Config::$DIR_PROJECT . '/locales/' . self::$lang . '.php';
 
         if (file_exists(filename: $file)) {

@@ -34,6 +34,9 @@ class Dispatcher
      */
     private static function dispatch(string $dirLilaPHP, string $dirRoutes): void
     {
+        if (PHP_SAPI === 'cli') {
+            return;
+        }
 
         if (Config::$DEBUG) {
             Debug::init();
