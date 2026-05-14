@@ -25,22 +25,32 @@ class Dispatcher
         }
     }
 
+    /**
+     * Handles the request dispatching process
+     * 
+     * @param string $dirLilaPHP Framework directory
+     * @param string $dirRoutes Routes directory
+     * @return void
+     */
     private static function dispatch(string $dirLilaPHP, string $dirRoutes): void
     {
+
         if (Config::$DEBUG) {
             Debug::init();
             Debug::start();
         }
+
+        header("X-Content-Type-Options: nosniff");
+        header("X-Frame-Options: SAMEORIGIN");
+        header("X-XSS-Protection: 1; mode=block");
+
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-
-
         $basePath = rtrim(dirname($scriptName), '/\\');
 
         $path = substr($uri, strlen($basePath));
         $path = explode('?', $path)[0];
         $path = trim($path, '/');
-
 
         $languages = self::getSupportedLanguages($dirLilaPHP);
         $lang = null;
@@ -64,12 +74,23 @@ class Dispatcher
         }
 
         if ($targetFile && file_exists($targetFile)) {
+            if (Config::$DEBUG) {
+                if (!isset($_GET['debug'])) {
+                    register_shutdown_function(function () {
+                        Debug::end(http_response_code() ?: 200);
+                    });
+                }
+            }
             require_once $targetFile;
         } else {
             http_response_code(404);
 
             if (Config::$DEBUG) {
-                Debug::end(404);
+                if (!isset($_GET['debug'])) {
+                    register_shutdown_function(function () {
+                        Debug::end(404);
+                    });
+                }
             }
             if (file_exists($dirRoutes . "/404.php")) {
                 require_once $dirRoutes . "/404.php";

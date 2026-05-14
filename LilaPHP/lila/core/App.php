@@ -732,38 +732,29 @@ class App
     protected function dispatch(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+        if ($method === 'GET' && isset($_GET['debug']) && Config::$DEBUG) {
+            if (isset($_GET['clear']))
+                Debug::clear();
+            elseif (isset($_GET['fetch']))
+                $this->jsonResponse(data: Debug::getRequests());
+            else
+                $this->render('lila/debug', ['requests' => Debug::getRequests()]);
+            exit;
+        }
+
         if (($this->options['translate'] ?? Config::$TRANSLATE) == false) {
             Session::remove("lang");
-        }
-        if (Config::$DEBUG) {
-            Debug::init();
-            Debug::start();
-
-            if (!isset($_GET['debug'])) {
-                register_shutdown_function(function () {
-                    Debug::end(http_response_code() ?: 200);
-                });
-            }
-
-            if ($method === 'GET' && isset($_GET['debug']) && Config::$DEBUG) {
-                if (isset($_GET['clear']))
-                    Debug::clear();
-                elseif (isset($_GET['fetch']))
-                    $this->jsonResponse(data: Debug::getRequests());
-                else
-                    $this->render('lila/debug', ['requests' => Debug::getRequests()]);
-                exit;
-            }
         }
 
         $route = $this->routes[$method] ?? null;
 
-        if (!is_array($route) || !is_callable($route['callback'])) {
-            if (Config::$DEBUG)
-                Debug::end(http_response_code() ?: 404);
-            http_response_code(404);
-            exit("404 Not Found");
-        }
+        // if (!is_array($route) || !is_callable($route['callback'])) {
+        //     if (Config::$DEBUG)
+        //         Debug::end(http_response_code() ?: 404);
+        //     http_response_code(404);
+        //     exit("404 Not Found");
+        // }
 
         self::$activeRoute = $route;
 
