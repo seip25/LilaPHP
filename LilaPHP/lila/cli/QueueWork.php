@@ -32,15 +32,15 @@ class QueueWork extends Command
         }
 
         if (!class_exists('Models\JobModel')) {
-            $this->error("JobModel not found! Run 'php app/cli.php optimize' or create the model manually.");
+            $this->error("JobModel not found! Run 'php cli.php optimize' or create the model manually.");
             return;
         }
-        
+
         // Wait for the migration to be ready
         try {
             JobModel::getTableName();
         } catch (\Throwable $e) {
-            $this->error("Error interacting with JobModel. Make sure your database is connected and 'php app/cli.php migrate:create' was run.");
+            $this->error("Error interacting with JobModel. Make sure your database is connected and 'php cli.php migrate:create' was run.");
             return;
         }
 
@@ -48,7 +48,7 @@ class QueueWork extends Command
             try {
                 // Find pending jobs
                 $jobs = JobModel::where('status', '=', 0, false);
-                
+
                 if (empty($jobs)) {
                     sleep(3);
                     continue;
@@ -57,11 +57,11 @@ class QueueWork extends Command
                 foreach ($jobs as $job) {
                     $this->processJob($job);
                 }
-                
+
             } catch (\PDOException $e) {
                 // Database connection might have dropped during sleep
                 $this->error("Database connection error: " . $e->getMessage());
-                sleep(5); 
+                sleep(5);
                 $this->connectDatabase(true); // Re-connect
             } catch (\Throwable $e) {
                 $this->error("Worker error: " . $e->getMessage());
@@ -78,8 +78,8 @@ class QueueWork extends Command
      */
     private function processJob(JobModel $job): void
     {
-        $this->info("[".date('Y-m-d H:i:s')."] Processing Job #{$job->id}: {$job->handler}");
-        
+        $this->info("[" . date('Y-m-d H:i:s') . "] Processing Job #{$job->id}: {$job->handler}");
+
         // Lock the job to prevent duplicate picking if multiple workers exist
         $job->status = 1; // Processing
         $job->save();
@@ -89,12 +89,12 @@ class QueueWork extends Command
             if (class_exists($handlerClass) && method_exists($handlerClass, 'handle')) {
                 $handler = new $handlerClass();
                 $payload = json_decode($job->payload, true) ?? [];
-                
+
                 // Call handle method
                 $handler->handle($payload);
 
                 // Assuming success if no exception was thrown
-                $job->delete(logic: false); 
+                $job->delete(logic: false);
                 $this->success("Job #{$job->id} processed successfully.");
             } else {
                 throw new \Exception("Handler class {$handlerClass} not found or missing handle() method.");
@@ -104,7 +104,7 @@ class QueueWork extends Command
             $job->error = $e->getMessage() . "\n" . $e->getTraceAsString();
             $job->attempts += 1;
             $job->save();
-            
+
             $this->error("Job #{$job->id} failed: " . $e->getMessage());
         }
     }

@@ -17,16 +17,16 @@ class Schedule extends Command
     public function execute(array $args): void
     {
         $this->info("Running scheduler...");
-        $tasksFile = Config::$DIR_PROJECT . '/tasks.php';
-        
+        $tasksFile = Config::$DIR_PROJECT . '/tasks/tasks.php';
+
         if (!file_exists($tasksFile)) {
-            $this->warning("No tasks.php found in app/ directory.");
+            $this->warning("No tasks.php found in tasks/ directory.");
             $this->line("Create one using: Core\Schedule::call(fn() => ...)->everyMinute();");
             return;
         }
 
         require_once $tasksFile;
-        
+
         $results = CoreSchedule::run();
         $ran = count($results);
         $passed = count(array_filter($results));

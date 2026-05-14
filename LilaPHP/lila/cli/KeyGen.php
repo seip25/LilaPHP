@@ -7,7 +7,7 @@ use Core\Config as CoreConfig;
 /**
  * Key Generator Command
  * 
- * Generates a cryptographically secure random SECRET_KEY and writes it to app/.env.
+ * Generates a cryptographically secure random SECRET_KEY and writes it to .env.
  * 
  * @package Cli
  */
@@ -60,7 +60,7 @@ class KeyGen extends Command
             return;
         }
 
-        $this->success("SECRET_KEY generated and written to app/.env");
+        $this->success("SECRET_KEY generated and written to .env");
         $this->line("");
         $this->line("  \033[33mKey:\033[0m {$key}");
         $this->line("");

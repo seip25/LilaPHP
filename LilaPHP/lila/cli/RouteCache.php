@@ -26,7 +26,7 @@ class RouteCache extends Command
         if ($command === 'clear') {
             $this->clear();
         } else {
-            $this->error("Unknown command. Usage: php app/cli.php route:cache [clear]");
+            $this->error("Unknown command. Usage: php cli.php route:cache [clear]");
         }
     }
 

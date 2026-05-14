@@ -100,7 +100,7 @@ class Model extends Command
             }
 
             $className = "Models\\" . substr($file, 0, -4);
-            
+
             if (!class_exists($className)) {
                 $filePath = $this->modelsDir . '/' . $file;
                 require_once $filePath;
@@ -132,7 +132,7 @@ class Model extends Command
             $content = "<?php\n\nreturn " . var_export($cache, true) . ";\n";
 
             if (file_put_contents($cacheFile, $content)) {
-                $this->success("Successfully cached {$total} models at app/lila/cache/model_cache.php");
+                $this->success("Successfully cached {$total} models at lila/cache/model_cache.php");
             } else {
                 $this->error("Failed to write cache file.");
             }

@@ -49,10 +49,10 @@ class Config extends Command
 
             $cacheFile = $dir . '/lila/cache/env_cache.php';
             if (CoreConfig::saveCache($cacheFile, $envVars)) {
-                $this->success("Configuration cached successfully at app/lila/cache/env_cache.php");
+                $this->success("Configuration cached successfully at lila/cache/env_cache.php");
                 $this->info("Opcache will now handle configuration loading for better performance.");
             } else {
-                $this->error("Failed to write cache file. Ensure app/lila/ is writable.");
+                $this->error("Failed to write cache file. Ensure lila/ is writable.");
             }
         } catch (\Throwable $e) {
             $this->error("Error caching configuration: " . $e->getMessage());

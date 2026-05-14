@@ -132,7 +132,7 @@ class AdminPortal
     private function discoverModels(): array
     {
         $models = [];
-        $appDir = Config::$DIR_PROJECT; // app/ folder
+        $appDir = Config::$DIR_PROJECT;
 
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($appDir, RecursiveDirectoryIterator::SKIP_DOTS)

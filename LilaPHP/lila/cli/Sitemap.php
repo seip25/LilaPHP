@@ -77,7 +77,7 @@ class Sitemap extends Command
     }
 
     /**
-     * Discover all localized locales from app/locales
+     * Discover all localized locales from locales
      * 
      * @return array Array of language codes
      */

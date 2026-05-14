@@ -156,7 +156,7 @@ class App
         return Config::$DEBUG ?? false;
     }
     /**
-     * Return url project configurated in app/.env
+     * Return url project configurated in .env
      */
     public function urlProject(): string
     {

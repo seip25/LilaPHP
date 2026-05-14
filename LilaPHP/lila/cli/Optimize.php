@@ -93,7 +93,7 @@ class Optimize extends Command
     {
         $this->info("\n[0/6] Clearing existing cache files...");
         CoreConfig::deleteCache(CoreConfig::$DIR_PROJECT);
-        $this->info("✓ Cleared: app/lila/cache/ directory");
+        $this->info("✓ Cleared: lila/cache/ directory");
     }
 
     /**
