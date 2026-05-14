@@ -66,13 +66,22 @@ class Sitemap extends Command
 
         $xml .= '</urlset>';
 
-        $outputPath = dirname(Config::$DIR_PROJECT) . '/sitemap.xml';
-        if (file_put_contents($outputPath, $xml)) {
-            $this->success("Sitemap successfully generated at: " . $outputPath);
+        $sitemapPath = dirname(Config::$DIR_PROJECT) . '/sitemap.xml';
+        if (file_put_contents($sitemapPath, $xml) !== false) {
+            $this->success("Sitemap successfully generated at: {$sitemapPath}");
+
+            $robotsPath = Config::$DIR_PROJECT . '/../robots.txt';
+            $baseUrl = rtrim(Config::$URL_PROJECT, '/');
+            $robotsContent = "User-agent: *\nDisallow:\n\nSitemap: {$baseUrl}/sitemap.xml\n";
+
+            if (file_put_contents($robotsPath, $robotsContent) !== false) {
+                $this->success("robots.txt successfully updated at: {$robotsPath}");
+            }
+
             $this->info("Total routes indexed: " . count($routes));
             $this->info("Total localized URLs: " . (count($routes) * count($locales)));
         } else {
-            $this->error("Failed to write sitemap.xml to " . $outputPath);
+            $this->error("Failed to write sitemap.xml to: {$sitemapPath}");
         }
     }
 
@@ -107,7 +116,7 @@ class Sitemap extends Command
      */
     private function discoverRoutes(): array
     {
-        $routes = ['/']; // Start with root
+        $routes = ['/'];
         $routesDir = Config::$DIR_PROJECT . DIRECTORY_SEPARATOR . 'routes';
 
         if (!is_dir($routesDir)) {
@@ -122,14 +131,13 @@ class Sitemap extends Command
                 $relativePath = str_replace([$routesDir, DIRECTORY_SEPARATOR], ['', '/'], $file->getPathname());
                 $relativePath = ltrim($relativePath, '/');
 
-                // If it's index.php, the route is the directory path
+
                 if (basename($relativePath) === 'index.php') {
                     $route = dirname($relativePath);
                     if ($route === '.') {
-                        continue; // Already added as root
+                        continue;
                     }
                 } else {
-                    // Otherwise, the route is the file path without .php
                     $route = str_replace('.php', '', $relativePath);
                 }
 
