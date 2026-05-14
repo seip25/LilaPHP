@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
+    RewriteBase /LilaPHP/
 
     # Prevent direct access to LilaPHP directory
     RewriteRule ^LilaPHP(/|$) - [F,L]

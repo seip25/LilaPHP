@@ -90,7 +90,7 @@ class Sitemap extends Command
             if ($files !== false) {
                 foreach ($files as $file) {
                     $filename = basename($file);
-                    if (str_starts_with($filename, 'validation_'))
+                    if (str_starts_with($filename, 'validation_') || $filename === 'seo.php')
                         continue;
                     $lang = str_replace('.php', '', $filename);
                     $locales[] = $lang;
@@ -101,46 +101,39 @@ class Sitemap extends Command
     }
 
     /**
-     * Discover all index.php endpoints in the project
+     * Discover all routes from LilaPHP/routes
      * 
      * @return array Array of relative URL paths
      */
     private function discoverRoutes(): array
     {
-        $routes = ['/']; // Root
-        $root = dirname(Config::$DIR_PROJECT);
+        $routes = ['/']; // Start with root
+        $routesDir = Config::$DIR_PROJECT . DIRECTORY_SEPARATOR . 'routes';
 
-        $it = new \RecursiveDirectoryIterator($root, \RecursiveDirectoryIterator::SKIP_DOTS);
+        if (!is_dir($routesDir)) {
+            return $routes;
+        }
+
+        $it = new \RecursiveDirectoryIterator($routesDir, \RecursiveDirectoryIterator::SKIP_DOTS);
         $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::SELF_FIRST);
 
-        $exclude = ['app', 'vendor', 'assets', 'cache', 'node_modules', '.git'];
-
         foreach ($files as $file) {
-            if ($file->isDir()) {
-                $dirName = $file->getBasename();
-                if (in_array($dirName, $exclude)) {
-                    continue;
-                }
-            }
+            if ($file->isFile() && $file->getExtension() === 'php') {
+                $relativePath = str_replace([$routesDir, DIRECTORY_SEPARATOR], ['', '/'], $file->getPathname());
+                $relativePath = ltrim($relativePath, '/');
 
-            if ($file->isFile() && $file->getBasename() === 'index.php') {
-                $relativePath = str_replace([$root, DIRECTORY_SEPARATOR], ['', '/'], $file->getPath());
-                $relativePath = trim($relativePath, '/');
-
-                if ($relativePath === '')
-                    continue;
-
-                $isExcluded = false;
-                foreach ($exclude as $ex) {
-                    if (str_contains('/' . $relativePath . '/', '/' . $ex . '/')) {
-                        $isExcluded = true;
-                        break;
+                // If it's index.php, the route is the directory path
+                if (basename($relativePath) === 'index.php') {
+                    $route = dirname($relativePath);
+                    if ($route === '.') {
+                        continue; // Already added as root
                     }
+                } else {
+                    // Otherwise, the route is the file path without .php
+                    $route = str_replace('.php', '', $relativePath);
                 }
 
-                if (!$isExcluded) {
-                    $routes[] = $relativePath;
-                }
+                $routes[] = $route;
             }
         }
 

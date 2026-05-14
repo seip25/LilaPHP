@@ -1,7 +1,7 @@
 <?php
 
 /** @var \Core\App $app */
-include_once "../index.php";
+include_once __DIR__ . "/../index.php";
 
 use Core\GET;
 use Core\Cache;

@@ -860,90 +860,95 @@ class App
             exit;
         }
 
-        foreach ($this->middlewares['before'] as $fn) {
-            if (is_callable($fn)) {
-                if ($fn($req, $res) === false)
-                    return;
+        try {
+            foreach ($this->middlewares['before'] as $fn) {
+                if (is_callable($fn)) {
+                    if ($fn($req, $res) === false)
+                        return;
+                }
             }
-        }
 
-        foreach ($route['middlewares'] as $fn) {
-            if (is_callable($fn)) {
-                if ($fn($req, $res) === false)
-                    return;
+            foreach ($route['middlewares'] as $fn) {
+                if (is_callable($fn)) {
+                    if ($fn($req, $res) === false)
+                        return;
+                }
             }
-        }
-        $isValidRequest = true;
-        if (in_array(needle: strtolower(string: $method), haystack: ['post', 'put', 'delete']) && (isset($route['csrf']) && $route['csrf'])) {
-            $isValidRequest = Security::validateCsrfToken(request: $req);
-        }
+            $isValidRequest = true;
+            if (in_array(needle: strtolower(string: $method), haystack: ['post', 'put', 'delete']) && (isset($route['csrf']) && $route['csrf'])) {
+                $isValidRequest = Security::validateCsrfToken(request: $req);
+            }
 
-        if ($isValidRequest) {
-            $callback = $route['callback'];
-            $reflection = $this->getReflection($callback);
+            if ($isValidRequest) {
+                $callback = $route['callback'];
+                $reflection = $this->getReflection($callback);
 
-            if ($reflection) {
-                $cbKey = $this->generateCallbackKey($callback);
-
-                if (!isset(self::$diCache[$cbKey])) {
-                    $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_di_cache.php';
-
-                    if (!Config::$DEBUG && is_string($cbKey) && file_exists($cacheFile)) {
-                        $loadedCache = require $cacheFile;
-                        if (isset($loadedCache[$cbKey])) {
-                            self::$diCache[$cbKey] = $loadedCache[$cbKey];
-                        }
-                    }
+                if ($reflection) {
+                    $cbKey = $this->generateCallbackKey($callback);
 
                     if (!isset(self::$diCache[$cbKey])) {
-                        $params = [];
-                        foreach ($reflection->getParameters() as $param) {
-                            $type = $param->getType();
-                            $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
-                            $params[] = [
-                                'name' => $param->getName(),
-                                'type' => $typeName
-                            ];
-                        }
-                        self::$diCache[$cbKey] = $params;
+                        $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_di_cache.php';
 
-                        if (!Config::$DEBUG && is_string($cbKey)) {
-                            $allCache = file_exists($cacheFile) ? require $cacheFile : [];
-                            $allCache[$cbKey] = $params;
-                            @file_put_contents($cacheFile, "<?php\n\nreturn " . var_export($allCache, true) . ";\n");
+                        if (!Config::$DEBUG && is_string($cbKey) && file_exists($cacheFile)) {
+                            $loadedCache = require $cacheFile;
+                            if (isset($loadedCache[$cbKey])) {
+                                self::$diCache[$cbKey] = $loadedCache[$cbKey];
+                            }
+                        }
+
+                        if (!isset(self::$diCache[$cbKey])) {
+                            $params = [];
+                            foreach ($reflection->getParameters() as $param) {
+                                $type = $param->getType();
+                                $typeName = ($type instanceof \ReflectionNamedType) ? $type->getName() : null;
+                                $params[] = [
+                                    'name' => $param->getName(),
+                                    'type' => $typeName
+                                ];
+                            }
+                            self::$diCache[$cbKey] = $params;
+
+                            if (!Config::$DEBUG && is_string($cbKey)) {
+                                $allCache = file_exists($cacheFile) ? require $cacheFile : [];
+                                $allCache[$cbKey] = $params;
+                                @file_put_contents($cacheFile, "<?php\n\nreturn " . var_export($allCache, true) . ";\n");
+                            }
                         }
                     }
-                }
 
-                $args = [];
-                foreach (self::$diCache[$cbKey] as $paramData) {
-                    $typeName = $paramData['type'];
-                    $paramName = $paramData['name'];
+                    $args = [];
+                    foreach (self::$diCache[$cbKey] as $paramData) {
+                        $typeName = $paramData['type'];
+                        $paramName = $paramData['name'];
 
-                    if ($typeName === 'array' || $paramName === 'req') {
-                        $args[] = $req;
-                    } elseif ($typeName === Response::class || $typeName === 'Response' || $paramName === 'res') {
-                        $args[] = $res;
-                    } elseif ($typeName && class_exists($typeName)) {
-                        $classRef = new \ReflectionClass($typeName);
-                        if ($classRef->isInstantiable() && (!$classRef->getConstructor() || $classRef->getConstructor()->getNumberOfRequiredParameters() === 0)) {
-                            $args[] = new $typeName();
+                        if ($typeName === 'array' || $paramName === 'req') {
+                            $args[] = $req;
+                        } elseif ($typeName === Response::class || $typeName === 'Response' || $paramName === 'res') {
+                            $args[] = $res;
+                        } elseif ($typeName && class_exists($typeName)) {
+                            $classRef = new \ReflectionClass($typeName);
+                            if ($classRef->isInstantiable() && (!$classRef->getConstructor() || $classRef->getConstructor()->getNumberOfRequiredParameters() === 0)) {
+                                $args[] = new $typeName();
+                            } else {
+                                $args[] = null;
+                            }
                         } else {
                             $args[] = null;
                         }
-                    } else {
-                        $args[] = null;
                     }
+                    $callback(...$args);
+                } else {
+                    $callback($req, $res);
                 }
-                $callback(...$args);
-            } else {
-                $callback($req, $res);
             }
-        }
 
-        foreach ($this->middlewares['after'] as $fn) {
-            if (is_callable($fn))
-                $fn($req, $res);
+            foreach ($this->middlewares['after'] as $fn) {
+                if (is_callable($fn))
+                    $fn($req, $res);
+            }
+        } catch (ValidationException $e) {
+            $e->render();
+            exit;
         }
 
         exit;

@@ -9,16 +9,5 @@
 
 namespace App;
 require_once __DIR__ . "/vendor/autoload.php";
+\Core\Config::load();
 
-/*
-Example App Initialization
-$app = new \Core\App([
-    'security' => [
-        'cors' => false,
-        'sanitize' => true,
-        'logger' => true,
-        'rateLimit' => 200
-    ],
-    'translate' => true
-]);
-*/
