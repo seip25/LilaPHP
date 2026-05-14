@@ -29,8 +29,28 @@ class Template
 
     private static function registerFunctions(): void
     {
-        self::$twig->addFunction(new TwigFunction('url', function (string $path = ''): string {
-            return rtrim(Config::$URL_PROJECT, '/') . '/' . ltrim($path, '/');
+        self::$twig->addFunction(new TwigFunction('url', function (string $path = '', bool $ignoreLang = true): string {
+            $baseUrl = rtrim(Config::$URL_PROJECT, '/');
+            $fullPath = ltrim($path, '/');
+            $isAssetsOrFavicon = str_starts_with(haystack: strtolower($fullPath), needle: 'assets') || str_contains(haystack: strtolower($fullPath), needle: 'favicon.ico');
+            if ($isAssetsOrFavicon) {
+                return $baseUrl . '/' . $path;
+            }
+            if (!$ignoreLang && Config::$TRANSLATE) {
+                $lang = Session::get('lang') ?? Config::$LANG;
+
+                $isAdmin = str_starts_with(haystack: strtolower($fullPath), needle: 'admin') || str_contains(haystack: strtolower($_SERVER['REQUEST_URI'] ?? ''), needle: '/admin');
+                $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+                $isGet = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET';
+
+                if (!$isAdmin && !$isAjax && $isGet) {
+                    $slash = ($fullPath !== '' && !str_contains($fullPath, '?') && !str_contains($fullPath, '#') && !str_ends_with($fullPath, '/')) ? '/' : '';
+                    return $baseUrl . '/' . $lang . '/' . $fullPath . $slash;
+                }
+            }
+
+            $slash = ($fullPath !== '' && !str_contains($fullPath, '?') && !str_contains($fullPath, '#') && !str_ends_with($fullPath, '/')) ? '/' : '';
+            return $baseUrl . '/' . $fullPath . $slash;
         }));
 
 
@@ -61,42 +81,67 @@ class Template
             return Security::generateCsrfToken();
         }));
 
+        self::$twig->addFunction(new TwigFunction('vite_assets', function (): string {
+            $assets = self::getViteAssetsData();
+            $html = '';
+            foreach ($assets['css'] as $href) {
+                $html .= '<link rel="stylesheet" href="' . $href . '">';
+            }
+            foreach ($assets['scripts'] as $script) {
+                if (isset($script['src'])) {
+                    $html .= '<script type="' . ($script['type'] ?? 'text/javascript') . '" src="' . $script['src'] . '"></script>';
+                } elseif (isset($script['content'])) {
+                    $html .= '<script type="' . ($script['type'] ?? 'text/javascript') . '">' . $script['content'] . '</script>';
+                }
+            }
+            return $html;
+        }, ['is_safe' => ['html']]));
         self::$twig->addFunction(new TwigFunction('hot_reload', function (): string {
             if (Config::$DEBUG) {
                 return self::hotReload();
             }
             return '';
         }, ['is_safe' => ['html']]));
+    }
 
-        self::$twig->addFunction(new TwigFunction('vite_assets', function (): string {
-            $isDev = Config::$DEBUG;
-            if ($isDev) {
+    /**
+     * Check if the current request is a frontend SPA request
+     * 
+     * @return bool
+     */
+    private static function isFrontendRequest(): bool
+    {
+        return (isset($_GET['source']) && $_GET['source'] === 'frontend') ||
+            (isset($_SERVER['HTTP_X_LILA_SPA']) && $_SERVER['HTTP_X_LILA_SPA'] === 'true');
+    }
 
-                $html = self::hotReload();
-                $html .= '
-                <script type="module">
-                    import RefreshRuntime from "http://localhost:5173/@react-refresh";
-                    RefreshRuntime.injectIntoGlobalHook(window);
-                    window.$RefreshReg$ = () => {};
-                    window.$RefreshSig$ = () => (type) => type;
-                    window.__vite_plugin_react_preamble_installed__ = true;
-                </script>
-                <script type="module" src="http://localhost:5173/js/main.jsx"></script>';
-                return $html;
-            }
-            $html = '<!-- Vite Manifest not found --><script>console.log("Vite Manifest not found ")</script>';
+    /**
+     * Render a JSON response for SPA navigation
+     * 
+     * @param string $body Rendered HTML body
+     * @param array $context Context containing metadata and assets
+     * @return void
+     */
+    private static function renderJsonResponse(string $body, array $context): void
+    {
+        $response = [
+            "meta" => [
+                "title" => $context['titleHtml'] ?? $context['title'] ?? Config::$TITLE_PROJECT,
+                "description" => $context['descriptionMeta'] ?? Config::$DESCRIPTIONMETA,
+                "keywords" => $context['keywordsMeta'] ?? Config::$KEYWORDSMETA,
+                "author" => $context['authorMeta'] ?? Config::$AUTHORMETA
+            ],
+            "lang" => $context['langHtml'] ?? $context['lang'] ?? Config::$LANG,
+            "scripts" => $context['scripts_array'] ?? [],
+            "css" => $context['styles_array'] ?? [],
+            "fonts" => [],
+            "body" => $body,
+            "props" => $context['props_array'] ?? [],
+            "translations" => Translate::translations()
+        ];
 
-            $manifest = require Config::$DIR_PROJECT . '/lila/build_manifest.php';
+        Response::JSON(data: $response);
 
-            $file = $manifest['js/main.jsx']['file'] ?? "js/main.jsx";
-            $css = $manifest['js/main.jsx']['css'] ?? [];
-
-            $html = '<script type="module" src="' . rtrim(Config::$URL_PROJECT, '/') . '/assets/build/' . $file . '"></script>';
-            foreach ($css as $cssFile) {
-                $html .= '<link rel="stylesheet" href="' . rtrim(Config::$URL_PROJECT, '/') . '/assets/build/' . $cssFile . '">';
-            }
-            return $html;
-        }, ['is_safe' => ['html']]));
     }
 
     public static function hotReload(): string
@@ -109,18 +154,39 @@ class Template
         return '';
     }
 
+    /**
+     * Render a React full page
+     * 
+     * @param string $page Page component name
+     * @param array $props Props to pass
+     * @param string|null $lang Language
+     * @param string|null $title Page title
+     * @param array $meta Meta tags
+     * @param array $scripts External scripts
+     * @param array $styles External styles
+     * @return void
+     */
     public static function react(string $page, array $props = [], ?string $lang = null, ?string $title = null, array $meta = [], array $scripts = [], array $styles = []): void
     {
-
         $stylesHtml = "";
         $scriptsHtml = "";
         $metaHtml = "";
-        $descriptionMeta = Config::$DESCRIPTIONMETA;
+        $seo = App::$activeRoute['seo'] ?? null;
+        if (isset($seo['key']) && $seo['key'] !== null) {
+            $seoDynamic = Translate::getSeo($seo['key']);
+            if ($seoDynamic) {
+                $seo['title'] = $seoDynamic['title'] ?? $seo['title'];
+                $seo['description'] = $seoDynamic['descriptionMeta'] ?? $seoDynamic['description'] ?? $seo['description'];
+                $seo['keywords'] = $seoDynamic['keywordsMeta'] ?? $seoDynamic['keywords'] ?? $seo['keywords'];
+            }
+        }
+        $titleHtml = $title ?? ($seo['title'] ?? Config::$TITLE_PROJECT);
+        $descriptionMeta = $seo['description'] ?? Config::$DESCRIPTIONMETA;
         $authorMeta = Config::$AUTHORMETA;
-        $keywordsMeta = Config::$KEYWORDSMETA;
-        $lang = is_null($lang) ? Config::$LANGHTML : $lang;
+        $keywordsMeta = $seo['keywords'] ?? Config::$KEYWORDSMETA;
+        $lang = is_null($lang) ? (Session::get('lang') ?? Config::$LANGHTML) : $lang;
         $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
-        $propsJson = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
+
         foreach ($styles as $style) {
             $stylesHtml .= '<link rel="stylesheet" href="' . rtrim($style) . '" />';
         }
@@ -128,16 +194,8 @@ class Template
             $scriptsHtml .= '<script src="' . rtrim($script) . '"></script>';
         }
         foreach ($meta as $meta_value) {
-            if ($meta_value["name"] == "description")
-                $descriptionMeta = $meta_value["content"];
-            elseif ($meta_value["name"] == "author")
-                $authorMeta = $meta_value["content"];
-            elseif ($meta_value["name"] == "keywords")
-                $keywordsMeta = $meta_value["content"];
-            else
-                $metaHtml .= '<meta name="' . $meta_value['name'] . '" content="' . $meta_value['content'] . '" />';
+            $metaHtml .= '<meta name="' . $meta_value['name'] . '" content="' . $meta_value['content'] . '" />';
         }
-        $titleHtml = $title ?? Config::$TITLE_PROJECT;
 
         $context = [
             "langHtml" => $lang,
@@ -147,22 +205,184 @@ class Template
             "icon" => $icon,
             "scripts" => $scriptsHtml,
             "component" => $page,
-            "props" => $propsJson,
             "descriptionMeta" => $descriptionMeta,
             "authorMeta" => $authorMeta,
-            "keywordsMeta" => $keywordsMeta
+            "keywordsMeta" => $keywordsMeta,
+            "styles_array" => $styles,
+            "scripts_array" => $scripts,
+            "props_array" => $props
         ];
-        self::render(template: "lila/react_base", context: $context);
+
+        if (self::isFrontendRequest()) {
+            $viteAssets = self::getViteAssetsData();
+            $context['scripts_array'] = array_merge($context['scripts_array'], $viteAssets['scripts']);
+            $context['styles_array'] = array_merge($context['styles_array'], $viteAssets['css']);
+
+            $bodyHtml = "<div id=\"root\" data-react-page=\"{$page}\" data-props='" . htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8') . "'></div>";
+            self::renderJsonResponse($bodyHtml, $context);
+
+        } else {
+            $context["props"] = htmlspecialchars(json_encode($props), ENT_QUOTES, 'UTF-8');
+            self::render(template: "lila/react_base", context: $context);
+        }
+
+
+    }
+
+    /**
+     * Render HTML directly via native PHP (bypasses Twig)
+     * 
+     * @param string|array $html Content to render
+     * @param array $options Options (renderFull, cache, title, meta, scripts, styles, lang)
+     * @return void
+     * @example 
+     * ```php
+     * $res->renderHtml("<h2>Hi!</h2>", [
+     *     "renderFull" => true,
+     *     "title" => "My title",
+     *     "cache" => 900
+     * ]);
+     * ```
+     */
+    public static function renderHtml(string|array $html, array $options = []): void
+    {
+        $renderFull = $options['renderFull'] ?? true;
+
+        if (is_array($html)) {
+            $html = implode("\n", $html);
+        }
+
+        if (!$renderFull) {
+            echo $html;
+            return;
+        }
+
+        $seo = App::$activeRoute['seo'] ?? null;
+        if (isset($seo['key']) && $seo['key'] !== null) {
+            $seoDynamic = Translate::getSeo($seo['key']);
+            if ($seoDynamic) {
+                $seo['title'] = $seoDynamic['title'] ?? $seo['title'];
+                $seo['description'] = $seoDynamic['descriptionMeta'] ?? $seoDynamic['description'] ?? $seo['description'];
+                $seo['keywords'] = $seoDynamic['keywordsMeta'] ?? $seoDynamic['keywords'] ?? $seo['keywords'];
+            }
+        }
+
+        $title = $options['title'] ?? ($seo['title'] ?? Config::$TITLE_PROJECT);
+        $description = $seo['description'] ?? Config::$DESCRIPTIONMETA;
+        $keywords = $seo['keywords'] ?? Config::$KEYWORDSMETA;
+        $lang = $options['lang'] ?? (Session::get('lang') ?? Config::$LANGHTML);
+        $icon = rtrim(Config::$URL_PROJECT, '/') . "/favicon.ico";
+
+        $metaHtml = "";
+        foreach ($options['meta'] ?? [] as $meta_value) {
+            $metaHtml .= '<meta name="' . ($meta_value['name'] ?? '') . '" content="' . ($meta_value['content'] ?? '') . '" />' . "\n";
+        }
+
+        $stylesHtml = "";
+        foreach ($options['styles'] ?? [] as $style) {
+            $stylesHtml .= '<link rel="stylesheet" href="' . rtrim($style) . '" />' . "\n";
+        }
+
+        $scriptsHtml = "";
+        foreach ($options['scripts'] ?? [] as $script) {
+            $scriptsHtml .= '<script src="' . rtrim($script) . '"></script>' . "\n";
+        }
+
+        $isFrontend = self::isFrontendRequest();
+
+        if ($isFrontend) {
+            $context = [
+                "titleHtml" => $title,
+                "descriptionMeta" => $description,
+                "keywordsMeta" => $keywords,
+                "langHtml" => $lang,
+                "scripts_array" => $options['scripts'] ?? [],
+                "styles_array" => $options['styles'] ?? [],
+                "props_array" => []
+            ];
+
+            $viteAssets = self::getViteAssetsData();
+            $context['scripts_array'] = array_merge($context['scripts_array'], $viteAssets['scripts']);
+            $context['styles_array'] = array_merge($context['styles_array'], $viteAssets['css']);
+
+            self::renderJsonResponse($html, $context);
+            return;
+        }
+
+        $viteHtml = "";
+        $viteAssets = self::getViteAssetsData();
+        foreach ($viteAssets['css'] as $href) {
+            $viteHtml .= '<link rel="stylesheet" href="' . $href . '">' . "\n";
+        }
+        foreach ($viteAssets['scripts'] as $script) {
+            if (isset($script['src'])) {
+                $viteHtml .= '<script type="' . ($script['type'] ?? 'text/javascript') . '" src="' . $script['src'] . '"></script>' . "\n";
+            } elseif (isset($script['content'])) {
+                $viteHtml .= '<script type="' . ($script['type'] ?? 'text/javascript') . '">' . $script['content'] . '</script>' . "\n";
+            }
+        }
+        $viteHtml .= self::hotReload();
+
+        $cacheControl = '';
+        if (isset($options['cache'])) {
+            $seconds = is_array($options['cache']) ? ($options['cache']['time'] ?? 900) : (int) $options['cache'];
+            $cacheControl = '<meta name="cache-control" content="max-age=' . $seconds . '">';
+        }
+
+        header('Content-Type: text/html; charset=utf-8');
+
+        $finalHtml = <<<HTML
+<!DOCTYPE html>
+<html lang="{$lang}">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{$title}</title>
+    <meta name="description" content="{$description}" />
+    <meta name="keywords" content="{$keywords}" />
+    {$cacheControl}
+    <link rel="icon" type="image/ico" href="{$icon}" />
+    {$metaHtml}
+    {$stylesHtml}
+    {$viteHtml}
+</head>
+<body>
+    <main id="lila-spa-content">
+        {$html}
+    </main>
+    {$scriptsHtml}
+</body>
+</html>
+HTML;
+
+        $finalHtml = self::minifyHtml($finalHtml);
+
+        if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
+            header('Content-Encoding: gzip');
+            echo gzencode($finalHtml, 6);
+        } else {
+            echo $finalHtml;
+        }
     }
 
     private static function getBaseContext(array $extra = []): array
     {
+        $seo = App::$activeRoute['seo'] ?? null;
+        if (isset($seo['key']) && $seo['key'] !== null) {
+            $seoDynamic = Translate::getSeo($seo['key']);
+            if ($seoDynamic) {
+                $seo['title'] = $seoDynamic['title'] ?? $seo['title'];
+                $seo['description'] = $seoDynamic['descriptionMeta'] ?? $seoDynamic['description'] ?? $seo['description'];
+                $seo['keywords'] = $seoDynamic['keywordsMeta'] ?? $seoDynamic['keywords'] ?? $seo['keywords'];
+            }
+        }
         return array_merge([
-            "title" => Config::$TITLE_PROJECT,
-            "descriptionMeta" => Config::$DESCRIPTIONMETA,
-            "keywordsMeta" => Config::$KEYWORDSMETA,
+            "title" => $seo['title'] ?? Config::$TITLE_PROJECT,
+            "descriptionMeta" => $seo['description'] ?? Config::$DESCRIPTIONMETA,
+            "keywordsMeta" => $seo['keywords'] ?? Config::$KEYWORDSMETA,
             "authorMeta" => Config::$AUTHORMETA,
-            "csrf_token" => Security::generateCsrfToken()
+            "csrf_token" => Security::generateCsrfToken(),
+            "lang" => Session::get('lang') ?? Config::$LANG
         ], $extra);
     }
 
@@ -174,21 +394,39 @@ class Template
         return trim($buffer);
     }
 
+    /**
+     * Render a Twig template
+     * 
+     * @param string $template Template name
+     * @param array $context Variables
+     * @param string|null $path Custom path
+     * @return void
+     */
     public static function render(string $template, array $context = [], ?string $path = null): void
     {
         try {
+            $isFrontend = self::isFrontendRequest();
             $twig = self::loadTwig($path ? Config::$DIR_PROJECT . $path : Config::$DIR_PROJECT . "/resources/templates");
+
+            $context['layout'] = $isFrontend ? "lila/empty.twig" : "base.twig";
             $fullContext = self::getBaseContext(extra: $context);
+
             $html = $twig->render("$template.twig", $fullContext);
             $html = self::minifyHtml($html);
-            header('Cache-Control: no-cache, must-revalidate');
 
-            if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
-                header('Content-Encoding: gzip');
-                echo gzencode($html, 6);
+            if ($isFrontend) {
+                self::renderJsonResponse($html, $fullContext);
             } else {
-                echo $html;
+                header('Cache-Control: no-cache, must-revalidate');
+
+                if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
+                    header('Content-Encoding: gzip');
+                    echo gzencode($html, 6);
+                } else {
+                    echo $html;
+                }
             }
+
         } catch (\Throwable $exc) {
             $message = "General error";
             if (Config::$DEBUG) {
@@ -230,7 +468,7 @@ HTML;
     {
         $html = <<<HTML
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head> 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -300,5 +538,41 @@ HTML;
 </html>
 HTML;
         return $html;
+    }
+
+    public static function getViteAssetsData(): array
+    {
+        $isDev = Config::$DEBUG;
+        $data = ['scripts' => [], 'css' => []];
+
+        if ($isDev) {
+            $data['scripts'][] = ['src' => 'http://localhost:5173/@vite/client', 'type' => 'module'];
+            $data['scripts'][] = [
+                'content' => '
+                    import RefreshRuntime from "http://localhost:5173/@react-refresh";
+                    RefreshRuntime.injectIntoGlobalHook(window);
+                    window.$RefreshReg$ = () => {};
+                    window.$RefreshSig$ = () => (type) => type;
+                    window.__vite_plugin_react_preamble_installed__ = true;
+                ',
+                'type' => 'module'
+            ];
+            $data['scripts'][] = ['src' => 'http://localhost:5173/js/main.jsx', 'type' => 'module'];
+            return $data;
+        }
+
+        $manifestFile = Config::$DIR_PROJECT . '/lila/cache/build_manifest.php';
+        if (!file_exists($manifestFile))
+            return $data;
+
+        $manifest = require $manifestFile;
+        $file = $manifest['js/main.jsx']['file'] ?? "js/main.jsx";
+        $css = $manifest['js/main.jsx']['css'] ?? [];
+
+        $data['scripts'][] = ['src' => rtrim(Config::$URL_PROJECT, '/') . '/assets/build/' . $file, 'type' => 'module'];
+        foreach ($css as $cssFile) {
+            $data['css'][] = rtrim(Config::$URL_PROJECT, '/') . '/assets/build/' . $cssFile;
+        }
+        return $data;
     }
 }

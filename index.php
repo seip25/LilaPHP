@@ -8,18 +8,13 @@ use Core\GET;
 use Core\Response;
 use Core\Session;
 use Core\Translate;
+use Core\SEO;
 
 
-$app = new App([
-    "security" => [
-        "logger" => false,
-        "cors" => true,
-        "rateLimit" => 200,
-    ],
-    "translate" => true
-]);
+$app = new App();
 
 #[GET]
+#[SEO(key: "index")]// key in app/locales/seo.php
 function get($req, Response $res, Session $session, Config $config, Translate $translate)
 {
 
@@ -45,7 +40,6 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
             context: [
                 "app" => [
                     "debug" => $debug,
-                    "lang" => $lang
                 ]
             ]
         );
@@ -57,20 +51,11 @@ function get($req, Response $res, Session $session, Config $config, Translate $t
             props: [
                 "app" => [
                     "debug" => $debug,
-                    "lang" => $lang
                 ],
                 "csrf" => $res->generateCSRF(),
                 "translations" => $res->translations()
             ],
             options: [
-                "lang" => "es",
-                "title" => "React full Page + LilaPHP",
-                "meta" => [
-                    ["name" => "description", "content" => "React full page render example meta description"],
-                    ["name" => "author", "content" => "LilaPHP"],
-                    ["name" => "keywords", "content" => "React,LilaPHP"],
-                ],
-
                 "scripts" => [
                     "https://cdn.tailwindcss.com"
                 ]

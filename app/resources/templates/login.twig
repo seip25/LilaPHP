@@ -1,4 +1,4 @@
-{% extends "base.twig" %}
+{% extends layout | default("base.twig") %}
 
 {% block content %}
 	<main class="flex justify-center items-center h-screen">
@@ -32,12 +32,18 @@
 					</form>
 
 					<div id="messages" class="mt-4 text-sm text-red-500 text-center"></div>
+
+
+					<div class="flex justify-center mt-6">
+						<a href="{{ url('') }}" class="text-gray-500  hover:underline dark:text-gray-400">Back to Home
+						</a>
+					</div>
 				</div>
 
 				<div class="  px-8 py-4  dark:border-slate-700 flex justify-center gap-6 text-sm font-medium text-slate-500 dark:text-slate-400">
-					<a href="?set-lang=true&lang=eng" class="hover:text-gray-600 dark:text-gray-300 transition-colors">English</a>
-					<a href="?set-lang=true&lang=esp" class="hover:text-gray-600 dark:text-gray-300 transition-colors">Español</a>
-					<a href="?set-lang=true&lang=bra" class="hover:text-gray-600 dark:text-gray-300 transition-colors">Português</a>
+					<a href="?set-lang=true&lang=en" class="hover:text-gray-600 dark:text-gray-300 transition-colors">English</a>
+					<a href="?set-lang=true&lang=es" class="hover:text-gray-600 dark:text-gray-300 transition-colors">Español</a>
+					<a href="?set-lang=true&lang=pt-br" class="hover:text-gray-600 dark:text-gray-300 transition-colors">Português</a>
 				</div>
 
 			</div>

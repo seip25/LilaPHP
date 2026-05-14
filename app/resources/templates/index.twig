@@ -1,4 +1,4 @@
-{% extends "base.twig" %}
+{% extends layout | default("base.twig") %}
 
 {% block content %}
 	<main class="flex-grow container mx-auto px-4 py-12 text-center">
@@ -68,7 +68,7 @@
 			</div>
 
 			<div class="flex justify-center mt-4">
-				<a href="login/" target="_blank" class="text-blue-600 dark:text-blue-400 underline">Example GET and POST Login
+				<a href="login/" class="text-blue-600 dark:text-blue-400 underline">Example GET and POST Login
 				</a>
 
 			</div>
@@ -116,9 +116,9 @@
 		</section>
 
 		<div class="mt-auto py-6 flex justify-center gap-6 text-sm font-medium text-slate-500 dark:text-slate-400">
-			<a href="?set-lang=true&lang=eng" class="hover:text-primary-600 transition-colors underline">🇺🇸 English</a>
-			<a href="?set-lang=true&lang=esp" class="hover:text-primary-600 transition-colors underline">🇪🇸 Español</a>
-			<a href="?set-lang=true&lang=bra" class="hover:text-primary-600 transition-colors underline">🇧🇷 Português</a>
+			<a href="?set-lang=true&lang=en" class="hover:text-primary-600 transition-colors underline">🇺🇸 English</a>
+			<a href="?set-lang=true&lang=es" class="hover:text-primary-600 transition-colors underline">🇪🇸 Español</a>
+			<a href="?set-lang=true&lang=pt-br" class="hover:text-primary-600 transition-colors underline">🇧🇷 Português</a>
 		</div>
 	</main>
 {% endblock %}

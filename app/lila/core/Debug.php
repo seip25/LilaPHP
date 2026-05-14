@@ -38,7 +38,7 @@ class Debug
         }
 
         try {
-            $path = Config::$DIR_PROJECT . "/lila";
+            $path = Config::$DIR_PROJECT . "/lila/cache";
             if (!is_dir($path)) {
                 mkdir($path, 0777, true);
             }

@@ -39,7 +39,7 @@ class AdminPortal
         }
 
         // Check Authentication
-        if (!Session::get('admin_logged_in')) {
+        if (!Session::get('admin_logged_in', false, true)) {
             $this->handleLogin($req, $res);
             return;
         }
@@ -95,7 +95,7 @@ class AdminPortal
             'data' => $data,
             'pagination' => $pagination,
             'debug' => Config::$DEBUG,
-            'user' => Session::get('admin_user')
+            'user' => Session::get('admin_user', null, true)
         ]);
     }
 
@@ -111,8 +111,8 @@ class AdminPortal
             if (!empty($admin)) {
                 $user = $admin[0];
                 if (password_verify($req['password'], $user->password)) {
-                    Session::set('admin_logged_in', true);
-                    Session::set('admin_user', $user->username);
+                    Session::set(key: 'admin_logged_in', value: true, encrypt: true);
+                    Session::set(key: 'admin_user', value: $user->username, encrypt: true);
                     $res->redirect('Admin/');
                     return;
                 }

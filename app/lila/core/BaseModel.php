@@ -175,7 +175,7 @@ abstract class BaseModel
     public function __construct(array $data = [], string|null $lang = null, bool $jsonResponse = true)
     {
 
-        $this->lang = in_array(needle: $lang, haystack: ['eng', 'esp', 'bra', 'por']) ? $lang : "eng";
+        $this->lang = in_array(needle: $lang, haystack: ['en', 'es', 'pt-br', 'pt']) ? $lang : "en";
 
         if (!isset(self::$i18nCache[$this->lang])) {
             $messagesFile = Config::$DIR_PROJECT . "/locales/validation_{$this->lang}.php";
@@ -454,7 +454,7 @@ abstract class BaseModel
             return self::$metadataCache[$className]['schema'];
         }
 
-        $cacheFile = Config::$DIR_PROJECT . '/lila/model_cache.php';
+        $cacheFile = Config::$DIR_PROJECT . '/lila/cache/model_cache.php';
         if (file_exists($cacheFile)) {
             $allCaches = require $cacheFile;
             if (isset($allCaches[$className]['schema'])) {
@@ -506,7 +506,7 @@ abstract class BaseModel
             return self::$metadataCache[$className]['fields'];
         }
 
-        $cacheFile = Config::$DIR_PROJECT . '/lila/model_cache.php';
+        $cacheFile = Config::$DIR_PROJECT . '/lila/cache/model_cache.php';
         if (file_exists($cacheFile)) {
             $allCaches = require $cacheFile;
             if (isset($allCaches[$className]['fields'])) {

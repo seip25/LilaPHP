@@ -66,7 +66,7 @@ class Middleware
 #[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
 class Cache
 {
-    public function __construct(public int $seconds = 60) {}
+    public function __construct(public int $seconds = 60, public ?string $tag = null) {}
 }
 
 /**
@@ -95,3 +95,46 @@ class Admin
     public function __construct(public array $models = [], public array $options = []) {}
 }
 
+
+/**
+ * Attribute to define SEO metadata for a route
+ * 
+ * @package Core
+ */
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+class SEO
+{
+    /**
+     * @param string|null $title Page title
+     * @param string|null $description Meta description
+     * @param string|null $keywords Meta keywords
+     * @param string|null $image OG/Share image URL
+     * @param string|null $key Centralized SEO translation key
+     */
+    public function __construct(
+        public ?string $title = null,
+        public ?string $description = null,
+        public ?string $keywords = null,
+        public ?string $image = null,
+        public ?string $key = null
+    ) {}
+}
+/**
+ * Attribute to enable Session Authentication check
+ * 
+ * @package Core
+ */
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+class AUTH
+{
+    /**
+     * @param string $key Session key to check (default: 'auth')
+     * @param bool $decrypt Whether to decrypt the session value
+     * @param string|bool|null $redirect Redirect path on failure (default: '/login'). Use false for pure 401.
+     */
+    public function __construct(
+        public string $key = 'auth',
+        public bool $decrypt = true,
+        public string|bool|null $redirect = '/login'
+    ) {}
+}

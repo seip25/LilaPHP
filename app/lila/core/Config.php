@@ -11,6 +11,7 @@ class Config
     public static string $VERSION_PROJECT;
     public static string $VERSION_API;
     public static bool $DEBUG;
+    public static bool $TRANSLATE;
     public static string $PATH_LOGS;
     public static string $PATH_LOCALES;
     private static string $SECRET_KEY;
@@ -28,7 +29,7 @@ class Config
     public static function load(): void
     {
         self::$DIR_PROJECT = dirname(__DIR__, 2);
-        $cacheFile = self::$DIR_PROJECT . '/lila/env_cache.php';
+        $cacheFile = self::$DIR_PROJECT . '/lila/cache/env_cache.php';
         $envFile = self::$DIR_PROJECT . '/.env';
 
         $cacheExists = false;
@@ -49,25 +50,59 @@ class Config
             $dotenv = Dotenv::createMutable(self::$DIR_PROJECT);
             $envVars = $dotenv->load();
 
-            if (isset($envVars['DEBUG']) && $envVars['DEBUG'] === 'false') {
+            if (isset($envVars['DEBUG']) && ($envVars['DEBUG'] === 'false' || $envVars['DEBUG'] === false)) {
+                $cacheDir = self::$DIR_PROJECT . '/lila/cache';
+                if (!is_dir($cacheDir)) {
+                    @mkdir($cacheDir, 0755, true);
+                }
                 self::saveCache($cacheFile, $envVars);
+            } else {
+                self::deleteCache(self::$DIR_PROJECT);
             }
+        }
+
+        if ($cacheExists && (($_ENV['DEBUG'] ?? 'true') === 'true')) {
+            self::deleteCache(self::$DIR_PROJECT);
         }
 
         self::$TITLE_PROJECT = $_ENV['TITLE_PROJECT'] ?? 'Seip PHP Framework';
         self::$VERSION_PROJECT = $_ENV['VERSION_PROJECT'] ?? '0.1';
         self::$VERSION_API = (int) ($_ENV['VERSION_API'] ?? 1);
         self::$DEBUG = ($_ENV['DEBUG'] ?? 'true') === 'true';
+        self::$TRANSLATE = ($_ENV['TRANSLATE'] ?? 'true') === 'true';
         self::$PATH_LOGS = self::normalizePath(env: 'PATH_LOGS', default: '/lila/logs');
         self::$PATH_LOCALES = self::normalizePath(env: 'PATH_LOCALES', default: '/locales/');
         self::$SECRET_KEY = $_ENV['SECRET_KEY'] ?? bin2hex(random_bytes(32));
         self::$URL_PROJECT = self::getURLProject();
-        self::$LANG = $_ENV['LANG'] ?? 'eng';
-        self::$LANGHTML = Config::convertLangForHtml($_ENV['LANG'] ?? "eng");
+        self::$LANG = $_ENV['LANG'] ?? 'en';
+        self::$LANGHTML = Config::convertLangForHtml($_ENV['LANG'] ?? "en");
         self::$DESCRIPTIONMETA = $_ENV['DESCRIPTIONMETA'] ?? "";
         self::$KEYWORDSMETA = $_ENV['KEYWORDSMETA'] ?? "";
         self::$AUTHORMETA = $_ENV['AUTHORMETA'] ?? "";
         self::$PATH_CACHE = self::normalizePath(env: 'PATH_CACHE', default: '/lila/cache');
+    }
+
+    public static function deleteCache(string $DIR_PROJECT): void
+    {
+        $cacheDir = rtrim($DIR_PROJECT, '/') . '/lila/cache';
+
+        if (is_dir($cacheDir)) {
+            self::recursiveRmdir($cacheDir);
+        }
+
+        // Recreate the directory so the app can write new cache files immediately
+        @mkdir($cacheDir, 0755, true);
+    }
+
+    private static function recursiveRmdir(string $dir): void
+    {
+        if (!is_dir($dir))
+            return;
+        $files = array_diff(scandir($dir), array('.', '..'));
+        foreach ($files as $file) {
+            (is_dir("$dir/$file")) ? self::recursiveRmdir("$dir/$file") : @unlink("$dir/$file");
+        }
+        @rmdir($dir);
     }
 
     public static function saveCache(string $path, array $data): bool

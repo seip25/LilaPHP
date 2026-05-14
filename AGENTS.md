@@ -1,6 +1,6 @@
 # LilaPHP — AI Assistant Guidelines
 
-> **Version:** 1.1.8 | **Author:** Andrés Paiva (Seip25)  
+> **Version:** 1.42 | **Author:** Andrés Paiva (Seip25)  
 > This file provides context and rules for AI assistants working on the **LilaPHP** codebase.
 
 ---
@@ -13,7 +13,8 @@ LilaPHP is a **lightweight PHP micro-framework** using PHP 8+, Twig, Dotenv, and
 
 - **Micro-App Pattern**: Each endpoint directory has its own `index.php` that includes `app/index.php` (bootstrap) and instantiates `Core\App`. There is **NO single global router file**. Each endpoint independently defines its GET/POST/PUT/DELETE handlers.
 - **Middleware Flow**: Script execution must flow through `before` → route middlewares → handler → `after` callbacks. **DO NOT** use `exit;` or `die()` inside helpers like `jsonResponse` or model constructors. Let the dispatch loop complete to execute `after` callbacks properly.
-- **PHP 8 Attributes**: Routing, CSRF, caching, and validation are configured via PHP Attributes (`#[GET]`, `#[POST]`, `#[CSRF]`, `#[Cache]`, `#[Validate]`, `#[Middleware]`).
+- **PHP 8 Attributes**: Routing, CSRF, caching, validation, and SEO are configured via PHP Attributes (`#[GET]`, `#[POST]`, `#[CSRF]`, `#[Cache]`, `#[Validate]`, `#[Middleware]`, `#[SEO]`).
+- **Virtual Language Routing**: The framework supports URL-based language detection (e.g., `/es/dashboard`). This automatically sets the session language and routes to the appropriate endpoint without physical subdirectories. **Can be disabled** globally via `.env` or per-instance via `App` options.
 - **Dual Registration**: Routes can be registered either via closures (`$app->get(...)`, `$app->post(...)`) or via named functions with Attributes and `$app->add('functionName')`.
 
 ### File Layout
@@ -35,7 +36,7 @@ project-root/
     ├── index.php           ← Bootstrap: autoload + new App()
     ├── vite.config.js      ← Vite + React HMR config
     ├── package.json        ← Node dependencies (React, Vite)
-    ├── locales/            ← Translation files (eng.php, esp.php, bra.php + validation_*.php)
+    ├── locales/            ← Translation files (en.php, es.php, pt-br.php + validation_*.php)
     └── lila/               ← Internal: debug.sqlite, build_manifest.php, and core framework
         ├── core/           ← Framework core classes (namespace: Core)
         │   ├── App.php         ← Main application (routing, dispatch, rendering)
@@ -131,6 +132,8 @@ $app->add('handleSubmit');
 | `#[Validate(ModelClass::class)]`           | Auto-validate request against model |
 | `#[Middleware(callable)]`                  | Attach middleware to route          |
 | `#[Admin]`                                 | Protect route with Admin Portal     |
+| `#[SEO(key: "...")]`                       | Define page metadata. Resolves automatically from `app/locales/seo.php` based on session language |
+| `#[AUTH(key: "auth", decrypt: true, redirect: "/login")]` | Verify session existence before executing route. Redirects to /login or returns 401 if failed |
 
 ---
 
@@ -203,7 +206,7 @@ Models extend `Core\BaseModel` and use two attribute systems:
 
 ### `#[Field(...)]` — Request Validation
 
-Triggered automatically when instantiating: `new ModelClass(data: $req, lang: 'esp')`
+Triggered automatically when instantiating: `new ModelClass(data: $req, lang: 'es')`
 Throws `ValidationException` on failure.
 
 ```php
@@ -291,8 +294,8 @@ $app->add('adminPortal');
 
 - Components live in `app/resources/js/pages/*.jsx` and `app/resources/js/components/*.jsx`
 - Auto-discovered by `main.jsx` via `import.meta.glob`
-- Twig helpers mount them via `data-react-component="ComponentName"` attribute
-- Full page renders mount via `data-react-page="PageComponent"` attribute
+- Twig helpers `{{ react('ComponentName') }}` mount islands via `data-react-component="ComponentName"`. These files are searched for **strictly within `app/resources/js/components/`**.
+- Full page renders `$res->renderReact('PageComponent')` mount via `data-react-page="PageComponent"`. These files are searched for **strictly within `app/resources/js/pages/`**.
 - **Re-render from JS**: `window.renderReactComponent('ComponentName', 'component')` or `window.renderReactComponent('PageComponent', 'page')`
 
 ### React Full Page Render
@@ -306,6 +309,39 @@ $res->renderReact('PageComponent', $props, [
     'styles' => []
 ]);
 ```
+
+---
+
+## 🚀 Single Page Application (SPA) Support
+
+LilaPHP features a native SPA engine (`assets/js/spa.js`) that enables instant transitions between Twig views and React islands without full page reloads.
+
+### How it works
+1. **Interceptor**: `spa.js` intercepts internal link clicks.
+2. **Partial Request**: It appends `?source=frontend` to the URL.
+3. **JSON Response**: The `Template` core detects the source and returns a JSON containing `body` (HTML partial), `meta`, `scripts`, `css`, and `props`.
+4. **DOM Update**: `spa.js` updates `#lila-spa-content`, injects missing assets into `<head>`, and executes embedded scripts.
+5. **React Re-sync**: Automatically triggers `window.renderReactComponent()` if available.
+
+### Usage & Conventions
+- **Container**: The main content must be wrapped in `<main id="lila-spa-content">` in `base.twig`.
+- **Dynamic Layout**: All Twig templates must use `{% extends layout | default("base.twig") %}`.
+- **Exclusion**: Add `data-no-spa` attribute to any link to force a full page reload.
+- **Error Handling**: If the server returns 401/403 (Unauthorized/Forbidden), the SPA engine performs a full reload to allow proper session handling (e.g., redirecting to login).
+
+### Authentication Attribute `#[AUTH]`
+Automatically protects routes by checking for a session key. Fully compatible with `app:optimize` attribute caching.
+
+```php
+use Core\{GET, AUTH, Response};
+
+#[GET]
+#[AUTH(key: 'auth', decrypt: true, redirect: '/login')]
+function dashboard(array $req, Response $res) {
+    return $res->render('dashboard');
+}
+```
+If the session key is missing, it will redirect to `/login` (default). If `redirect` is set to `false`, it returns a 401 response (which triggers a full reload in SPA mode).
 
 ---
 
@@ -332,7 +368,7 @@ php app/cli.php seed:create Name   # Generate seeder file
 php app/cli.php seed:run           # Run all seeders
 php app/cli.php test:run           # Run all unit tests (Recursive .test.php discovery)
 php app/cli.php assets:minify      # Minify all assets in assets/
-php app/cli.php schedule:run       # Run scheduled tasks defined in tasks.php
+php app/cli.php sitemap:generate      # Generate multilingual sitemap.xml
 php app/cli.php admin:add          # Create or update an admin user
 ```
 
@@ -391,7 +427,17 @@ $app->translate('key');       // PHP
 {{ __('key') }}               // Twig shorthand
 ```
 
-Language switching: `?set-lang=true&lang=esp` (auto-handled by framework).
+Language switching: `?set-lang=true&lang=es` (auto-handled by framework).
+
+### Single Language Mode
+If your application only supports one language, you can disable the translation system globally in `.env` or per `App` instance.
+- **Global**: Set `TRANSLATE=false` in `.env`.
+- **Instance**: Pass `['translate' => false]` to `new App()`.
+
+When disabled:
+- URL prefixes (e.g., `/es/`) are ignored and NOT generated by the `url()` helper.
+- `set-lang` logic is skipped.
+- Sitemap generator only includes the default language without prefixes.
 
 ---
 
@@ -403,7 +449,8 @@ DEBUG=true                    # true=dev mode, false=production (Twig cache, min
 VERSION_PROJECT="0.1"
 SECRET_KEY="your-secret-key"  # Used for session encryption
 URL_PROJECT="http://localhost/project"
-LANG="esp"                    # Default language (eng, esp, bra, por)
+LANG="es"                    # Default language (en, es, pt-br, pt)
+TRANSLATE=true               # Enable/Disable multi-language support (default: true)
 DB_PROVIDER="mysql"           # mysql, pgsql, sqlite
 DB_NAME="dbname"
 DB_USER="root"
@@ -428,3 +475,4 @@ DB_PORT="3306"
 10. **Use named parameters** — LilaPHP code style uses PHP 8 named arguments extensively
 11. **Auto-wiring DI is the Standard** — Write fully independent endpoint controllers utilizing the native DI. Auto-wiring handles resolution regardless of parameter order.
 12. **Twig Block Convention** — Standard layouts (e.g., `base.twig`) use `{% block content %}` for the main body area. Avoid using `{% block body %}`. This is the default framework pattern to accelerate template development, although React full-page rendering remains a more flexible alternative.
+13. **SEO and Localization** — Use standardized 2-letter ISO codes (e.g., `en`, `es`, `pt`) for translations. Always use the `url()` helper to benefit from automatic language-prefix routing. Use the `#[SEO(key: "...")]` attribute on main public-facing routes to resolve metadata from the array defined in `app/locales/seo.php`.

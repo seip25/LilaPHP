@@ -10,18 +10,18 @@ class Security
     {
         $this->options = array_replace_recursive([
             'logger' => false,
-            'rateLimit' => 200,
+            'rateLimit' => false,
             'sanitize' => true,
             'cors' => [
                 'enabled' => true,
                 'origins' => ['*'],
                 'methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-                'headers' => ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+                'headers' => ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'HTTP_X_LILA_SPA'],
                 'credentials' => false
             ],
             'payloadCheck' => true,
             'csp' => [
-                'enabled' => true,
+                'enabled' => false,
                 'directives' => [
                     'default-src' => ["'self'"],
                     'script-src' => [
@@ -63,8 +63,11 @@ class Security
     public function runBeforeMiddlewares(array &$req, string $method = "GET"): bool
     {
         if ($this->options['logger']) {
-            if (!$this->loggerMiddleware($req)) return false;
+            if (!$this->loggerMiddleware($req))
+                return false;
         }
+        $this->applyGeneralSecurityHeaders();
+
         if ($this->options['cors'])
             $this->corsHeaders();
         if ($this->options['csp'])
@@ -185,10 +188,39 @@ class Security
         foreach ($directives as $directive => $sources) {
             $policy .= $directive . ' ' . implode(' ', $sources) . '; ';
         }
+
         if (!empty($policy)) {
             header("Content-Security-Policy: " . rtrim($policy));
         }
     }
+
+    /**
+     * Apply general security headers to every response.
+     * These headers are independent of CSP and provide baseline protection.
+     * 
+     * @return void
+     */
+    protected function applyGeneralSecurityHeaders(): void
+    {
+        header("X-Frame-Options: SAMEORIGIN");
+
+        header("X-Content-Type-Options: nosniff");
+
+        header("X-XSS-Protection: 0");
+
+        header("Cross-Origin-Opener-Policy: same-origin-allow-popups");
+
+        if (!Config::$DEBUG) {
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                ($_SERVER['SERVER_PORT'] == 443) ||
+                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+            if ($isHttps) {
+                header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+            }
+        }
+    }
+
 
 
     public static function generateCsrfToken(): string
@@ -196,10 +228,10 @@ class Security
         if (session_status() === PHP_SESSION_ACTIVE)
             Session::start();
         if (Session::has(key: '_csrf'))
-            return Session::get(key: '_csrf');
+            return Session::get(key: '_csrf', default: '', decrypt: true);
 
         $token = bin2hex(string: random_bytes(length: 32));
-        Session::set(key: '_csrf', value: $token);
+        Session::set(key: '_csrf', value: $token, encrypt: true);
         return $token;
     }
 
@@ -214,7 +246,7 @@ class Security
         if (session_status() === PHP_SESSION_ACTIVE)
             Session::start();
         $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($request['_csrf'] ?? '');
-        $sessionToken = Session::get(key: '_csrf');
+        $sessionToken = Session::get(key: '_csrf', decrypt: true);
 
         if (!$headerToken || !$sessionToken || !hash_equals(known_string: $sessionToken, user_string: $headerToken)) {
             $data = Config::$DEBUG ? [
@@ -254,7 +286,16 @@ class Security
         $rateData = Session::get('__rate_limit', [
             'count' => 0,
             'start' => $now
-        ]);
+        ], decrypt: true);
+
+
+        if (!is_array($rateData) || !isset($rateData['start'])) {
+            $rateData = [
+                'count' => 0,
+                'start' => $now
+            ];
+        }
+
 
         if ($now - $rateData['start'] >= 60) {
             $rateData['start'] = $now;
@@ -262,7 +303,7 @@ class Security
         }
 
         $rateData['count']++;
-        Session::set('__rate_limit', $rateData);
+        Session::set('__rate_limit', $rateData, encrypt: true);
 
         $remaining = max(0, $limit - $rateData['count']);
         $reset = max(0, 60 - ($now - $rateData['start']));

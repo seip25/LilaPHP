@@ -25,6 +25,8 @@ require_once __DIR__ . '/lila/cli/Schedule.php';
 require_once __DIR__ . '/lila/cli/Admin.php';
 require_once __DIR__ . '/lila/cli/Config.php';
 require_once __DIR__ . '/lila/cli/Optimize.php';
+require_once __DIR__ . '/lila/cli/Sitemap.php';
+require_once __DIR__ . '/lila/cli/KeyGen.php';
 require_once __DIR__ . '/lila/core/TestCase.php';
 require_once __DIR__ . '/lila/core/Schedule.php';
 
@@ -37,12 +39,12 @@ use Cli\Schedule;
 use Cli\Admin;
 use Cli\Config as ConfigCmd;
 use Cli\Optimize;
+use Cli\Sitemap;
+use Cli\KeyGen;
 
-// Parse command line arguments
 $command = $argv[1] ?? 'help';
 $args = array_slice($argv, 2);
 
-// Color output helpers
 function success(string $msg): void
 {
     echo "\033[32m✓ {$msg}\033[0m" . PHP_EOL;
@@ -63,7 +65,7 @@ function warning(string $msg): void
     echo "\033[33m⚠ {$msg}\033[0m" . PHP_EOL;
 }
 
-// Command routing
+
 try {
     switch ($command) {
         case 'migrate:run':
@@ -140,7 +142,7 @@ try {
             $config = new ConfigCmd();
             $config->clear($args);
             break;
-            
+
         case 'route:cache':
         case 'route:clear':
             $route = new \Cli\RouteCache();
@@ -156,6 +158,16 @@ try {
         case 'app:optimize':
             $optimize = new Optimize();
             $optimize->execute($args);
+            break;
+
+        case 'sitemap:generate':
+            $sitemap = new Sitemap();
+            $sitemap->execute($args);
+            break;
+
+        case 'key:generate':
+            $keygen = new KeyGen();
+            $keygen->execute($args);
             break;
 
         case 'help':
@@ -176,17 +188,22 @@ try {
 
   \033[32mmodel:create\033[0m        Create a new model file
   \033[32mmodel:cache\033[0m         Generate model metadata cache for production
- 
-  \033[32mtest:run\033[0m            Run all test suites (*Test.php)
-  \033[32massets:minify\033[0m       Minify CSS and JS files in assets/
-  \033[32mschedule:run\033[0m        Execute scheduled tasks from app/tasks.php
+
   \033[32madmin:add\033[0m           Create or update an admin user
 
-  \033[32mconfig:cache\033[0m        Generate environment variables cache for production
-  \033[32mconfig:clear\033[0m        Clear environment variables cache
-  \033[32mapp:optimize\033[0m        Unified production optimization (config + models + assets)
+  \033[32mschedule:run\033[0m        Execute scheduled tasks from app/tasks.php 
   \033[32mqueue:work\033[0m          Start the queue worker to process background jobs
+ 
+  \033[32mtest:run\033[0m            Run all test suites (*Test.php)
 
+  \033[32msitemap:generate\033[0m    Generate a multilingual sitemap.xml for SEO
+  \033[32massets:minify\033[0m       Minify CSS and JS files in assets/
+ 
+  \033[32mkey:generate\033[0m        Generate a secure random SECRET_KEY and write it to app/.env
+  \033[32mconfig:cache\033[0m        Generate environment variables cache for production
+  \033[32mconfig:clear\033[0m        Clear all application caches (app/lila/cache/)
+  \033[32mapp:optimize\033[0m        Unified production optimization (config + models + assets)
+  
   \033[32mhelp\033[0m                Show this help message
 
 \033[33mExamples:\033[0m

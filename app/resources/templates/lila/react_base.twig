@@ -1,4 +1,4 @@
-{% extends "base.twig" %}
+{% extends layout | default("base.twig") %}
 {% block extra %}
 	<!-- Inject Vite assets -->
 	{{ vite_assets() }}

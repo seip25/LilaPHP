@@ -153,7 +153,7 @@
 										</a>
 									{% endif %}
 
-									<div class="flex items-center gap-1 mx-1">
+									<div class="flex items-center gap-1 mx-10">
 										{% for i in 1..pagination.pages %}
 											{% if pagination.pages <= 7 or (i == 1 or i == pagination.pages or (i >= pagination.current - 1 and i <= pagination.current + 1)) %}
 												<a href="?model={{ activeModel|url_encode }}&q={{ pagination.q|url_encode }}&page={{ i }}" class="min-w-[32px] h-8 flex items-center justify-center rounded-lg text-xs font-medium transition-all {{ i == pagination.current ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-gray-200 dark:hover:border-slate-700' }}">
@@ -193,18 +193,18 @@
 
 	<script>
 		document.addEventListener('DOMContentLoaded', () => {
-			const toggle = document.getElementById('mobile-sidebar-toggle');
-			const sidebar = document.getElementById('admin-sidebar');
-			const overlay = document.getElementById('sidebar-overlay');
+const toggle = document.getElementById('mobile-sidebar-toggle');
+const sidebar = document.getElementById('admin-sidebar');
+const overlay = document.getElementById('sidebar-overlay');
 
-			const toggleSidebar = () => {
-				sidebar.classList.toggle('-translate-x-full');
-				overlay.classList.toggle('hidden');
-			};
+const toggleSidebar = () => {
+sidebar.classList.toggle('-translate-x-full');
+overlay.classList.toggle('hidden');
+};
 
-			toggle.addEventListener('click', toggleSidebar);
-			overlay.addEventListener('click', toggleSidebar);
-		});
+toggle.addEventListener('click', toggleSidebar);
+overlay.addEventListener('click', toggleSidebar);
+});
 	</script>
 
 {% endblock %}

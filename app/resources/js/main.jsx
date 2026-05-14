@@ -37,8 +37,18 @@ window.renderReactComponent = async (name = 'all', type = 'component') => {
   });
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+const bootReact = () => {
   window.renderReactComponent();
   window.renderReactComponent('all', 'page');
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootReact);
+} else {
+  bootReact();
+}
+
+document.addEventListener('lila:navigation', (e) => {
+  bootReact();
 });
 

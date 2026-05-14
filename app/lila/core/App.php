@@ -22,11 +22,7 @@ use ReflectionMethod;
  * 
  * @package Core
  * @author Andrés Paiva (Seip25)
-<<<<<<< Updated upstream
- * @version 1.31
-=======
- * @version 1.46
->>>>>>> Stashed changes
+ * @version 1.45
  */
 class App
 {
@@ -55,6 +51,12 @@ class App
 
     /** @var array Cache for DI parameter maps */
     protected static array $diCache = [];
+
+    /** @var array Cache for route attributes (SEO, CSRF, etc) */
+    protected static array $attributeCache = [];
+
+    /** @var array|null Current active route data */
+    public static ?array $activeRoute = null;
 
     /**
      * Initialize the application with configuration options
@@ -123,9 +125,14 @@ class App
     {
         $this->options = $options;
         Config::load();
+
         if (isset($options['debug'])) {
             Config::$DEBUG = (bool) $options['debug'];
         }
+        if (isset($options['translate'])) {
+            Config::$TRANSLATE = (bool) $options['translate'];
+        }
+
         $this->registerErrorHandler();
         $this->registerExceptionHandler();
         $this->security = new Security($options['security'] ?? []);
@@ -209,7 +216,7 @@ class App
     /**
      * Get default language code
      * 
-     * @return string Language code (e.g., 'eng', 'esp', 'bra', 'por')
+     * @return string Language code (e.g., 'en', 'es', 'pt-br', 'pt')
      */
     public function getLangDefault(): string
     {
@@ -235,9 +242,10 @@ class App
 
         if ($validateReferer) {
             if (!str_starts_with($newUrl, '/') && !str_starts_with($newUrl, $baseUrl)) {
-                $newUrl = '/';
+                $newUrl = "{$baseUrl}";
             }
         }
+
         header(header: "Location: $newUrl");
         exit;
     }
@@ -444,43 +452,167 @@ class App
     protected function registerRoute(string $method, mixed $callback, array $middlewares = [], bool $csrf = false): void
     {
         include_once __DIR__ . '/Method.php';
+        $seoData = null;
+        $cbKey = $this->generateCallbackKey($callback);
+
+        if (!Config::$DEBUG && is_string($cbKey)) {
+            $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_attribute_cache.php';
+            if (empty(self::$attributeCache)) {
+                if (function_exists('apcu_fetch')) {
+                    $cached = apcu_fetch('lila_route_attributes');
+                    if ($cached !== false) {
+                        self::$attributeCache = $cached;
+                    }
+                }
+                if (empty(self::$attributeCache) && file_exists($cacheFile)) {
+                    self::$attributeCache = require $cacheFile;
+                    if (function_exists('apcu_store'))
+                        apcu_store('lila_route_attributes', self::$attributeCache);
+                }
+            }
+
+            if (isset(self::$attributeCache[$cbKey])) {
+                $cached = self::$attributeCache[$cbKey];
+                $resolvedMiddlewares = [];
+                foreach (($cached['middlewares'] ?? []) as $mw) {
+                    if ($mw === 'ADMIN_PORTAL') {
+                        $resolvedMiddlewares[] = function ($req, $res) {
+                            $admin = new \Core\AdminPortal();
+                            $admin->handle($req, $res);
+                        };
+                    } elseif (is_array($mw) && isset($mw['type'])) {
+                        if ($mw['type'] === 'VALIDATE') {
+                            $resolvedMiddlewares[] = $this->createValidationMiddleware($mw['model'], $mw['lang']);
+                        } elseif ($mw['type'] === 'AUTH') {
+                            $resolvedMiddlewares[] = $this->createAuthMiddleware($mw['key'], $mw['decrypt'], $mw['redirect']);
+                        } elseif ($mw['type'] === 'CACHE') {
+                            $resolvedMiddlewares[] = Response::cacheResponse($mw['seconds'], $mw['tag'] ?? null);
+                        }
+                    } else {
+                        $resolvedMiddlewares[] = $mw;
+                    }
+                }
+
+                $this->routes[$method] = [
+                    'callback' => $callback,
+                    'middlewares' => array_merge($middlewares, $resolvedMiddlewares),
+                    'csrf' => $cached['csrf'] ?? $csrf,
+                    'seo' => $cached['seo'] ?? null
+                ];
+                return;
+            }
+        }
+
         $reflection = $this->getReflection($callback);
 
         if ($reflection) {
+            $cachedMiddlewares = [];
             if (!empty($reflection->getAttributes(CSRF::class))) {
                 $csrf = true;
             }
 
             $cacheAttr = $reflection->getAttributes(Cache::class);
             if (!empty($cacheAttr)) {
-                $seconds = $cacheAttr[0]->newInstance()->seconds;
-                $middlewares[] = Response::cacheResponse($seconds);
+                $instance = $cacheAttr[0]->newInstance();
+                $cachedMiddlewares[] = [
+                    'type' => 'CACHE',
+                    'seconds' => $instance->seconds,
+                    'tag' => $instance->tag ?? null
+                ];
             }
 
             $validateAttr = $reflection->getAttributes(Validate::class);
             if (!empty($validateAttr)) {
                 $instance = $validateAttr[0]->newInstance();
-                $middlewares[] = $this->createValidationMiddleware($instance->modelClass, $instance->langParam);
+                $cachedMiddlewares[] = [
+                    'type' => 'VALIDATE',
+                    'model' => $instance->modelClass,
+                    'lang' => $instance->langParam
+                ];
+            }
+
+            $authAttr = $reflection->getAttributes(AUTH::class);
+            if (!empty($authAttr)) {
+                $instance = $authAttr[0]->newInstance();
+                $cachedMiddlewares[] = [
+                    'type' => 'AUTH',
+                    'key' => $instance->key,
+                    'decrypt' => $instance->decrypt,
+                    'redirect' => $instance->redirect
+                ];
             }
 
             $adminAttr = $reflection->getAttributes(Admin::class);
             if (!empty($adminAttr)) {
                 $instance = $adminAttr[0]->newInstance();
-                $middlewares[] = function ($req, $res) use ($instance) {
-                    $admin = new \Core\AdminPortal();
-                    $admin->handle($req, $res, $instance->models, $instance->options);
-                };
+                $cachedMiddlewares[] = 'ADMIN_PORTAL';
             }
 
             foreach ($reflection->getAttributes(Middleware::class) as $attr) {
-                $middlewares[] = $attr->newInstance()->callback;
+                $cachedMiddlewares[] = $attr->newInstance()->callback;
             }
+
+            $seoAttr = $reflection->getAttributes(SEO::class);
+            if (!empty($seoAttr)) {
+                $instance = $seoAttr[0]->newInstance();
+                $seoData = [
+                    'title' => $instance->title,
+                    'description' => $instance->description,
+                    'keywords' => $instance->keywords,
+                    'image' => $instance->image,
+                    'key' => $instance->key
+                ];
+            }
+
+            if (!Config::$DEBUG && is_string($cbKey)) {
+                $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_attribute_cache.php';
+
+                // Check if any middleware is a closure, if so, we can't cache this route's attributes
+                $canCache = true;
+                foreach ($cachedMiddlewares as $mw) {
+                    if (is_object($mw) && $mw instanceof \Closure) {
+                        $canCache = false;
+                        break;
+                    }
+                }
+
+                if ($canCache) {
+                    self::$attributeCache[$cbKey] = [
+                        'csrf' => $csrf,
+                        'middlewares' => $cachedMiddlewares,
+                        'seo' => $seoData
+                    ];
+                    @file_put_contents($cacheFile, "<?php\n\nreturn " . var_export(self::$attributeCache, true) . ";\n");
+                }
+            }
+
+            $finalMiddlewares = $middlewares;
+            foreach ($cachedMiddlewares as $mw) {
+                if ($mw === 'ADMIN_PORTAL') {
+                    $finalMiddlewares[] = function ($req, $res) {
+                        $admin = new \Core\AdminPortal();
+                        $admin->handle($req, $res);
+                    };
+                } elseif (is_array($mw) && isset($mw['type'])) {
+                    if ($mw['type'] === 'VALIDATE') {
+                        $finalMiddlewares[] = $this->createValidationMiddleware($mw['model'], $mw['lang']);
+                    } elseif ($mw['type'] === 'AUTH') {
+                        $finalMiddlewares[] = $this->createAuthMiddleware($mw['key'], $mw['decrypt'], $mw['redirect']);
+                    } elseif ($mw['type'] === 'CACHE') {
+                        $finalMiddlewares[] = Response::cacheResponse($mw['seconds'], $mw['tag'] ?? null);
+                    }
+                } else {
+                    $finalMiddlewares[] = $mw;
+                }
+            }
+            $middlewares = $finalMiddlewares;
         }
 
         $this->routes[$method] = [
             'callback' => $callback,
             'middlewares' => $middlewares,
-            'csrf' => $csrf
+            'csrf' => $csrf,
+            'seo' => $seoData
         ];
     }
 
@@ -499,6 +631,54 @@ class App
         };
     }
 
+    /**
+     * Create authentication middleware
+     * 
+     * @param string $key Session key to check
+     * @param bool $decrypt Whether to decrypt the session value
+     * @param string|bool|null $redirect Redirect path on failure
+     * @return callable Middleware closure
+     */
+    protected function createAuthMiddleware(string $key, bool $decrypt, string|bool|null $redirect = '/login'): callable
+    {
+        return function (array $req, Response $res) use ($key, $decrypt, $redirect) {
+            $session = Session::get($key, null, $decrypt);
+            if (!$session) {
+                if (is_string($redirect)) {
+                    $res->redirect($redirect);
+                } else {
+                    http_response_code(401);
+                    echo "401 Unauthorized";
+                }
+                return false;
+            }
+            return true;
+        };
+    }
+
+
+    /**
+     * Generate a unique key for a callback
+     * 
+     * @param mixed $callback
+     * @return string|null
+     */
+    protected function generateCallbackKey(mixed $callback): ?string
+    {
+        if (is_string($callback)) {
+            return $_SERVER['SCRIPT_FILENAME'] . '::' . $callback;
+        }
+
+        if (is_array($callback)) {
+            return (is_object($callback[0]) ? spl_object_hash($callback[0]) : $callback[0]) . '::' . $callback[1];
+        }
+
+        if (is_object($callback)) {
+            return spl_object_hash($callback);
+        }
+
+        return null;
+    }
 
     /**
      * Get reflection object for a callback
@@ -508,7 +688,7 @@ class App
      */
     protected function getReflection(mixed $callback): mixed
     {
-        $key = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : (is_object($callback) ? spl_object_hash($callback) : null));
+        $key = $this->generateCallbackKey($callback);
 
         if ($key && isset(self::$reflectionCache[$key])) {
             return self::$reflectionCache[$key];
@@ -552,7 +732,9 @@ class App
     protected function dispatch(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-
+        if (($this->options['translate'] ?? Config::$TRANSLATE) == false) {
+            Session::remove("lang");
+        }
         if (Config::$DEBUG) {
             Debug::init();
             Debug::start();
@@ -584,6 +766,8 @@ class App
             exit("404 Not Found");
         }
 
+        self::$activeRoute = $route;
+
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 
         $data = [];
@@ -595,18 +779,77 @@ class App
 
         $req = array_merge($_GET, $_POST, $data, $_FILES);
 
-        if (isset($_GET['set-lang'])) {
-            $newLang = $_GET["lang"] ?? $this->getLangDefault();
-            $this->setSession(key: "lang", value: $newLang);
+        if ($this->options['translate'] ?? Config::$TRANSLATE) {
+            if (isset($_GET['set-lang'])) {
+                $lang = $this->getSession("lang") ?? $this->getLangDefault();
+                $newLang = $_GET["lang"] ?? $this->getLangDefault();
+                $this->setSession(key: "lang", value: $newLang);
+                if (isset($_GET['redirect']) && $_GET['redirect'] === 'false') {
+                    $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
+                    exit;
+                } else {
+                    if ($method === "GET") {
+                        http_response_code(302);
+                        $referer = $_SERVER['HTTP_REFERER'] ?? '/';
+                        $parsedUrl = parse_url($referer);
+                        $path = $parsedUrl['path'] ?? '/';
 
-            if (isset($_GET['redirect']) && $_GET['redirect'] === 'false') {
-                $this->jsonResponse(data: ["changeLang" => true, "lang" => $newLang]);
-                exit;
+                        $basePath = parse_url($this->getEnv('URL_PROJECT') ?? '/', PHP_URL_PATH) ?? '';
+                        $basePath = rtrim($basePath, '/');
+                        $pattern = '#^' . preg_quote($basePath, '#') . '/([a-z]{2,3}(-[a-z]{2})?)(/|$)#i';
+
+                        if (preg_match($pattern, $path, $matches)) {
+                            $path = preg_replace($pattern, $basePath . '/' . $newLang . '$3', $path);
+                        } else {
+                            $path = str_replace("/{$lang}", "/{$newLang}", $path);
+                        }
+
+                        $queryParams = [];
+                        if (isset($parsedUrl['query'])) {
+                            parse_str($parsedUrl['query'], $queryParams);
+                            unset($queryParams['set-lang'], $queryParams['lang']);
+                        }
+
+                        $newQuery = !empty($queryParams) ? '?' . http_build_query($queryParams) : '';
+                        $fragment = isset($parsedUrl['fragment']) ? '#' . $parsedUrl['fragment'] : '';
+
+                        if (isset($parsedUrl['host'])) {
+                            $scheme = $parsedUrl['scheme'] ?? 'http';
+                            $port = isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '';
+                            $back = "{$scheme}://{$parsedUrl['host']}{$port}{$path}{$newQuery}{$fragment}";
+                        } else {
+                            $back = "{$path}{$newQuery}{$fragment}";
+                        }
+
+                        $this->redirect(url: $back);
+                        exit;
+                    } else {
+                        $this->jsonResponse(data: ['changeLang' => true, 'lang' => $newLang], code: 302);
+                        exit;
+                    }
+                }
             } else {
-                http_response_code(302);
-                $back = $_SERVER['HTTP_REFERER'] ?? '/';
-                $this->redirect(url: $back);
-                exit;
+                $currentUri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+                $basePath = parse_url($this->getEnv('URL_PROJECT') ?? '/', PHP_URL_PATH) ?? '';
+                $basePath = rtrim($basePath, '/');
+
+                if ($basePath !== '' && str_starts_with($currentUri, $basePath)) {
+                    $relativePath = substr($currentUri, strlen($basePath));
+                } else {
+                    $relativePath = $currentUri;
+                }
+
+                $segments = explode('/', trim($relativePath, '/'));
+                $firstSegment = strtolower($segments[0] ?? '');
+
+                if ($firstSegment !== '' && preg_match('/^[a-z]{2,3}(-[a-z]{2})?$/', $firstSegment)) {
+                    $localeFile = Config::$DIR_PROJECT . "/locales/{$firstSegment}.php";
+                    if (file_exists($localeFile)) {
+                        if ($this->getSession('lang') !== $firstSegment) {
+                            $this->setSession(key: "lang", value: $firstSegment);
+                        }
+                    }
+                }
             }
         }
 
@@ -640,10 +883,10 @@ class App
             $reflection = $this->getReflection($callback);
 
             if ($reflection) {
-                $cbKey = is_string($callback) ? $callback : (is_array($callback) ? (is_object($callback[0]) ? spl_object_hash($callback[0]) . '::' . $callback[1] : $callback[0] . '::' . $callback[1]) : spl_object_hash($callback));
+                $cbKey = $this->generateCallbackKey($callback);
 
                 if (!isset(self::$diCache[$cbKey])) {
-                    $cacheFile = Config::$DIR_PROJECT . '/lila/route_di_cache.php';
+                    $cacheFile = Config::$DIR_PROJECT . '/lila/cache/route_di_cache.php';
 
                     if (!Config::$DEBUG && is_string($cbKey) && file_exists($cacheFile)) {
                         $loadedCache = require $cacheFile;

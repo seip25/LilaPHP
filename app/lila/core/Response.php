@@ -92,6 +92,18 @@ class Response
     }
 
     /**
+     * Render a pure PHP HTML page
+     * 
+     * @param string|array $html HTML content
+     * @param array $options Options (renderFull, cache, title, meta, scripts, styles, lang)
+     * @return void
+     */
+    public function renderHtml(string|array $html, array $options = []): void
+    {
+        Template::renderHtml($html, $options);
+    }
+
+    /**
      * Redirect to a URL
      * 
      * @param string $url Target URL
@@ -208,15 +220,25 @@ class Response
      * Cache the response
      * 
      * @param int $seconds Cache duration in seconds
+     * @param string|null $tag Cache tag for invalidation
      * @return callable Middleware closure
      */
-    public static function cacheResponse(int $seconds = 60): callable
+    public static function cacheResponse(int $seconds = 60, ?string $tag = null): callable
     {
-        return function (array $req, $res) use ($seconds) {
+        return function (array $req, $res) use ($seconds, $tag) {
 
-            $cacheKey = md5($_SERVER['REQUEST_URI'] . json_encode($req));
+            $lang = Config::$TRANSLATE ? (Session::get('lang') ?? Config::$LANG) : '';
+            $cacheKey = md5($_SERVER['REQUEST_URI'] . json_encode($req) . $lang);
             $cacheDir = Config::$PATH_CACHE . '/responses';
-            $cacheFile = $cacheDir . '/' . $cacheKey . '.cache';
+            
+            $prefix = '';
+            if ($tag) {
+                $parsedTag = preg_replace_callback('/\{([a-zA-Z0-9_]+)\}/', function($matches) use ($req) {
+                    return $req[$matches[1]] ?? $matches[0];
+                }, $tag);
+                $prefix = "{$parsedTag}_";
+            }
+            $cacheFile = $cacheDir . '/' . $prefix . $cacheKey . '.cache';
 
             if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $seconds)) {
                 $cached = @unserialize(file_get_contents($cacheFile));
@@ -253,6 +275,29 @@ class Response
                 }
             });
         };
+    }
+
+    /**
+     * Clear cached responses by tag
+     * 
+     * @param string $tag Cache tag to clear
+     * @return int Number of files deleted
+     */
+    public static function clearCache(string $tag): int
+    {
+        $cacheDir = Config::$PATH_CACHE . '/responses';
+        $pattern = $cacheDir . '/' . $tag . '_*.cache';
+        $files = glob($pattern);
+        $count = 0;
+        if ($files) {
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    @unlink($file);
+                    $count++;
+                }
+            }
+        }
+        return $count;
     }
 
     /**

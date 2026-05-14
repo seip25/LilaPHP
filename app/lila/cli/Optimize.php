@@ -28,20 +28,22 @@ class Optimize extends Command
         $this->info("   LilaPHP Production Optimization      ");
         $this->info("========================================");
 
+        // 0. Preliminary Cleanup
+        $this->clearCache();
+
         // 1. Environment Caching
-        $this->info("\n[1/5] Optimizing Environment Variables...");
+        $this->info("\n[1/6] Optimizing Environment Variables...");
         $configCmd = new Config();
         $configCmd->cache([]);
 
         // 2. Model Caching
-        $this->info("\n[2/5] Optimizing Model Metadata...");
+        $this->info("\n[2/6] Optimizing Model Metadata...");
         $modelCmd = new Model();
         $modelCmd->cache([]);
 
-        // 3. Route Caching (On the fly in production, we just clear it)
+        // 3. Route Caching
         $this->info("\n[3/6] Optimizing Route Cache...");
-        $routeCmd = new RouteCache();
-        $routeCmd->execute(['clear']);
+        $this->success("Route attribute and DI cache cleared.");
 
         // 4. Asset Minification
         $this->info("\n[4/6] Minifying Assets...");
@@ -60,6 +62,35 @@ class Optimize extends Command
         $this->success("Optimization completed successfully!");
         $this->info("Your application is now ready for scale.");
         $this->info("========================================\n");
+    }
+
+    /**
+     * Clear all framework cache files
+     * 
+     * @return void
+     */
+    private function clearCache(): void
+    {
+        $this->info("\n[0/6] Clearing existing cache files...");
+        CoreConfig::deleteCache(CoreConfig::$DIR_PROJECT);
+        $this->info("✓ Cleared: app/lila/cache/ directory");
+    }
+
+    /**
+     * Recursively remove a directory
+     * 
+     * @param string $path
+     * @return void
+     */
+    private function removeDirectory(string $path): void
+    {
+        if (!is_dir($path)) return;
+        $files = array_diff(scandir($path), ['.', '..']);
+        foreach ($files as $file) {
+            $fullPath = $path . DIRECTORY_SEPARATOR . $file;
+            is_dir($fullPath) ? $this->removeDirectory($fullPath) : @unlink($fullPath);
+        }
+        @rmdir($path);
     }
 
     /**
