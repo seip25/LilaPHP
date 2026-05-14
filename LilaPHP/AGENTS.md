@@ -75,6 +75,7 @@ class User extends BaseModel {
 ### Project Bootstrapping
 - **Command**: `php cli.php app:init`
 - **Logic**: Copies initial structure (routes, models, .env) from `lila/scaffold/` to the root.
+- **Rule**: All CLI commands MUST be executed from the project root (e.g., `LilaPHP/`). Running them from subdirectories will cause path resolution failures.
 
 ## 📁 Key File Locations
 

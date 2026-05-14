@@ -588,7 +588,6 @@ DB_PORT="3306"
 # 2. Create your models in models/
 
 # 3. Run migrations
-cd app
 php cli.php migrate:create
 
 # 4. Create and run seeders
@@ -625,12 +624,12 @@ Set `DEBUG=false` in your `.env` file:
 DEBUG=false
 ```
 
-### Restrict Access to `/app` Directory
+### Restrict Access to `/lila` Directory
 
 **NGINX:**
 
 ```nginx
-location /app {
+location /lila {
     deny all;
 }
 ``` 
@@ -640,7 +639,7 @@ location /app {
 **Apache (.htaccess):**
 
 ```apache
-<Directory "app">
+<Directory "lila">
   Order allow,deny
   Deny from all
 </Directory>

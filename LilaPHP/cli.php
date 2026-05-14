@@ -207,9 +207,9 @@ try {
   \033[32msitemap:generate\033[0m    Generate a multilingual sitemap.xml for SEO
   \033[32massets:minify\033[0m       Minify CSS and JS files in assets/
  
-  \033[32mkey:generate\033[0m        Generate a secure random SECRET_KEY and write it to app/.env
+  \033[32mkey:generate\033[0m        Generate a secure random SECRET_KEY and write it to .env
   \033[32mconfig:cache\033[0m        Generate environment variables cache for production
-  \033[32mconfig:clear\033[0m        Clear all application caches (app/lila/cache/)
+  \033[32mconfig:clear\033[0m        Clear all application caches (lila/cache/)
   \033[32mapp:optimize\033[0m        Unified production optimization (config + models + assets)
   \033[32mapp:init\033[0m            Initialize application scaffolding from lila/scaffold
   
