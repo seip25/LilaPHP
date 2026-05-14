@@ -1780,9 +1780,9 @@ Queue::push(Jobs\SendEmailJob::class, ['to' => 'user@domain.com', 'subject' => '
 
                     <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">1. Create the Endpoint</h3>
                     <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                        <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\{App, Admin};
+                        <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\{App, Admin,GET,POST};
 
-// admin/index.php
+// routes/admin.php
 $app = new App();
 
 #[GET] #[POST] #[Admin]

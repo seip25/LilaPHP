@@ -199,7 +199,7 @@ try {
 
   \033[32madmin:add\033[0m           Create or update an admin user
 
-  \033[32mschedule:run\033[0m        Execute scheduled tasks from app/tasks.php 
+  \033[32mschedule:run\033[0m        Execute scheduled tasks from /tasks/my-task.php 
   \033[32mqueue:work\033[0m          Start the queue worker to process background jobs
  
   \033[32mtest:run\033[0m            Run all test suites (*Test.php)
