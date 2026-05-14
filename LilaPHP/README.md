@@ -43,12 +43,12 @@ LilaPHP was designed with one clear purpose — to give developers **full contro
 Each entry file can instantiate the framework with its own configuration, giving you complete control over security, middleware, and session behavior.
 
 ```php
-// app/index.php - Default configuration
+// LilaPHP/index.php - Default configuration
 $app = new App();
 ```
 
 ```php
-// app/newApp.php - Custom configuration
+// routes/api.php - Custom configuration
 $app = new App([
     'security' => [
         'cors' => false,
@@ -79,117 +79,102 @@ LANG="en"
 TRANSLATE=true # Set to false for single-language apps
 ```
 
-### Run the Application or visit http://localhost/LilaPHP in LAMPP ,XAMPP,WAMP
+### 🌐 Server Setup
 
-**Using PHP's Built-in Server (Development):**
+LilaPHP is designed for production-grade servers. We recommend **NGINX**, **Apache**, or **Docker** for both development and production. 
 
-```bash
-php -S localhost:8000
-```
-
-Then visit [http://localhost:8000](http://localhost:8000)
+- **Apache**: The included `.htaccess` handles all routing out of the box.
+- **Nginx**: Ensure your configuration points to `index.php` for all non-file requests.
+- **Docker**: See the `docker-compose.yml` (if available) for an instant containerized environment.
 
 
-### React 
+### React Integration
 
-## Install
+Install dependencies and build assets:
 
 ```bash
-cd app
+cd LilaPHP
 npm install
-npm run dev 
 npm run build
 ```
 
-**Edit in app/resources/js/pages  :**
+**Edit in resources/js/pages  :**
 
 ## 📁 Project Structure
 
 ```
 LilaPHP/
-├── app/
-│   ├── templates/     # Twig templates
-│   ├── locales/       # Language files (eng, esp, bra, por)
-│   ├── vendor/        # Composer dependencies
-│   ├── .env           # Environment configuration
-│   ├── index.php      # Framework bootstrap
-│   └── lila/          # Framework core and CLI
-│       ├── core/      # Core framework files (router, response, validator)
-│       └── cli/       # CLI commands
-│
-├── public/            # Public assets (CSS, JS, images)
-├── index.php          # Main entry point
-├── login/             # Independent app example
-│   └── index.php
-├── set-lang/          # Language switcher
-│   └── index.php
-└── .htaccess          # Apache configuration
+├── lila/              # Framework core
+│   ├── core/          # Internal logic
+│   ├── cli/           # CLI commands
+│   └── scaffold/      # Default templates for app:init
+├── models/            # Database models (Scanned by CLI)
+├── routes/            # Application routes & controllers
+├── locales/           # Multilingual files
+├── tasks/             # Scheduled jobs
+├── resources/         # React components & Twig templates
+├── assets/            # CSS, JS, and compiled build
+├── .env               # Project configuration
+├── cli.php            # CLI Entry point
+└── index.php          # Web Entry point
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### Basic Routing
+### Basic Routing (Attributes & DI)
 
 ```php
 <?php
-include_once __DIR__."/app/index.php";
+// LilaPHP/routes/home.php
+include_once __DIR__ . "/../index.php";
 
-$app->get(callback: function($req, $res) use ($app) {
-    return $app->render("home");
-});
+use Core\{App, GET, Response, Session, SEO};
 
-$app->post(callback: function($req, $res) use ($app) {
-    return $app->jsonResponse(["success" => true]);
-}, csrf: true);
+$app = new App();
 
+#[GET]
+#[SEO(key: "home")]
+function home(Response $res, Session $session) {
+    return $res->render("home", [
+        "user" => $session::get("user_id")
+    ]);
+}
+
+$app->add('home');
 $app->run();
 ```
 
-### React Render
+### React Rendering & SEO
 
 ```php
 <?php
-include_once __DIR__."/app/index.php";
+// LilaPHP/routes/react.php
+include_once __DIR__ . "/../index.php";
 
-$app->get(callback: function($req, $res) use ($app) {
-        
-        //Example render Twig and React Island app/resources/templates/react_integration.twig
-        return $app->render(template:"react_integration", 
-        context:
-        [
-            "app" => [
-                "debug" => $app->getEnv("DEBUG")
-            ]
-        ]);
+use Core\{App, GET, Response, SEO, Config};
 
-        //Example render full page React app/resources/js/pages/ReactExample.jsx
-        return $app->renderReact(
-            page: "ReactExample",
-            props: [
-                "app" => [
-                    "debug" => $app->getEnv("DEBUG")
-                ],
-                "csrf"=>Security::generateCsrfToken() ,
-                "translations"=>Translate::translations()
-            ],
-            options: [
-                "lang" => "es",
-                "title" => "React full Page + LilaPHP",
-                "meta" => [
-                    ["name" => "description", "content" => "React full page render example meta description"]
-                ],
+$app = new App();
 
-                "scripts" => [
-                    "https://cdn.tailwindcss.com"
-                ]
-            ]
-        );
-  
-});
- 
+#[GET]
+#[SEO(key: "react_page")]
+function reactDemo(Response $res, Config $config) {
+    return $res->renderReact(
+        page: "ReactExample",
+        props: [
+            "debug" => $config::$DEBUG,
+            "translations" => $res->translations(),
+            "csrf" => $res->generateCSRF()
+        ],
+        options: [
+            "title" => "React + LilaPHP",
+            "scripts" => ["https://cdn.tailwindcss.com"]
+        ]
+    );
+}
 
+$app->add('reactDemo');
 $app->run();
 ```
 ## In React receives props 
@@ -218,11 +203,10 @@ window.renderReactComponent('ReactExample', 'page');
 
 This is incredibly useful for updating separate component roots when reading shared client endpoints (such as `localStorage`) from external areas.
 
-### Validation with PHP 8 Attributes
+### Validation with Attributes
 
 ```php
-use Core\BaseModel;
-use Core\Field;
+use Core\{BaseModel, Field, POST, Response};
 
 class LoginModel extends BaseModel
 {
@@ -233,13 +217,13 @@ class LoginModel extends BaseModel
     public string $password;
 }
 
-$app->post(
-    callback: fn($req, $res) => $app->jsonResponse(["success" => true]),
-    middlewares: [
-        fn($req, $res) => new LoginModel(data: $req)
-    ],
-    csrf: true
-);
+#[POST]
+function login(array $req, Response $res) {
+    $model = new LoginModel(data: $req); // Throws exception on failure
+    return $res->jsonResponse(["success" => true]);
+}
+
+$app->add('login', csrf: true);
 ```
 
 ### 🚀 Single Page Application (SPA)
@@ -297,7 +281,7 @@ LANG_DEFAULT="esp"
 **Translation files structure:**
 
 ```
-app/locales/
+locales/
 ├── esp.php
 ├── eng.php
 ├── bra.php
@@ -308,7 +292,7 @@ app/locales/
 
 ```php
 <?php
-// app/locales/eng.php
+// locales/eng.php
 return [
     "welcome" => "Welcome!",
     "login" => [
@@ -439,15 +423,53 @@ $db2 = $app->getDatabaseConnection(
 
 ---
 
-## 🔧 CLI Commands and Migrations
+## 🔧 CLI Commands and Automation
 
-LilaPHP includes a powerful CLI system for database migrations and seeders.
+LilaPHP includes a powerful CLI system for database management, background tasks, and production optimization.
 
-### Quick Start
+### 🚀 Production Hardening
+
+Before deploying to production, use the unified optimization command to ensure maximum performance and security.
 
 ```bash
-# Create database and run migrations
-cd app
+# Unified optimization (config + models + assets + health check)
+php cli.php app:optimize
+
+# Generate a secure random SECRET_KEY for .env
+php cli.php key:generate
+```
+
+### 📅 Task Scheduling
+
+Automate background jobs by defining them in `tasks/tasks.php`.
+
+```php
+// tasks/tasks.php
+use Core\Schedule;
+
+Schedule::call(function() {
+    // Your logic here
+})->everyMinute();
+
+Schedule::command('migrate:run')->dailyAt('02:00');
+```
+
+Run the scheduler via cron: `* * * * * php cli.php schedule:run >> /dev/null 2>&1`
+
+### 🔍 SEO & Assets
+
+```bash
+# Generate sitemap.xml and robots.txt automatically
+php cli.php sitemap:generate
+
+# Minify CSS and JS files in assets/
+php cli.php assets:minify
+```
+
+### 🗄️ Database & Migrations
+
+```bash
+# Create database and tables from models (scans /models directory)
 php cli.php migrate:create
 
 # Check migration status
@@ -455,25 +477,6 @@ php cli.php migrate:status
 
 # Run seeders
 php cli.php seed:run
-```
-
-### Available Commands
-
-**Migration Commands:**
-
-```bash
-php cli.php migrate:create    # Create database and run all migrations
-php cli.php migrate:run        # Run pending migrations
-php cli.php migrate:status     # Show migration status
-php cli.php migrate:fresh      # Drop all tables and re-migrate (WARNING: destructive)
-php cli.php migrate:rollback   # Rollback last migration
-```
-
-**Seeder Commands:**
-
-```bash
-php cli.php seed:run           # Run all seeders
-php cli.php seed:create UserSeeder  # Create a new seeder
 ```
 
 ### Creating Models with Migrations
@@ -525,15 +528,16 @@ class User extends BaseModel
 - `unsigned` - For numeric types (MySQL)
 - `comment` - Column comment
 
-### Creating Seeders
+### 🏗️ Application Scaffolding
 
-Generate a seeder template:
+When starting a new project, use the `init` command to generate the basic structure.
 
 ```bash
-php cli.php seed:create UserSeeder
+# Initialize project from internal scaffolding
+php cli.php app:init
 ```
 
-This creates `app/lila/cli/seeders/UserSeeder.php`:
+This copies essential files from `lila/scaffold/` (models, routes, and .env) to your project root, giving you a working starting point.
 
 ```php
 <?php
@@ -581,7 +585,7 @@ DB_PASSWORD=""
 DB_NAME="my_app"
 DB_PORT="3306"
 
-# 2. Create your models in app/models/
+# 2. Create your models in models/
 
 # 3. Run migrations
 cd app
@@ -589,7 +593,7 @@ php cli.php migrate:create
 
 # 4. Create and run seeders
 php cli.php seed:create UserSeeder
-# Edit app/lila/cli/seeders/UserSeeder.php
+# Edit lila/cli/seeders/UserSeeder.php
 php cli.php seed:run
 
 # 5. Verify
@@ -598,16 +602,16 @@ php cli.php migrate:status
 
 **Database Support:** MySQL/MariaDB, PostgreSQL, SQLite
 
----
+--- 
 
-## ⚡ Performance
+## ⚡ Performance & Caching
 
-When `DEBUG=false`, LilaPHP automatically:
+LilaPHP is designed for speed. When `DEBUG=false` or when using `app:optimize`, the framework:
 
-- ✅ Minifies HTML, CSS, and JavaScript
-- ✅ Generates optimized WebP images
-- ✅ Caches Twig templates
-- ✅ Loads only required components per route
+- ✅ **Config Caching**: Environments are loaded from a compiled PHP array (`env_cache.php`).
+- ✅ **Model Metadata**: Table schemas are cached to avoid expensive reflection at runtime.
+- ✅ **Asset Minification**: JS/CSS are automatically minified.
+- ✅ **Static Dispatch**: Routes and DI maps are cached for instant resolution.
 
 ---
 
