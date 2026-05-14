@@ -31,7 +31,7 @@ class Init extends Command
 
         $this->copyRecursive($source, $destination);
 
-        $this->deleteRecursive($source);
+        //  $this->deleteRecursive($source);
 
         $this->success("Scaffolding files copied to project root and scaffold directory removed.");
         $this->info("You can now start your server and access the application.");
