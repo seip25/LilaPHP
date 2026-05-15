@@ -1,5 +1,5 @@
 /**
- * LilaPHP SPA Navigation Engine
+ * LilaPHP-SPA Navigation Engine
  * Provides Single Page Application behavior for Twig and React.
  */
 (function () {
@@ -19,13 +19,6 @@
 
     try {
       let requestUrl = url;
-      if (!requestUrl.includes('?') && !requestUrl.includes('#') && !requestUrl.endsWith('/')) {
-        const parts = requestUrl.split('/');
-        const lastPart = parts[parts.length - 1];
-        if (lastPart && !lastPart.includes('.')) {
-          requestUrl += '/';
-        }
-      }
 
       const separator = requestUrl.includes('?') ? '&' : '?';
       const response = await fetch(`${requestUrl}${separator}source=frontend`, {
@@ -48,7 +41,7 @@
       }
 
       const data = await response.json();
-  
+
       if (data.meta) {
         document.title = data.meta.title || document.title;
         ['description', 'keywords', 'author'].forEach(name => {
@@ -67,7 +60,7 @@
           }
         });
       }
- 
+
       if (data.scripts && Array.isArray(data.scripts)) {
         data.scripts.forEach(scriptData => {
           const src = typeof scriptData === 'string' ? scriptData : scriptData.src;
@@ -79,6 +72,10 @@
               document.head.appendChild(script);
             }
           } else if (scriptData.content) {
+            Array.from(document.head.querySelectorAll('script:not([src])'))
+              .filter(s => s.textContent.trim() === scriptData.content.trim())
+              .forEach(s => s.remove());
+
             const script = document.createElement('script');
             script.textContent = scriptData.content;
             script.type = scriptData.type || 'module';
@@ -86,7 +83,7 @@
           }
         });
       }
- 
+
       const container = document.getElementById(CONTENT_ID);
       if (container) {
         container.innerHTML = data.body;
@@ -110,6 +107,10 @@
               document.head.appendChild(newScript);
             }
           } else {
+            Array.from(document.head.querySelectorAll('script:not([src])'))
+              .filter(s => s.textContent.trim() === oldScript.textContent.trim())
+              .forEach(s => s.remove());
+
             const newScript = document.createElement('script');
             Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
             newScript.textContent = oldScript.textContent;
@@ -130,14 +131,15 @@
           }
         }
       }
- 
+
       if (push) {
         let finalUrl = response.url || url;
         try {
           const urlObj = new URL(finalUrl);
+          const hasSetLang = urlObj.searchParams.has('set-lang');
           urlObj.searchParams.delete('source');
           urlObj.searchParams.delete('set-lang');
-           if (urlObj.searchParams.has('set-lang')) {
+          if (hasSetLang) {
             urlObj.searchParams.delete('lang');
           }
           finalUrl = urlObj.pathname + urlObj.search + urlObj.hash;
@@ -146,7 +148,7 @@
         }
         window.history.pushState({ url: finalUrl }, data.meta?.title || '', finalUrl);
       }
- 
+
       document.dispatchEvent(new CustomEvent('lila:navigation', {
         detail: { url, data }
       }));
@@ -166,15 +168,15 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
       const link = e.target.closest('a');
-      
-      if (link && 
-          link.href && 
-          link.href.startsWith(window.location.origin) && 
-          !link.hasAttribute('download') && 
-          !link.hasAttribute('data-no-spa') &&
-          link.target !== '_blank' &&
-          !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-        
+
+      if (link &&
+        link.href &&
+        link.href.startsWith(window.location.origin) &&
+        !link.hasAttribute('download') &&
+        !link.hasAttribute('data-no-spa') &&
+        link.target !== '_blank' &&
+        !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+
         e.preventDefault();
         navigate(link.href);
       }
