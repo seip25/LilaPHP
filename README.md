@@ -36,7 +36,7 @@ LilaPHP was designed with one clear purpose — to give developers **full contro
 - 🧠 **Developer experience first** — Instant setup, clear routing, and intuitive Twig integration
 - 🚀 **Performance oriented** — Minimal I/O, cached helpers, and pre-optimized rendering for production
 - 🌐 **Multi-language support** — Built-in localization system with English, Spanish, Portuguese, and Brazilian Portuguese
-- ⚡ **SPA Ready** — Built-in Single Page Application engine for instant transitions between Twig and React views
+- ⚡ **SPA Ready** — Built-in Single Page Application engine (`spa.js`) for instant transitions between Twig views using Vanilla JS
 
 ### 🔥 Modular Architecture
 
@@ -48,7 +48,7 @@ $app = new App();
 ```
 
 ```php
-// routes/api.php - Custom configuration
+// api/test.php - Custom configuration
 $app = new App([
     'security' => [
         'cors' => false,
@@ -81,42 +81,83 @@ TRANSLATE=true # Set to false for single-language apps
 
 ### 🌐 Server Setup
 
-LilaPHP is designed for production-grade servers. We recommend **NGINX**, **Apache**, or **Docker** for both development and production. 
+LilaPHP can be run locally using **Docker** (recommended) or traditional web servers like **Apache (XAMPP/MAMP/LAMPP)**.
 
-- **Apache**: The included `.htaccess` handles all routing out of the box.
-- **Nginx**: Ensure your configuration points to `index.php` for all non-file requests.
-- **Docker**: See the `docker-compose.yml` (if available) for an instant containerized environment.
+#### Option A: Docker Dev Environment (Recommended)
 
-
-### React Integration
-
-Install dependencies and build assets:
+LilaPHP includes convenience scripts (`app/docker/dev.sh` and `app/docker/dev.bat`) to manage your development containers manually. By default, containers do not restart automatically on system startup, saving valuable CPU and RAM when you use your computer for gaming or other non-development activities.
 
 ```bash
-cd LilaPHP
-npm install
-npm run build
+# 1. Build and start containers (Nginx + PHP 8.4-FPM + MySQL)
+./app/docker/dev.sh build
+
+# 2. Run migrations inside the container
+docker exec -it lilaphp_dev_php php app/cli.php migrate:create
+
+# 3. Stop the containers when you're done coding to free up resources
+./app/docker/dev.sh stop
+
+# 4. Start them back up later without rebuilding
+./app/docker/dev.sh start
 ```
 
-**Edit in resources/js/pages  :**
+Your app will be running at `http://localhost:8000`.
+
+#### Option B: Local Web Server (XAMPP / MAMP / LAMPP)
+
+1. Move the framework folder into your server's public root (e.g. `htdocs/LilaPHP`).
+2. The root `.htaccess` handles trailing slashes, extensionless URLs, and blocks framework directory access automatically.
+3. If placed inside a subdirectory, update `RewriteBase` inside the root `.htaccess`:
+   ```apache
+   RewriteBase /LilaPHP/
+   ```
+4. Generate your local application key:
+   ```bash
+   php app/cli.php key:generate
+   ```
+
+Your app will be running at `http://localhost/LilaPHP/`.
+
+
+### Frontend Assets & Hot Reload
+
+Install dependencies and build/run the dev server with Vite:
+
+```bash
+cd app
+npm install
+npm run dev    # Start local Vite development server for hot-reload
+npm run build  # Build production-ready assets
+```
 
 ## 📁 Project Structure
 
 ```
 LilaPHP/
-├── lila/              # Framework core
-│   ├── core/          # Internal logic
+├── app/               # Application & Framework core
+│   ├── core/          # Core classes (App, Database, Config, Template, etc.)
 │   ├── cli/           # CLI commands
-│   └── scaffold/      # Default templates for app:init
-├── models/            # Database models (Scanned by CLI)
-├── routes/            # Application routes & controllers
-├── locales/           # Multilingual files
-├── tasks/             # Scheduled jobs
-├── resources/         # React components & Twig templates
-├── assets/            # CSS, JS, and compiled build
-├── .env               # Project configuration
-├── cli.php            # CLI Entry point
-└── index.php          # Web Entry point
+│   ├── models/        # Database models (Scanned by CLI)
+│   ├── tasks/         # Scheduled tasks
+│   ├── locales/       # Multilingual files
+│   ├── resources/     # Templates (Twig) & source JS (flat structure)
+│   │   ├── app/       # Framework debug layouts & admin views
+│   │   ├── index.twig # Homepage template
+│   │   ├── base.twig  # Base HTML template
+│   │   └── main.js    # Entry point JS for Vite compilation
+│   ├── cache/         # Cache files (routes, models, templates)
+│   ├── logs/          # Log files
+│   ├── .env           # Environment configuration
+│   ├── package.json   # Frontend manifest
+│   └── vite.config.js # Vite configuration
+├── assets/            # Public web assets (CSS, JS, images, build output)
+├── api/               # API endpoints
+├── index.php          # Homepage / Main web entry point
+├── login.php          # Login page entry point
+├── 404.php            # 404 error page
+├── cache-response.php # Cache example entry point
+├── composer.json      # Composer dependencies & autoloading
+└── .htaccess          # Apache URL rewriting & security
 ```
 
 ---
@@ -127,8 +168,8 @@ LilaPHP/
 
 ```php
 <?php
-// LilaPHP/routes/home.php
-include_once __DIR__ . "/../index.php";
+// LilaPHP/index.php
+require_once __DIR__ . '/app/bootstrap.php';
 
 use Core\{App, GET, Response, Session, SEO};
 
@@ -137,7 +178,7 @@ $app = new App();
 #[GET]
 #[SEO(key: "home")]
 function home(Response $res, Session $session) {
-    return $res->render("home", [
+    return $res->render("index", [
         "user" => $session::get("user_id")
     ]);
 }
@@ -146,62 +187,6 @@ $app->add('home');
 $app->run();
 ```
 
-### React Rendering & SEO
-
-```php
-<?php
-// LilaPHP/routes/react.php
-include_once __DIR__ . "/../index.php";
-
-use Core\{App, GET, Response, SEO, Config};
-
-$app = new App();
-
-#[GET]
-#[SEO(key: "react_page")]
-function reactDemo(Response $res, Config $config) {
-    return $res->renderReact(
-        page: "ReactExample",
-        props: [
-            "debug" => $config::$DEBUG,
-            "translations" => $res->translations(),
-            "csrf" => $res->generateCSRF()
-        ],
-        options: [
-            "title" => "React + LilaPHP",
-            "scripts" => ["https://cdn.tailwindcss.com"]
-        ]
-    );
-}
-
-$app->add('reactDemo');
-$app->run();
-```
-## In React receives props 
-
-```javascript
-export default function ReactIsland({ csrf, translations }) { 
-    ...
-}
-
-```
-
-### 🔄 Re-rendering React Islands
-
-You can trigger a re-render of your React islands from standard JavaScript (e.g., from Twig templates, jQuery, or other non-React code) using the global function:
-
-```javascript
-// Re-render all React components on the page
-window.renderReactComponent();
-
-// Re-render only components named 'CartBadge'
-window.renderReactComponent('CartBadge', 'component');
-
-// Re-render a specific full page component
-window.renderReactComponent('ReactExample', 'page');
-```
-
-This is incredibly useful for updating separate component roots when reading shared client endpoints (such as `localStorage`) from external areas.
 
 ### Validation with Attributes
 
@@ -230,7 +215,7 @@ $app->add('login', csrf: true);
 
 LilaPHP includes a native SPA engine (`assets/js/spa.js`) that intercepts links and performs partial DOM updates.
 
-- **Twig & React hybrid**: Seamlessly switch between static Twig templates and dynamic React islands.
+- **Twig & Vanilla JS**: Seamlessly switch between static Twig templates and dynamic Vanilla JS logic.
 - **Smart Loading**: Automatically detects and injects missing CSS or JS assets during transitions.
 - **Dynamic Layouts**: Uses a conditional layout system to return only the necessary HTML fragment.
 - **Fail-safe**: Automatic fallback to traditional navigation on timeout or server error.
@@ -433,10 +418,10 @@ Before deploying to production, use the unified optimization command to ensure m
 
 ```bash
 # Unified optimization (config + models + assets + health check)
-php cli.php app:optimize
+php app/cli.php app:optimize
 
 # Generate a secure random SECRET_KEY for .env
-php cli.php key:generate
+php app/cli.php key:generate
 ```
 
 ### 📅 Task Scheduling
@@ -454,29 +439,29 @@ Schedule::call(function() {
 Schedule::command('migrate:run')->dailyAt('02:00');
 ```
 
-Run the scheduler via cron: `* * * * * php cli.php schedule:run >> /dev/null 2>&1`
+Run the scheduler via cron: `* * * * * php app/cli.php schedule:run >> /dev/null 2>&1`
 
 ### 🔍 SEO & Assets
 
 ```bash
 # Generate sitemap.xml and robots.txt automatically
-php cli.php sitemap:generate
+php app/cli.php sitemap:generate
 
 # Minify CSS and JS files in assets/
-php cli.php assets:minify
+php app/cli.php assets:minify
 ```
 
 ### 🗄️ Database & Migrations
 
 ```bash
 # Create database and tables from models (scans /models directory)
-php cli.php migrate:create
+php app/cli.php migrate:create
 
 # Check migration status
-php cli.php migrate:status
+php app/cli.php migrate:status
 
 # Run seeders
-php cli.php seed:run
+php app/cli.php seed:run
 ```
 
 ### Creating Models with Migrations
@@ -530,14 +515,7 @@ class User extends BaseModel
 
 ### 🏗️ Application Scaffolding
 
-When starting a new project, use the `init` command to generate the basic structure.
-
-```bash
-# Initialize project from internal scaffolding
-php cli.php app:init
-```
-
-This copies essential files from `lila/scaffold/` (models, routes, and .env) to your project root, giving you a working starting point.
+LilaPHP comes pre-scaffolded with all essential files ready at the project root. No manual initialization step is required.
 
 ```php
 <?php
@@ -577,7 +555,7 @@ class UserSeeder
 ### Workflow Example
 
 ```bash
-# 1. Configure database in .env
+# 1. Configure database in app/.env
 DB_PROVIDER="mysql"
 DB_HOST="localhost"
 DB_USER="root"
@@ -585,18 +563,18 @@ DB_PASSWORD=""
 DB_NAME="my_app"
 DB_PORT="3306"
 
-# 2. Create your models in models/
+# 2. Create your models in app/models/
 
 # 3. Run migrations
-php cli.php migrate:create
+php app/cli.php migrate:create
 
 # 4. Create and run seeders
-php cli.php seed:create UserSeeder
-# Edit lila/cli/seeders/UserSeeder.php
-php cli.php seed:run
+php app/cli.php seed:create UserSeeder
+# Edit app/cli/seeders/UserSeeder.php
+php app/cli.php seed:run
 
 # 5. Verify
-php cli.php migrate:status
+php app/cli.php migrate:status
 ```
 
 **Database Support:** MySQL/MariaDB, PostgreSQL, SQLite
@@ -645,6 +623,20 @@ location /lila {
 </Directory>
 ```
 
+
+---
+
+### Docker Production Stack (Recommended)
+
+LilaPHP includes an optimized production Docker environment configured with pre-tuned OPcache, APCu cache, and optimal PHP-FPM pool worker configurations. Use the prod scripts to start/stop the production containers manually:
+
+```bash
+# Build and run optimized production containers
+./app/docker/prod.sh build    # or app\docker\prod.bat build
+
+# Stop production containers to free up system resources
+./app/docker/prod.sh stop     # or app\docker\prod.bat stop
+```
 
 ---
 

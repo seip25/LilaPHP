@@ -1,18 +1,28 @@
-composer.phar
-/vendor/
-.DS_Store
-node_modules
+# LilaPHP Root gitignore
+vendor/
+node_modules/
+app/node_modules/
 package-lock.json
+app/package-lock.json
 composer.lock
-lila/debug.sqlite
-lila/lila.sqlite
-lila/logs
-lila/*.sqlite
-lila/build_manifest.php
-lila/env_cache.php
-lila/schema_cache.php
-lila/model_cache.php
-lila/route_di_cache.php
-lila/route_attribute_cache.php
-lila/cache/
+.env
+app/.env
+.DS_Store
+
+# Assets / frontend build output
+assets/build/
+assets/cache/
+assets/js/spa.min.js
+public/build/
+
+# App local logs, caches, and databases
+app/logs/*.log
+app/cache/*.php
+app/cache/env_cache.php
+app/cache/schema_cache.php
+app/cache/model_cache.php
+app/cache/route_di_cache.php
+app/cache/route_attribute_cache.php
+app/cache/build_manifest.php
+app/*.sqlite
 /docs

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- SEO -->
+            <section id="seo" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        SEO & Sitemap
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full uppercase tracking-wide">New</span>
+                </div>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP provides a declarative way to handle SEO metadata using PHP 8 Attributes. This
+                    information is automatically injected into Twig templates.
+                </p>
+
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
+                    <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">Usage with #[SEO] Attribute</span>
+                    </div>
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\SEO;
+use Core\GET;
+
+#[GET]
+#[SEO(
+    title: "Beautiful Framework",
+    description: "Documentation for LilaPHP SEO features",
+    keywords: "php, seo, sitemap, framework",
+    image: "https://domain.com/og-image.jpg"
+)]
+function index($req, $res) {
+    return $res->render("home");
+}</code></pre>
+                </div>
+
+                <!-- Multilingual SEO -->
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-purple-500 mb-8">
+                    <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Multilingual Dynamic
+                        SEO</h4>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                        Instead of hardcoding strings, you can use the <code>key</code> parameter to pull
+                        localized SEO data from <code>locales/seo.php</code> automatically based on the
+                        user's active session language.
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="text-sm font-semibold text-slate-900 dark:text-white mb-2">1. Define in
+                                <code>seo.php</code>
+                            </h5>
+                            <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-xs"><code class="language-php">// locales/seo.php
+return [
+    "home" => [
+        "en" => [
+            "title" => "Welcome",
+            "descriptionMeta" => "Hello world",
+            "keywordsMeta" => "welcome, hello"
+        ],
+        "es" => [
+            "title" => "Bienvenido",
+            "descriptionMeta" => "Hola mundo",
+            "keywordsMeta" => "bienvenido, hola"
+        ]
+    ]
+];</code></pre>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-semibold text-slate-900 dark:text-white mb-2">2. Use in your
+                                Controller</h5>
+                            <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-xs"><code class="language-php">use Core\SEO;
+use Core\GET;
+
+#[GET]
+#[SEO(key: "home")] // Auto-resolves based on language
+function index($req, $res) {
+    return $res->render("home");
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-500 mb-8">
+                    <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Performance Caching
+                    </h4>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">
+                        In production (<code>DEBUG=false</code>), SEO attributes are cached to avoid Reflection
+                        overhead. The system uses <code>app/cache/route_attribute_cache.php</code> to store
+                        this
+                        metadata.
+                    </p>
+                </div>
+
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-green-500">
+                    <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Multilingual Sitemap
+                    </h4>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                        Generate a compliant <code>sitemap.xml</code> with <code>hreflang</code> support for all
+                        your physical endpoints and discovered languages. This command also creates or updates
+                        your <code>robots.txt</code> to include the <code>Sitemap:</code> directive
+                        automatically.
+                    </p>
+                    <pre
+                        class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php app/cli.php sitemap:generate</code></pre>
+                </div>
+            </section>
+            <div class="mt-10 px-4">
+                <a href="session.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    Session
+                </a>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

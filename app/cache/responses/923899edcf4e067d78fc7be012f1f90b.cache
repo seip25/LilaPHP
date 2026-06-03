@@ -1,0 +1,4 @@
+a:3:{s:4:"body";s:59:"{
+    "message": "Hi!",
+    "time": "2026-06-03 23:32:06"
+}";s:7:"headers";a:8:{i:0;s:30:"Access-Control-Allow-Origin: *";i:1;s:61:"Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS";i:2;s:106:"Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token, X-Requested-With, HTTP_X_LILA_SPA";i:3;s:32:"X-Powered-By: Lila PHP Framework";i:4;s:38:"Expires: Thu, 19 Nov 1981 08:52:00 GMT";i:5;s:50:"Cache-Control: no-store, no-cache, must-revalidate";i:6;s:16:"Pragma: no-cache";i:7;s:45:"Content-Type: application/json; charset=utf-8";}s:6:"status";i:200;}

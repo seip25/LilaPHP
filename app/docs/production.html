@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- Production -->
+            <section id="production" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Production Deployment
+                </h2>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-8">
+                    LilaPHP is <strong>production-ready out of the box</strong>. Simply
+                    set <code>DEBUG=false</code> and deploy to any server—Nginx, Apache,
+                    LAMPP, XAMPP, WAMP, VPS, or shared hosting.
+                </p>
+                <div
+                    class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-100 dark:border-blue-900 mb-6">
+                    <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">
+                        Automatic Optimizations (when DEBUG=false)
+                    </h3>
+                    <ul class="list-disc list-inside text-blue-800 dark:text-blue-300 space-y-2">
+                        <li>
+                            <strong>HTML Minification</strong> - Automatic compression of
+                            all HTML output
+                        </li>
+                        <li>
+                            <strong>Twig Template Caching</strong> - Pre-compiled templates
+                            in <code>app/cache/</code>
+                        </li>
+                        <li>
+                            <strong>Asset Caching</strong> - Cached API responses and queries
+                            in <code>app/cache/</code>
+                        </li>
+                        <li>
+                            <strong>Environment Variable Caching</strong> - Caches
+                            <code>.env</code> into <code>app/cache/env_cache.php</code>
+                            for Opcache-level performance.
+                        </li>
+                        <li>
+                            <strong>Route & DI Caching</strong> - Dynamic caching of PHP Reflection properties
+                            into
+                            <code>app/cache/route_di_cache.php</code> to bypass Reflection overhead.
+                        </li>
+                        <li>
+                            <strong>APCu RAM Cache Fallback</strong> - If the <code>APCu</code> PHP extension is
+                            enabled,
+                            LilaPHP will automatically store and load route attributes directly from RAM,
+                            bypassing disk I/O entirely for near-zero millisecond latency.
+                        </li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4 mt-8">
+                    Unified Optimization Command
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Before deploying to production, run a single command to harden performance, build assets,
+                    and
+                    perform health checks:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
+                    <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">Terminal</span>
+                    </div>
+                    <pre
+                        class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Option A: Local PHP / Apache
+php app/cli.php app:optimize
+
+# Option B: Docker environment
+docker exec -it lilaphp_prod_php php app/cli.php app:optimize</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    This command automatically groups:
+                <ul class="list-disc list-inside mt-2 ml-4">
+                    <li>Environment Caching (<code>config:cache</code>)</li>
+                    <li>Model Metadata Caching (<code>model:cache</code>)</li>
+                    <li>Route & DI Cache Pre-clearing (<code>route:clear</code>)</li>
+                    <li>Asset Minification (<code>assets:minify</code>)</li>
+                    <li>Vite Production Build (<code>npm run build</code>)</li>
+                    <li>Platform Health Checks</li>
+                </ul>
+                </p>
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        Security Checklist
+                    </h3>
+                    <ul class="list-disc list-inside text-slate-600 dark:text-slate-400 space-y-2">
+                        <li>Set <code>DEBUG=false</code> in <code>.env</code></li>
+                        <li>
+                            Ensure <code>app/</code> directory is denied in Nginx/Apache
+                            config
+                        </li>
+                        <li>
+                            Run <code>npm run build</code> in the root for building
+                            assets (if using Vite/bundle)
+                        </li>
+                        <li>Enable HTTPS with SSL certificates</li>
+                        <li>
+                            Configure proper file permissions (755 for directories, 644 for
+                            files)
+                        </li>
+                        <li>
+                            Ensure required PHP extensions (GD, mbstring, etc.) are
+                            installed
+                        </li>
+                        <li>
+                            <strong>Run <code>php app/cli.php app:optimize</code></strong> to trigger all
+                            performance
+                            and health checks.
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Docker Production Stack -->
+                <div class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+                        🐳 Docker Deployment (Highly Recommended)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-6">
+                        LilaPHP features a fully optimized, production-ready Docker Compose environment. We highly recommend using this containerized setup as it pre-installs and tunes OPcache, APCu metadata caching, and optimal PHP-FPM pool settings (e.g., static process manager).
+                    </p>
+
+                    <div class="space-y-6 mb-12">
+                        <!-- Step 1: Run stack -->
+                        <div class="p-6 bg-slate-900 rounded-xl overflow-hidden shadow-lg border border-slate-700">
+                            <h4 class="font-bold text-sm text-primary-400 mb-2">1. Spin up the Production Stack</h4>
+                            <p class="text-xs text-slate-400 mb-3">
+                                Run the production environment from the project root using our convenience scripts. This boots Nginx, PHP 8.4-FPM, and MySQL in containers:
+                            </p>
+                            <pre class="text-xs text-slate-300 font-mono overflow-x-auto"><code class="language-bash"># Build and start optimized production containers
+./app/docker/prod.sh build     # or app\docker\prod.bat build
+
+# Stop production containers when not needed
+./app/docker/prod.sh stop      # or app\docker\prod.bat stop</code></pre>
+                        </div>
+
+                        <!-- Step 2: Nginx Host reverse proxy -->
+                        <div class="p-6 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <h4 class="font-bold text-sm text-primary-600 mb-2">2. Reverse Proxy with Host Nginx (Redirecting port 80/443 to Docker)</h4>
+                            <p class="text-xs text-slate-500 mb-4">
+                                If you run the Docker containers on a custom port (e.g. <code>3003</code>) and expose your app on standard ports (80/443), update the port mapping in <code>app/docker/prod/docker-compose.yml</code> to <code>"3003:80"</code>, then configure a reverse proxy on your host server's Nginx:
+                            </p>
+                            <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-xs"><code class="language-nginx">server {
+    listen 80;
+    server_name your-domain.com www.your-domain.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name your-domain.com www.your-domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:3003;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Server Setup Guide -->
+                <div class="mt-12 space-y-12">
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+                        Alternative: Manual Server Setup Guide (Ubuntu/Debian)
+                    </h3>
+
+                    <!-- PHP Installation -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                            1. PHP 8.4 Installation
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Add the official PHP repository and install PHP 8.4 with key
+                            modules:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Add official PHP repository (Ondřej Surý)
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+
+# Install PHP 8.4 and key modules
+sudo apt install -y php8.4-fpm php8.4-mysql php8.4-gd php8.4-opcache \
+php8.4-curl php8.4-mbstring php8.4-xml php8.4-zip php8.4-bcmath php8.4-apcu</code></pre>
+                    </div>
+
+                    <!-- Composer -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                            2. Composer Installation
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Install the PHP package manager globally:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># 1. Download the installer
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+
+# 2. Run the installation and move to system binaries
+sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+# 3. Remove the temporary installer
+php -r "unlink('composer-setup.php');"</code></pre>
+                    </div>
+
+                    <!-- Opcache -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                            3. Opcache Configuration
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Optimize production performance by enabling Opcache in your
+                            <code>php.ini</code>:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-ini"># Edit your php.ini (e.g., /etc/php/8.4/fpm/php.ini)
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=0</code></pre>
+                    </div>
+
+                    <!-- APCu -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                            4. APCu RAM Cache Configuration
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            LilaPHP supports ultra-fast RAM caching using APCu. Enable it in your
+                            <code>php.ini</code> (or <code>/etc/php/8.4/mods-available/apcu.ini</code>) to
+                            completely bypass disk I/O when reading routing metadata:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-ini">apc.enabled=1
+apc.enable_cli=1
+apc.shm_size=64M</code></pre>
+                    </div>
+
+                    <!-- FPM -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                            5. PHP-FPM Pool Optimization
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Optimize <code>/etc/php/8.4/fpm/pool.d/www.conf</code> process
+                            management:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-ini">pm = static
+pm.max_children = 60
+pm.max_requests = 1000
+listen.backlog = 1024</code></pre>
+                    </div>
+
+                    <!-- Nginx -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4" id="nginxTitle">
+                            6. Nginx Configuration
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Full virtual host configuration with SSL and optimized PHP-FPM
+                            support:
+                        </p>
+
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm">
+              <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hidden mb-4" id="copyNginx">Copy</button>
+
+ <pre><code class="language-nginx" id="nginxConfig">
+server {
+    listen 80;
+    listen [::]:80;
+    server_name <span data-nginx-domain>your-domain.com</span> www.<span data-nginx-domain>your-domain.com</span>;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name <span data-nginx-domain>your-domain.com</span> www.<span data-nginx-domain>your-domain.com</span>;
+
+    # ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+    # include /etc/letsencrypt/options-ssl-nginx.conf;
+    # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # ssl_certificate /etc/nginx/ssl/your-domain.com/your-domain.com.crt;
+    # ssl_certificate_key /etc/nginx/ssl/your-domain.com/your-domain.com.key;
+
+    root <span data-nginx-path>/var/www/your-project</span>;
+    index index.php index.html;
+
+    location ^~ /LilaPHP/ {
+        deny all;
+        return 403;
+    }
+
+    location ~ /\.(env|git|htaccess) {
+        deny all;
+        return 403;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/var/run/php/php<span data-nginx-php-version>8.4</span>-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_index index.php;
+    }
+
+     location ~ ^/(vendor|composer\.json|composer\.lock|package\.json|package-lock\.json|AGENTS\.md) {
+        deny all;
+        return 404;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires max;
+        log_not_found off;
+    }
+}</code></pre>
+
+                    </div>
+
+                </div>
+
+                <!-- Permissions -->
+                <div>
+                    <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        7. Folder Permissions
+                    </h4>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        Ensure the web server has the correct ownership and permissions:
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm">
+                <code class="language-bash" id="permission"># Set web server as owner
+sudo chown -R www-data:www-data <span data-nginx-path>/var/www/your-project</span>
+
+# Set correct permissions
+sudo chmod -R 755 <span data-nginx-path>/var/www/your-project</span></code></pre>
+                </div>
+
+                <!--Configure nginx-->
+                <div
+                    class="bg-white dark:bg-slate-800 flex flex-col gap-4 justify-center items-center p-4 mt-4 rounded-lg mb-4">
+                    <h5 class="text-center text-2xl font-bold">Configure Nginx</h5>
+                    <label for="nginxProjectPath">Project Path</label>
+                    <input type="text" id="nginxProjectPath" value="/var/www/project" placeholder="Your project path"
+                        class="border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2" />
+                    <label for="nginxDomain">Domain</label>
+                    <input type="text" id="nginxDomain" value="your-domain.com" placeholder="Your domain"
+                        class="border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2" />
+                    <label for="nginxPhpVersion">PHP Version</label>
+                    <input type="text" id="nginxPhpVersion" value="8.4" placeholder="PHP Version"
+                        class="border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2" />
+                    <button id="configureNginx" class="bg-blue-500 text-white px-4 py-2 rounded-lg">
+                        Configure Nginx
+                    </button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

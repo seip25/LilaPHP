@@ -1,0 +1,92 @@
+<script>
+    hljs.highlightAll();
+
+    const html = document.documentElement;
+
+    function toggleTheme() {
+        html.classList.toggle("dark");
+        localStorage.setItem(
+            "theme",
+            html.classList.contains("dark") ? "dark" : "light",
+        );
+    }
+
+    document
+        .getElementById("theme-toggle")
+        .addEventListener("click", toggleTheme);
+    document
+        .getElementById("theme-toggle-nav")
+        .addEventListener("click", toggleTheme);
+
+    if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+        html.classList.add("dark");
+    } else {
+        html.classList.remove("dark");
+    }
+
+    const menuToggle = document.getElementById("menu-toggle");
+    const sidebar = document.getElementById("sidebar");
+
+    menuToggle.addEventListener("click", () => {
+        if (sidebar.classList.contains("-translate-x-full")) {
+            sidebar.classList.remove("-translate-x-full");
+        } else {
+            sidebar.classList.add("-translate-x-full");
+        }
+    });
+
+    document.querySelectorAll("#sidebar a").forEach((link) => {
+        link.addEventListener("click", () => {
+            if (window.innerWidth < 1024) {
+                sidebar.classList.add("-translate-x-full");
+            }
+        });
+    });
+
+    document
+        .getElementById("configureNginx")
+        .addEventListener("click", nginxConfigReplace);
+
+    function nginxConfigReplace() {
+        const nginxConfigId = document.getElementById("nginxConfig");
+        const permission = document.getElementById("permission");
+        const nginxProjectPath =
+            document.getElementById("nginxProjectPath").value;
+        const nginxDomain = document.getElementById("nginxDomain").value;
+        const versionPHP = document.getElementById("nginxPhpVersion").value;
+        const dataNginxDomain = document.querySelectorAll("[data-nginx-domain]");
+        dataNginxDomain.forEach((element) => {
+            element.innerHTML = nginxDomain;
+        });
+        const dataNginxPath = document.querySelectorAll("[data-nginx-path]");
+        dataNginxPath.forEach((element) => {
+            element.innerHTML = nginxProjectPath;
+        });
+        const dataNginxPhpVersion = document.querySelectorAll(
+            "[data-nginx-php-version]"
+        );
+        dataNginxPhpVersion.forEach((element) => {
+            element.innerHTML = versionPHP;
+        });
+        document.getElementById("copyNginx").addEventListener("click", () => {
+            navigator.clipboard.writeText(nginxConfigId.innerHTML);
+            document.getElementById("copyNginx").innerHTML = "Copied";
+            setTimeout(() => {
+                document.getElementById("copyNginx").innerHTML = "Copy";
+            }, 2000);
+        });
+        permission.innerHTML = permission.innerHTML.replaceAll(
+            "/var/www/your-project",
+            nginxProjectPath
+        );
+        scrollTo("nginxTitle");
+    }
+    function scrollTo(id) {
+        const element = document.getElementById(id);
+        element.scrollIntoView({ behavior: "smooth" });
+    }
+</script>

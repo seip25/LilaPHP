@@ -1,0 +1,123 @@
+[2026-06-03 23:30:12] [error] Connection error (attempt 1/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:13] [error] Connection error (attempt 2/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:15] [error] Connection error (attempt 3/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:18] [error] Connection error (attempt 4/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:22] [error] Connection error (attempt 5/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:22] [error] Failed to connect after 5 attempts.
+[2026-06-03 23:30:50] [error] Connection error (attempt 1/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:51] [error] Connection error (attempt 2/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:53] [error] Connection error (attempt 3/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:30:56] [error] Connection error (attempt 4/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:31:00] [error] Connection error (attempt 5/5): 
+SQLSTATE[HY000] [14] unable to open database file 
+sqlite:/var/www/html/app/lila.sqlite 
+#0 /var/www/html/app/core/Database.php(104): PDO->__construct('sqlite:/var/www...', 'root', Object(SensitiveParameterValue), Array)
+#1 /var/www/html/app/core/Database.php(57): Core\Database->connectWithRetry()
+#2 /var/www/html/app/core/App.php(933): Core\Database->__construct()
+#3 /var/www/html/app/core/App.php(734): Core\App->dispatch()
+#4 /var/www/html/login.php(86): Core\App->run()
+#5 {main}  /var/www/html/app/core/Database.php
+
+
+
+[2026-06-03 23:31:00] [error] Failed to connect after 5 attempts.
+[2026-06-03 23:31:00] [error] Debug system logging failed: SQLSTATE[HY000]: General error: 8 attempt to write a readonly database

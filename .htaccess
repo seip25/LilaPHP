@@ -1,0 +1,35 @@
+# LilaPHP Root Apache Configuration
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Prevent direct access to sensitive directories and files
+    RewriteRule ^(app|vendor|node_modules|composer\.json|package\.json|package-lock\.json|vite\.config\.js|\.env|\.gitignore|README\.md|LICENSE|composer\.lock) - [F,L]
+
+    # Strip trailing slashes (except for directories)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} ^/(.+)/$
+    RewriteRule ^ /%1 [L,R=301]
+
+    # Match and internally strip language prefixes (e.g., /es/login -> login, /pt-br/api/test -> api/test)
+    # The language detection is handled in PHP via REQUEST_URI
+    RewriteRule ^([a-z]{2,3}(?:-[a-z]{2})?)/(.*)$ $2 [QSA,DPI]
+
+    # Allow direct access to actual existing files or directories
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Check for extensionless PHP file at root: e.g., /login -> /login.php
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^([^/]+)$ $1.php [L]
+
+    # Check for extensionless PHP file inside api/: e.g., /api/test -> /api/test.php
+    RewriteCond %{DOCUMENT_ROOT}/api/$1.php -f
+    RewriteRule ^api/([^/]+)$ api/$1.php [L]
+
+    # Fallback to 404.php for any other non-existent route
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ 404.php [L]
+</IfModule>

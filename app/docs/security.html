@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+
+
+            <!-- Security -->
+            <section id="security" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Security
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    Integrated CSRF protection, input sanitization automatically, secure
+                    headers, cors, rate limiting.
+                </p>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        CSRF Protection
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        Enable properly by adding <code>csrf: true</code> to your routes.
+                    </p>
+                    <pre
+                        class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">$app->post(..., csrf: true);</code></pre>
+
+                    <p class="mt-4">Or with attribute</p>
+                    <pre class="bg-slate-900 text-slate-300 p-6 rounded-xl overflow-hidden"><code class="language-php">include_once __DIR__ . "/../index.php";
+use Core\{App, POST, CSRF, Response};
+
+$app = new App();
+
+#[POST]
+#[CSRF]
+function example(Response $res) {
+    return $res->jsonResponse(['success' => true]);
+}
+
+$app->add('example');
+$app->run();</code></pre>
+                    <p class="text-slate-600 dark:text-slate-400 mb-2">
+                        Then use the helper in forms:
+                    </p>
+                    <pre
+                        class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-html">{{ csrf_input() }}</code></pre>
+                    <p class="text-slate-600 dark:text-slate-400 mb-2">
+                        And send "_csrf" key , and value csrf_input in fetch body
+                    </p>
+                    <pre>
+                        <code>
+function exampleFetchWithCSRF(event) {
+    event.preventDefault();
+    const body = {
+        email: event.target.email.value,
+        password: event.target.password.value,
+        _csrf: event.target._csrf.value
+    };
+    const r = await fetch("{{url('/login/')}}", {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": body._csrf,
+    },
+    credentials: "include",
+});
+....
+}
+
+                        </code>
+                    </pre>
+                </div>
+            </section>
+
+            <!-- Auth Attribute -->
+            <section id="auth-attribute" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Auth Attribute
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-full uppercase tracking-wide">Security</span>
+                </div>
+
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    Secure your routes declaratively using the <code>#[AUTH]</code> attribute. It automatically verifies
+                    session
+                    existence and validity before executing your handler.
+                </p>
+
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-8">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Basic Usage</h3>
+                    <p class="text-sm text-slate-500 mb-4">
+                        By default, the attribute will look for the <code>"auth"</code> session key and redirect to
+                        <code>/login</code> if not found.
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-6 rounded-xl overflow-hidden"><code class="language-php">// LilaPHP/routes/dashboard.php
+include_once __DIR__ . "/../index.php";
+
+use Core\{App, GET, AUTH, Response};
+
+$app = new App();
+
+#[GET]
+#[AUTH] // Uses defaults: key="auth", redirect="/login" 
+function dashboard(Response $res) {
+    return $res->render("dashboard");
+}
+
+$app->add('dashboard');
+$app->run();</code></pre>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-100 dark:bg-slate-700/50 rounded-lg">
+                        <h4 class="font-bold mb-1 text-slate-900 dark:text-white">Parameters:</h4>
+                        <ul class="list-disc pl-5 text-sm space-y-1">
+                            <li><strong>key</strong>: The session key to check (default: <code>"auth"</code>).</li>
+                            <li><strong>decrypt</strong>: Whether to decrypt the session value (default:
+                                <code>true</code>).
+                            </li>
+                            <li><strong>redirect</strong>: URL to redirect if check fails (default:
+                                <code>"/login"</code>). Set
+                                to <code>false</code> to return a <strong>401 Unauthorized</strong> status instead.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 rounded-r-lg">
+                        <p class="text-sm text-blue-700 dark:text-blue-400 font-medium">
+                            🚀 Performance Tip:
+                        </p>
+                        <p class="text-sm text-blue-700 dark:text-blue-400">
+                            Auth attributes are fully compatible with LilaPHP's route optimization system. When you run
+                            <code>php app/cli.php app:optimize</code>, the authentication logic is pre-compiled for
+                            maximum
+                            performance in production.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            <!-- Middleware -->
+            <section id="middleware" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Middleware
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP includes a built-in middleware system that allows you to
+                    execute code before and after your routes are executed.Or you can
+                    add middleware to a specific route and method.
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">include_once __DIR__ . "/../index.php";
+use Core\BaseModel;
+use Core\Field;
+use Core\App;
+use Core\Response;
+
+$app = new App();
+class LoginModel extends BaseModel
+{
+    #[Field(required: true, format: "email")]
+    public string $email;
+
+    #[Field(required: true, min_length: 6)]
+    public string $password;
+}
+$lang = $app->getSession(key: "lang", default: "es");
+
+#[POST]
+function handleLogin(array $req, Response $res, Session $session) {
+    $lang = $session::get("lang") ?? "es";
+    $model = new LoginModel(data: $req, lang: $lang);
+    return $res->jsonResponse(["success" => true, "session" => $lang]);
+}
+
+$app->add('handleLogin', csrf: true);
+
+//Or use with attributes
+use Core\Middleware;
+
+function testingMiddleware($req, $res) {
+    error_log(message: "Testing middleware");
+}
+
+function testingMiddlewareRepeat($req, $res) {
+    error_log(message: "Testing middleware repeat");
+}
+
+#[GET]
+#[Middleware('testingMiddleware')]
+#[Middleware('testingMiddlewareRepeat')]
+function login($req, Response $res) {
+    global $app;
+    $lang = $app->getSession(key: "lang", default: "es");
+    return $app->jsonResponse(["success" => true, "login" => false, "session" => $lang]);
+}
+$app->add(callback:"login");
+
+//Global middlewares after and before for "/login" all methods in route
+$app->addMiddlewares(middlewares: [
+    'before' => [
+        fn($req, $res) => error_log(message: "Custom before route")
+    ],
+    'after' => [
+        fn($req, $res) => error_log(message: "Custom after route")
+    ]
+]);
+
+$app->run();
+</code></pre>
+                </div>
+
+                <!-- Middleware Attributes -->
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-600 mt-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                            Middleware Attributes
+                        </h3>
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">New</span>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        You can declare middlewares directly using attributes on your
+                        route methods or functions.
+                    </p>
+
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Middleware;
+use Core\Response;
+class Auth {
+    static function verify($req, Response $res) {
+        if (!isset($_SESSION['user'])) $res->redirect('login/');
+    }
+}
+
+#[GET]
+#[Middleware([Auth::class, 'verify'])]
+function dashboard($req, $res) {
+    echo "Welcome to Dashboard";
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="features.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    Features(Debuggin,Schedule,Queues)
+                </a>
+            </div>
+
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

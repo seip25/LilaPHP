@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- Routing -->
+            <section id="routing" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Routing
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    Zero-config routing system with method injection and middleware
+                    support.
+                </p>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    GET, POST, PUT, DELETE, PATCH, OPTIONS...
+                </p>
+
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">// LilaPHP/routes/index.php
+include_once __DIR__ . "/../index.php";
+
+use Core\{App, Response};
+
+$app = new App();
+$app->post(
+    callback: function(array $req, Response $res) {
+        return $res->jsonResponse(["success" => true]);
+    },
+    csrf: true,
+    middlewares: [fn($req, $res) => new LoginModel(data: $req, lang: $lang)]
+);
+$app->run();</code></pre>
+                </div>
+
+
+            </section>
+
+            <!-- Routing Attributes -->
+            <section id="routing-attributes" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Routing Attributes
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">New</span>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    Use PHP 8 Attributes to define HTTP methods, CSRF protection, and
+                    middlewares directly on your handlers.
+                </p>
+
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                            Available Attributes
+                        </h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <ul class="space-y-2 text-slate-600 dark:text-slate-400">
+                                <li><code>#[GET]</code>, <code>#[POST]</code></li>
+                                <li><code>#[PUT]</code>, <code>#[DELETE]</code></li>
+                            </ul>
+                            <ul class="space-y-2 text-slate-600 dark:text-slate-400">
+                                <li><code>#[CSRF]</code> - Enable CSRF validation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg">
+                        <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                            <span class="text-xs text-slate-400 font-mono">Example Usage</span>
+                        </div>
+                        <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">
+// LilaPHP/routes/index.php
+include_once __DIR__ . "/../index.php";
+use Core\GET;
+use Core\POST;
+use Core\CSRF; 
+use Core\App;
+use Core\Response;
+
+$app = new App();
+
+// Register using attributes for functions or methods
+
+#[GET]
+function login(array $req, Response $res)
+{
+    return $res->render("login");
+}
+$app->add(callback: 'login');
+
+#[POST]
+#[CSRF]
+function loginPost(array $req, Response $res)
+{
+    return $res->jsonResponse(["success" => true]);
+}
+$app->add(callback: 'loginPost', middlewares: [fn(array $req) => new LoginModel(data: $req, lang: $lang)]);
+
+//With class
+class Example{
+    #[GET]
+    static function GET(array $req, Response $res){
+        return $res->render("login");
+    }
+}
+$app->add(callback:  [Example::class,'GET'] );
+</code></pre>
+                    </div>
+                </div>
+
+                <!-- Auto-wiring DI -->
+                <div
+                    class="mt-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-600">
+                    <div class="flex items-center gap-2 mb-3">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                            Auto-wiring Dependency Injection
+                        </h3>
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">New</span>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        LilaPHP automatically resolves your route handler dependencies
+                        using Reflection. This means you no longer need
+                        <code>global $app;</code> or to pass specific arguments manually.
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Response;
+use Core\Session;
+use Core\Config;
+use Core\Database;
+use Core\GET;
+
+#[GET]
+function showDashboard(array $req, Response $res, Session $session) {
+    // The framework detects that you need the Request array, Response object, and Session.
+    // It automatically injects them without any extra work.
+    
+    if (!$session::has('user')) {
+        return $res->redirect('/login');
+    }
+    
+    return $res->render('dashboard');
+}
+
+#[GET]
+function showDashboardWithConfigAndDB(array $req, Response $res, Config $config, Database $db) {
+    // $db is automatically instantiated using configuration from .env by default
+    $pdo = $db->getConnection();
+    $insert = $pdo->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+    $random = rand(1, 100);
+    $email = "Jhon{$random}@email.com";
+    $insert->execute(['John Doe', $email, 'password']);
+    $query = $db->query("SELECT * FROM users");
+    $users = $query->fetchAll(PDO::FETCH_ASSOC); 
+    
+    
+    $debug = $config::$DEBUG;
+    $urlProject = $config::$URL_PROJECT;
+    
+    return $res->render('dashboard');
+}
+
+</code></pre>
+
+                    <h4 class="text-md font-medium text-slate-900 dark:text-white mt-6 mb-2">
+                        Order independent and Custom Classes
+                    </h4>
+                    <p class="text-sm text-slate-500 mb-2">
+                        The order of parameters does not matter. The framework can also
+                        auto-instantiate any custom class for you as long as it has a
+                        zero-argument constructor.
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Utils\EmailService;
+
+#[POST]
+function sendEmail(Response $res, EmailService $mailer, array $req) {
+    // $res is injected successfully regardless of being the first parameter!
+    // $mailer is automatically instantiated via new EmailService()
+    
+    $mailer->send($req['to'], "Welcome!");
+    return $res->jsonResponse(['sent' => true]);
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="spa.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    SPA Support
+                </a>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

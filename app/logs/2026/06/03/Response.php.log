@@ -1,0 +1,2 @@
+[2026-06-03 23:30:22] [Response.php] File: /var/www/html/app/core/Response.php - Line: 131 - Error: 2 - http_response_code(): Cannot set response code - headers already sent (output started at /var/www/html/app/core/Database.php:123) - Date: 03/06/2026 23:30:22
+[2026-06-03 23:31:00] [Response.php] File: /var/www/html/app/core/Response.php - Line: 131 - Error: 2 - http_response_code(): Cannot set response code - headers already sent (output started at /var/www/html/app/core/Database.php:123) - Date: 03/06/2026 23:31:00

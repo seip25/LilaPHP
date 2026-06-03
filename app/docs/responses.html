@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+
+            <!-- Responses -->
+            <section id="responses" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Responses
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP provides straightforward methods to send HTML, JSON, and
+                    manage dynamic output.
+                </p>
+
+                <div class="space-y-6">
+                    <!-- render -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                            $res->render($template, $data)
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Renders a view with Twig and passes context automatically.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Response;
+
+#[GET]
+function home(array $req, Response $res) {
+    return $res->render('home', ['title' => 'Welcome']);
+}</code></pre>
+                    </div>
+
+                    <!-- jsonResponse -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                            $res->jsonResponse($data, $code)
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Returns a JSON encoded response with appropriate headers and
+                            status code.
+                        </p>
+                        <pre
+                            class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">$res->jsonResponse(['success' => true], 200);</code></pre>
+                    </div>
+
+                    <!-- Helpers -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                            Helpers ($res->generateCSRF, $res->translations)
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            You can access the generated CSRF token and translation map
+                            directly from the <strong>Response</strong> object. This is
+                            especially handy to pass context into your javascript frontend.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">$csrf = $res->generateCSRF();
+$translations = $res->translations();</code></pre>
+                    </div>
+
+                    <!-- cacheResponse -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-primary-600">
+                        <div class="flex items-center gap-2 mb-3">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                                Response Caching
+                            </h3>
+                            <span
+                                class="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs font-semibold rounded-full uppercase tracking-wide">New</span>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            You can cache your responses for a specified amount of time.
+                            Excellent for heavy queries or static-like APIs. Supports
+                            transparent Output Buffering.
+                        </p>
+
+                        <h4 class="text-md font-medium text-slate-900 dark:text-white mt-4 mb-2">
+                            Option A: Attribute Style
+                        </h4>
+                        <p class="text-sm text-slate-500 mb-2">
+                            Add the Attribute directly above your route handler function or
+                            method.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Cache;
+use Core\Response;
+#[GET]
+#[Cache(seconds: 60)] // Cache response for 1 minute
+function index($req,Response $res) {
+   return $res->jsonResponse([
+        "message" => "Hi!",
+        "time" => date("Y-m-d H:i:s")
+    ]);
+}</code></pre>
+
+                        <h4 class="text-md font-medium text-slate-900 dark:text-white mt-4 mb-2">
+                            Option B: Middleware Style
+                        </h4>
+                        <p class="text-sm text-slate-500 mb-2">
+                            Pass the execution middleware array when registering route
+                            manually.
+                        </p>
+                        <pre
+                            class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">$app->add(callback: 'handler', middlewares: [$app->cacheResponse(60)]);</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="validation.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    Validation (BaseModel attributes)
+                </a>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

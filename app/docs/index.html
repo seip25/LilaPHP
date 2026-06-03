@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+            <div class="p-6">
+                <a href="#" class="flex items-center gap-2 font-bold text-2xl text-slate-900 dark:text-white mb-8">
+                    <div class="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white">
+                        L
+                    </div>
+                    <span>LilaPHP</span>
+                </a>
+
+                <nav class="space-y-1">
+                    <div class="flex items-center justify-between px-3 mb-2 mt-4">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Getting Started
+                        </p>
+                        <button id="theme-toggle-nav"
+                            class="p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                            aria-label="Toggle theme">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.5" class="w-4 h-4 hidden dark:block">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z" />
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.5" class="w-4 h-4 dark:hidden">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <a href="#introduction"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Introduction</a>
+                    <a href="#why-lilaphp"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Why
+                        LilaPHP?</a>
+                    <a href="#install"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Installation</a>
+
+                    <a href="#spa"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">SPA
+                        Support</a>
+
+                    <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6">
+                        Core Concepts
+                    </p>
+                    <a href="#routing"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Routing</a>
+                    <a href="#routing-attributes"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Routing
+                        Attributes</a>
+                    <a href="#coreapp"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">App
+                        Core</a>
+                    <a href="#core-classes"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Core
+                        Classes</a>
+                    <a href="#responses"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Responses</a>
+                    <a href="#config"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Configuration</a>
+                    <a href="#security"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Security</a>
+                    <a href="#auth-attribute"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Auth
+                        Attribute</a>
+
+                    <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6">
+                        Features
+                    </p>
+                    <a href="#debugging"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Debugging</a>
+                    <a href="#middleware"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Middleware</a>
+                    <a href="#events"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Events</a>
+                    <a href="#queues"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Queues
+                        (Workers)</a>
+                    <a href="#validation"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Validation</a>
+                    <a href="#sessions"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Sessions</a>
+                    <a href="#localization"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Translations</a>
+                    <a href="#admin"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Admin
+                        Portal</a>
+                    <a href="#templates"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Twig
+                        Helper</a>
+                    <a href="#seo"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">SEO
+                        & Sitemap</a>
+                    <a href="#database"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Database
+                        Info</a>
+                    <a href="#cli"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">CLI
+                        & Migrations</a>
+                    <a href="#cli_models"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Model Generator</a>
+                    <a href="#cli_assets"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Assets Minify</a>
+                    <a href="#cli_tests"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Test Runner</a>
+                    <a href="#cli_schedule"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Scheduler</a>
+                    <a href="#example"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Full
+                        Example</a>
+                    <a href="#production"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Production</a>
+
+                </nav>
+            </div>
+
+            <div class="p-6 border-t border-gray-200 dark:border-slate-700">
+                <button id="theme-toggle"
+                    class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5 dark:hidden">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5 hidden dark:block">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                    </svg>
+                    <span class="dark:hidden">Light Mode</span>
+                    <span class="hidden dark:block">Dark Mode</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- Hero -->
+            <section id="introduction" class="mb-20 pt-10">
+                <div class="text-center md:text-left mb-12">
+                    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+                        Lila<span class="text-primary-600">PHP</span> Framework
+                    </h1>
+                    <p class="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+                        A lightweight, modular, and performance-first PHP micro-framework
+                        designed for simplicity, flexibility, and security.
+                        <strong>Install in seconds with Composer</strong>, runs on any
+                        server (Nginx, Apache, LAMPP, XAMPP, WAMP, FrankenPHP, Swoole),
+                        and combines the power of
+                        <strong>SPA + Twig</strong> for modern, hybrid
+                        applications.
+                    </p>
+
+                    <div class="mt-8 flex flex-wrap gap-4">
+                        <a href="#install"
+                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            Get Started
+                        </a>
+                        <a href="https://github.com/seip25/LilaPHP" target="_blank"
+                            class="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-slate-600 text-base font-medium rounded-lg text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            High Performance
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Minimal footprint, optimized assets, and zero unnecessary
+                            overhead per request.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Secure by Default
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            CSRF protection, sanitization, and secure headers built-in and
+                            auto-configured.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Modular Design
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Independent configuration per route or endpoint. Use only what
+                            you need.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            SPA Engine
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Built-in SPA navigation with vanilla JavaScript and Twig templates.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-4">
+                            <svg class="w-10 h-10" viewBox="0 0 256 257" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="viteBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#41D1FF"></stop>
+                                        <stop offset="50%" stop-color="#BD34FE"></stop>
+                                        <stop offset="100%" stop-color="#9D5CFF"></stop>
+                                    </linearGradient>
+                                    <linearGradient id="viteBolt" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#FFEA83"></stop>
+                                        <stop offset="100%" stop-color="#FFC300"></stop>
+                                    </linearGradient>
+                                </defs>
+                                <path
+                                    d="M255.153 37.938L134.897 254.647c-2.503 4.504-8.953 4.543-11.508.07L.845 37.958C-1.814 33.07 2.64 27.5 8.157 28.29l120.61 17.304a6.5 6.5 0 0 0 1.846 0L247.84 28.28c5.522-.78 9.973 4.803 7.313 9.658Z"
+                                    fill="url(#viteBg)"></path>
+                                <path
+                                    d="M185.432 0 94.72 18.147a3.25 3.25 0 0 0-2.61 2.662L82.16 86.746a3.25 3.25 0 0 0 4.043 3.616l25.25-6.356a3.25 3.25 0 0 1 3.98 3.813l-7.5 36.735a3.25 3.25 0 0 0 4.236 3.704l15.6-5.04a3.25 3.25 0 0 1 4.166 3.78l-11.92 56.02c-.74 3.48 3.91 5.38 5.88 2.42l1.32-1.99 73.9-147.6c1.24-2.48-.91-5.34-3.64-4.79Z"
+                                    fill="url(#viteBolt)"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Vite
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Vite ready and configured for dev and production
+                        </p>
+                    </div>
+
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8" viewBox="0 0 256 256" fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <ellipse cx="128" cy="128" rx="120" ry="80" />
+                                <text x="128" y="150" text-anchor="middle" font-size="96" font-weight="700"
+                                    font-family="Arial, Helvetica, sans-serif" fill="#fff">
+                                    PHP
+                                </text>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            PHP
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            And PHP pure code pre-configured, modular, modifiable and ready
+                            to use
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Features Overview -->
+            <section id="features-overview" class="mb-20">
+                <div
+                    class="bg-gradient-to-br from-primary-50 via-purple-50 to-pink-50 dark:from-primary-900/20 dark:via-purple-900/20 dark:to-pink-900/20 p-8 rounded-2xl border border-primary-200 dark:border-primary-800">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                One-Command Installation
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Install via Composer in seconds. No complex setup, no build
+                                tools required to start.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Universal Server Support
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Works on Nginx, Apache, LAMPP, XAMPP, WAMP, FrankenPHP,
+                                Swoole, VPS, or shared hosting.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                SPA & Twig
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Native single page application behavior with instant transitions between Twig pages.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Multi-Database Support
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Built-in support for SQLite, MySQL, and PostgreSQL with
+                                automatic migrations.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Production-Ready Optimizations
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Auto-minification, WebP image optimization, Twig caching,
+                                and more when DEBUG=false.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Zero Boilerplate
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Clean, minimal code. No unnecessary abstractions. Full
+                                control over your application.
+                            </p>
+                        </div>
+
+                    </div>
+            </section>
+
+            <!-- Why Styles -->
+            <section id="why-lilaphp" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Why Choose LilaPHP?
+                </h2>
+                <div class="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-400">
+                    <p class="mb-4">
+                        LilaPHP avoids the monolithic approach of traditional frameworks.
+                        Instead of loading a massive global state, LilaPHP instantiates
+                        only what is required for the specific request.
+                        <strong>No complex setup</strong>—just run
+                        <code>composer create-project</code> and you're ready to go.
+                    </p>
+                    <p class="mb-4">
+                        This means faster cold starts, lower memory usage, and the ability
+                        to run multiple "micro-apps" within the same codebase—each with
+                        different security policies, headers, or middleware
+                        configurations.
+                    </p>
+                    <p class="mb-6">
+                        <strong>Universal compatibility:</strong> Works seamlessly on
+                        <strong>Nginx</strong>, <strong>Apache</strong>,
+                        <strong>LAMPP</strong>, <strong>XAMPP</strong>,
+                        <strong>WAMP</strong>, <strong>FrankenPHP</strong>,
+                        <strong>Swoole</strong>, VPS, shared hosting, or PHP's built-in
+                        server. Deploy anywhere without configuration headaches.
+                    </p>
+
+                    <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg my-8">
+                        <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                            <div class="flex gap-1.5">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <span class="text-xs text-slate-400 font-mono">LilaPHP/routes/home.php</span>
+                        </div>
+                        <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">include_once __DIR__ . "/../index.php";
+use Core\App;
+
+// Standard App
+$app = new App(); 
+
+// Admin Panel (Strict Security)
+$adminApp = new App([
+    'security' => ['cors' => false, 'sanitize' => true,'logger'=>false,'rateLimit'=>30],
+     'translate'=>true
+]);
+
+// Public API (Open Access)
+//rateLimit 300 request for 1 minute per IP address
+$apiApp = new App([
+    'security' => ['cors' => true, 'rateLimit'=>300],
+    'translate'=>true
+]);</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Installation -->
+            <section id="install" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Installation
+                </h2>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-8">
+                    Get started in <strong>under 60 seconds</strong>. LilaPHP is designed to be simple to install and
+                    easy to move between environments.
+                </p>
+                <div class="space-y-8">
+                    <!-- Step 1 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">1</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Install via Composer</h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            Create a new project using the official skeleton. The project comes pre-scaffolded with all
+                            root entry points and files ready to use immediately.
+                        </p>
+                        <pre
+                            class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash">composer create-project seip25/lila-php LilaPHP</code></pre>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">2</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Initialize Environment
+                                (.env)</h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            Enter the project directory, copy the example environment file into `app/`, and generate a
+                            secure cryptographically random key:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash"># Enter project directory
+cd LilaPHP
+
+# Copy example environment configuration
+cp app/.env.example app/.env
+
+# Generate security key
+php app/cli.php key:generate</code></pre>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">3</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Start Development Server
+                            </h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            You can boot your application using Docker (recommended) or via traditional local servers
+                            (Apache, MAMP, XAMPP, LAMPP).
+                        </p>
+
+                        <div class="space-y-6">
+                            <!-- Docker Dev Setup -->
+                            <div
+                                class="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h4 class="font-bold text-sm text-primary-600 mb-2">Option A: Docker Dev Environment
+                                </h4>
+                                <p class="text-xs text-slate-500 mb-3">
+                                    Manage container lifecycle using scripts (runs from project root) to avoid running
+                                    Docker in the background when not coding:
+                                </p>
+                                <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-xs mb-3"><code class="language-bash"># Build and start containers (Nginx + PHP 8.4-FPM + MySQL)
+./app/docker/dev.sh build #or sudo ./app/docker/dev.sh build
+
+# Stop containers to free up system resources
+./app/docker/dev.sh stop #or sudo ./app/docker/dev.sh stop
+ 
+# Start existing containers without rebuilding
+./app/docker/dev.sh start #or sudo ./app/docker/dev.sh start
+
+#windows
+# app\docker\dev.bat build
+# app\docker\dev.bat stop
+# app\docker\dev.bat start
+
+# Run database migrations inside the container
+docker exec -it lilaphp_dev_php php app/cli.php migrate:create</code></pre>
+                                <p class="text-xs text-slate-500">
+                                    Visit <code class="text-primary-500">http://localhost:8000</code> in your browser.
+                                </p>
+                            </div>
+
+                            <!-- Apache/XAMPP Setup -->
+                            <div
+                                class="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h4 class="font-bold text-sm text-primary-600 mb-2">Option B: Apache / MAMP / XAMPP /
+                                    LAMPP</h4>
+                                <p class="text-xs text-slate-500 mb-3">
+                                    Move the project folder into your web server root (e.g.,
+                                    <code>htdocs/LilaPHP</code>). The root <code>.htaccess</code> handles clean routing
+                                    out of the box.
+                                </p>
+                                <p class="text-xs text-slate-500 mb-3">
+                                    If placed in a subdirectory, modify the <code>RewriteBase</code> in the root
+                                    <code>.htaccess</code> file to match your directory name:
+                                </p>
+                                <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-xs"><code class="language-apache"># .htaccess (Root Level)
+RewriteBase /LilaPHP/</code></pre>
+                                <p class="text-xs text-slate-500 mt-3">
+                                    Visit <code class="text-primary-500">http://localhost/LilaPHP/</code> in your
+                                    browser.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">4</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Production Deployment</h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            Deploying LilaPHP to production can be done via Apache/Shared Hosting or Docker.
+                        </p>
+
+                        <div class="space-y-4 text-sm">
+                            <p class="text-xs text-slate-500">
+                                <strong>Apache / Shared Hosting:</strong> Upload the directory. The
+                                <code>app/.htaccess</code> file denies direct web access to config/core files, while the
+                                root <code>.htaccess</code> safely routes extensionless requests.
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                <strong>Docker Prod Stack:</strong> Deploy the production Docker stack (preconfigured
+                                with OPcache, APCu, static FPM processes) using the prod lifecycle scripts from the
+                                project root:
+                            </p>
+                            <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-xs"><code class="language-bash"># Build and start optimized production containers
+./app/docker/prod.sh build # or sudo ./app/docker/prod.sh build
+
+# Stop production containers
+./app/docker/prod.sh stop # or sudo ./app/docker/prod.sh stop
+
+
+#Windows
+# app\docker\prod.bat build
+# app\docker\prod.bat stop
+</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="core.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">Core
+                    documentation</a>
+            </div>
+
+
+    </div>
+    </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

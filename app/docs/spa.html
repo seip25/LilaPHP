@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- SPA Support -->
+            <section id="spa" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        SPA Support
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">Beta</span>
+                </div>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP features a powerful, built-in Single Page Application (SPA) engine that enables instant,
+                    seamless transitions between Twig-rendered pages.
+                </p>
+                <div class="grid md:grid-cols-2 gap-8 mb-12">
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">Hybrid Navigation</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm">
+                            Intercepts internal links and performs partial DOM updates using JSON payloads. It combines
+                            server-side security (session validation, CSRF) with frontend speed.
+                        </p>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">Intelligent Resource
+                            Loading</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm">
+                            Automatically extracts and re-injects missing scripts or styles into the
+                            <code>&lt;head&gt;</code>, ensuring dynamic dependencies (like Vite modules) load only when
+                            needed.
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">How to enable</h3>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-html">&lt;!-- 1. Use the main content container in base.twig --&gt;
+&lt;main id="lila-spa-content"&gt;
+    {% block content %}{% endblock %}
+&lt;/main&gt;
+
+&lt;!-- 2. Use the dynamic layout in your templates --&gt;
+{% extends layout | default("base.twig") %}</code></pre>
+                </div>
+
+                <div class="mb-6 mt-6 bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <p class="text-sm text-blue-700 dark:text-blue-400">
+                        <strong>Fail-safe Mechanism:</strong> If a request times out (5s) or fails with a server error,
+                        the engine automatically falls back to a traditional <code>window.location.href</code> reload.
+                    </p>
+                </div>
+
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="responses.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    Responses
+                </a>
+            </div>
+
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>
