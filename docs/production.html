@@ -75,19 +75,27 @@
                     </h3>
                     <ul class="list-disc list-inside text-blue-800 dark:text-blue-300 space-y-2">
                         <li>
-                            <strong>OPcache RAM Preloading</strong> - Automatically pre-compiles and pins all engine classes (`_core/*.php`) and database models (`backend/models/*.php`) into RAM via `backend/preload.php`.
+                            <strong>OPcache RAM Preloading</strong> - Automatically pre-compiles and pins all engine
+                            classes (`_core/*.php`) and database models (`backend/models/*.php`) into RAM via
+                            `backend/preload.php`.
                         </li>
                         <li>
-                            <strong>APCu In-Memory Caching</strong> - Direct RAM caching for API rate limits (`Core\Security`), validation dictionaries, and high-frequency SQL query payloads (`O(1)` zero disk I/O).
+                            <strong>APCu In-Memory Caching</strong> - Direct RAM caching for API rate limits
+                            (`Core\Security`), validation dictionaries, and high-frequency SQL query payloads (`O(1)`
+                            zero disk I/O).
                         </li>
                         <li>
-                            <strong>Redis Cluster & Background Workers</strong> - Dual-tier shared caching across multiple servers with asynchronous non-blocking job queues (`Core\Task`).
+                            <strong>Redis Cluster & Background Workers</strong> - Dual-tier shared caching across
+                            multiple servers with asynchronous non-blocking job queues (`Core\Task`).
                         </li>
                         <li>
-                            <strong>Environment Variable OPcache Export</strong> - Compiles `.env` directly into an OPcache-ready static array (`_core/cache/env.php`) when running `php cli.php optimize`.
+                            <strong>Environment Variable OPcache Export</strong> - Compiles `.env` directly into an
+                            OPcache-ready static array (`_core/cache/env.php`) when running `php cli.php optimize`.
                         </li>
                         <li>
-                            <strong>Nginx C-Level Direct Routing & JSON 404</strong> - Direct physical file execution (`backend/routes/*.php`) with native C-level JSON `404` error responses (`@json_404`), eliminating PHP worker startup overhead for invalid routes.
+                            <strong>Nginx C-Level Direct Routing & JSON 404</strong> - Direct physical file execution
+                            (`backend/routes/*.php`) with native C-level JSON `404` error responses (`@json_404`),
+                            eliminating PHP worker startup overhead for invalid routes.
                         </li>
                     </ul>
                 </div>
@@ -96,8 +104,10 @@
                     Docker Production Stack Command (`docker prod`)
                 </h3>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Before deploying to production, launch your container orchestration using our unified Blue-bird style master command.
-                    This command builds and starts `php:8.5-fpm` with `preload.php` active, pinning all core framework classes (`Config`, `Database`, `Cache`, `Response`, `Task`) directly into memory:
+                    Before deploying to production, launch your container orchestration using our unified Blue-bird
+                    style master command.
+                    This command builds and starts `php:8.4-fpm` with `preload.php` active, pinning all core framework
+                    classes (`Config`, `Database`, `Cache`, `Response`, `Task`) directly into memory:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
                     <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
@@ -115,16 +125,21 @@ php cli.php docker prod</code></pre>
                     <li>Disabled logger output by default for high-throughput performance (`LOG_ENABLED=false`)</li>
                 </ul>
                 </p>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                         Security Checklist
                     </h3>
                     <ul class="list-disc list-inside text-slate-600 dark:text-slate-400 space-y-2">
-                        <li>Set <code>APP_ENV=production</code> and <code>APP_DEBUG=false</code> in <code>backend/.env</code></li>
-                        <li>Ensure external ports are protected by your firewall/load balancer (Nginx handles rate limits via <code>limit_req zone=api_limit</code>)</li>
+                        <li>Set <code>APP_ENV=production</code> and <code>APP_DEBUG=false</code> in
+                            <code>backend/.env</code></li>
+                        <li>Ensure external ports are protected by your firewall/load balancer (Nginx handles rate
+                            limits via <code>limit_req zone=api_limit</code>)</li>
                         <li>Enable HTTPS with SSL certificates (e.g., Let's Encrypt / Certbot in Nginx)</li>
-                        <li>Configure secure database credentials and restrict MySQL (`3306`) from public internet exposure</li>
-                        <li>Verify that background worker daemons (`php cli.php task:work`) run under dedicated non-root users inside your container</li>
+                        <li>Configure secure database credentials and restrict MySQL (`3306`) from public internet
+                            exposure</li>
+                        <li>Verify that background worker daemons (`php cli.php task:work`) run under dedicated non-root
+                            users inside your container</li>
                     </ul>
                 </div>
 
@@ -134,7 +149,9 @@ php cli.php docker prod</code></pre>
                         🐳 Docker Deployment (Highly Recommended)
                     </h3>
                     <p class="text-slate-600 dark:text-slate-400 mb-6">
-                        LilaPHP features a fully optimized, production-ready Docker Compose environment. We highly recommend using this containerized setup as it pre-installs and tunes OPcache, APCu metadata caching, and optimal PHP-FPM pool settings (e.g., static process manager).
+                        LilaPHP features a fully optimized, production-ready Docker Compose environment. We highly
+                        recommend using this containerized setup as it pre-installs and tunes OPcache, APCu metadata
+                        caching, and optimal PHP-FPM pool settings (e.g., static process manager).
                     </p>
 
                     <div class="space-y-6 mb-12">
@@ -142,7 +159,9 @@ php cli.php docker prod</code></pre>
                         <div class="p-6 bg-slate-900 rounded-xl overflow-hidden shadow-lg border border-slate-700">
                             <h4 class="font-bold text-sm text-primary-400 mb-2">1. Spin up the Production Stack</h4>
                             <p class="text-xs text-slate-400 mb-3">
-                                Run the production environment directly from the root CLI using our unified command (`php cli.php docker`). This boots Nginx, PHP 8.4-FPM (with OPcache preload active), MySQL, and Redis in isolated containers:
+                                Run the production environment directly from the root CLI using our unified command
+                                (`php cli.php docker`). This boots Nginx, PHP 8.4-FPM (with OPcache preload active),
+                                MySQL, and Redis in isolated containers:
                             </p>
                             <pre class="text-xs text-slate-300 font-mono overflow-x-auto"><code class="language-bash"># Build and start optimized production containers (Nginx + PHP 8.4-FPM + MySQL + Redis)
 php cli.php docker prod
@@ -155,10 +174,14 @@ php cli.php docker stop</code></pre>
                         </div>
 
                         <!-- Step 2: Nginx Host reverse proxy -->
-                        <div class="p-6 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <h4 class="font-bold text-sm text-primary-600 mb-2">2. Reverse Proxy with Host Nginx (Redirecting port 80/443 to Docker)</h4>
+                        <div
+                            class="p-6 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <h4 class="font-bold text-sm text-primary-600 mb-2">2. Reverse Proxy with Host Nginx
+                                (Redirecting port 80/443 to Docker)</h4>
                             <p class="text-xs text-slate-500 mb-4">
-                                By default, `docker-compose.yml` maps your HTTP service to `HTTP_PORT=8080` (configured in `backend/.env`). If you expose your app on standard ports (`80/443`), configure a reverse proxy on your host server's Nginx pointing to `http://127.0.0.1:8080`:
+                                By default, `docker-compose.yml` maps your HTTP service to `HTTP_PORT=8080` (configured
+                                in `backend/.env`). If you expose your app on standard ports (`80/443`), configure a
+                                reverse proxy on your host server's Nginx pointing to `http://127.0.0.1:8080`:
                             </p>
                             <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-xs"><code class="language-nginx">server {
     listen 80;

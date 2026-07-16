@@ -1,4 +1,4 @@
-FROM php:8.5.8-fpm
+FROM php:8.4-fpm
 
 RUN apt-get update && apt-get install -y \
     libpng-dev \
@@ -12,10 +12,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql zip
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql zip opcache
 
 RUN pecl install redis apcu \
-    && docker-php-ext-enable redis apcu
+    && docker-php-ext-enable redis apcu opcache
 
 RUN echo "auto_prepend_file = /var/www/html/_core/bootstrap.php" >> /usr/local/etc/php/conf.d/lila.ini && \
     echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/lila.ini && \
