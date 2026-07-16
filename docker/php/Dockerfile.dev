@@ -1,0 +1,28 @@
+FROM php:8.5.8-fpm
+
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql zip
+
+RUN pecl install redis apcu \
+    && docker-php-ext-enable redis apcu
+
+RUN echo "auto_prepend_file = /var/www/html/_core/bootstrap.php" >> /usr/local/etc/php/conf.d/lila.ini && \
+    echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/lila.ini && \
+    echo "display_errors = On" >> /usr/local/etc/php/conf.d/lila.ini && \
+    echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/lila.ini
+
+WORKDIR /var/www/html
+
+EXPOSE 9000
+CMD ["php-fpm"]

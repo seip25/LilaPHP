@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LilaPHP | High-Performance API Framework</title>
+    <meta name="description"
+        content="LilaPHP ultra-fast API-first PHP 8.4+ framework with Nginx, OPcache Preload, APCu RAM, Redis, and file-based routing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="background-glow glow-1"></div>
+    <div class="background-glow glow-2"></div>
+
+    <header class="navbar">
+        <div class="container navbar-content">
+            <div class="brand">
+                <span class="brand-badge">⚡ PHP 8.4+</span>
+                <h1 class="brand-title">Lila<span class="accent">PHP</span></h1>
+            </div>
+            <nav class="nav-links">
+                <a href="#features" class="nav-link">Architecture</a>
+                <a href="#diagnostics" class="nav-link btn-glow" id="run-test-btn">Test API Live</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <section class="hero">
+            <div class="hero-text">
+                <div class="tagline">API-First • Zero Overhead • Direct File-Based Routing</div>
+                <h2 class="hero-title">The PHP engine engineered for maximum <span class="gradient-text">speed and
+                        concurrency</span>.</h2>
+                <p class="hero-description">
+                    LilaPHP eliminates legacy template engines, heavy session overhead, and regex routing loops.
+                    Powered by ultra-fast direct physical file routing with Nginx C-level rate limiting, OPcache RAM preloading, and hybrid APCu + Redis drivers.
+                </p>
+                <div class="hero-actions">
+                    <button id="hero-benchmark-btn" class="btn btn-primary">
+                        <span>Run Real-Time Diagnostics</span>
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                    </button>
+                    <a href="/api/" target="_blank" class="btn btn-secondary">View JSON Endpoint (/api/)</a>
+                </div>
+            </div>
+            <div class="hero-card">
+                <div class="code-preview">
+                    <div class="code-header">
+                        <div class="dots"><span></span><span></span><span></span></div>
+                        <span class="code-filename">backend/routes/users/profile.php</span>
+                    </div>
+                    <pre class="code-content"><code>&lt;?php
+<span class="comment">/** File-based Routing: instant RAM execution */</span>
+<span class="keyword">use</span> <span class="type">Core\Response</span>;
+<span class="keyword">use</span> <span class="type">Core\Cache</span>;
+<span class="keyword">use</span> <span class="type">Models\User</span>;
+
+<span class="variable">$user</span> = <span class="type">Cache</span>::api(<span class="string">'user_profile_1'</span>, <span class="keyword">fn</span>() =&gt; 
+    <span class="type">User</span>::find(<span class="number">1</span>), <span class="number">300</span>
+);
+
+<span class="type">Response</span>::json([
+    <span class="string">'status'</span> =&gt; <span class="string">'success'</span>,
+    <span class="string">'data'</span> =&gt; <span class="variable">$user</span>
+]);</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="diagnostics" class="diagnostics-section">
+            <div class="section-header">
+                <h3>Real-Time Cluster Diagnostics</h3>
+                <p>Live metrics returned from <code class="inline-code">backend/routes/test.php</code> via Nginx FastCGI.</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card" id="card-speed">
+                    <div class="stat-icon speed-icon">⚡</div>
+                    <div class="stat-info">
+                        <span class="stat-label">PHP Execution Latency</span>
+                        <div class="stat-value"><span id="metric-speed">---</span> <small>ms</small></div>
+                        <span class="stat-sub" id="status-speed">Waiting for diagnostics...</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="card-apcu">
+                    <div class="stat-icon ram-icon">🧠</div>
+                    <div class="stat-info">
+                        <span class="stat-label">RAM Cache (APCu)</span>
+                        <div class="stat-value" id="metric-apcu">---</div>
+                        <span class="stat-sub" id="status-apcu">Checking memory...</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="card-redis">
+                    <div class="stat-icon redis-icon">💎</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Redis Shared Cluster</span>
+                        <div class="stat-value" id="metric-redis">---</div>
+                        <span class="stat-sub" id="status-redis">Checking connection...</span>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="card-mysql">
+                    <div class="stat-icon db-icon">🗄️</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Database Pool (MySQL)</span>
+                        <div class="stat-value" id="metric-mysql">---</div>
+                        <span class="stat-sub" id="status-mysql">Checking connection...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal-box">
+                <div class="terminal-header">
+                    <span>API Response (RAW JSON)</span>
+                    <span class="badge-live">LIVE</span>
+                </div>
+                <pre id="json-viewer"
+                    class="terminal-body">Click "Run Real-Time Diagnostics" to trigger a live request against the LilaPHP API cluster...</pre>
+            </div>
+        </section>
+
+        <section id="features" class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h4>Direct File-Based Routing</h4>
+                <p>Nginx directly routes requests to physical files inside <code>backend/routes/*.php</code>. Zero computational routing loops or regex matching.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h4>OPcache RAM Preloading</h4>
+                <p>In production (`preload.php`), all core classes and models are permanently compiled inside shared RAM for PHP-FPM workers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💎</div>
+                <h4>Dual-Tier Caching</h4>
+                <p>First-level caching in APCu (native RAM with 0 latency) backed by a secondary Redis Cluster for shared distributed persistence.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h4>High-Throughput Security</h4>
+                <p>C-level rate limiting via Nginx (`limit_req`), rapid JSON payload validation, and anti-malware file upload scanning (`Core\Upload`).</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>© 2026 LilaPHP Framework. High-Performance API Engine.</p>
+            <div class="footer-meta">LilaPHP • PHP 8.4+ • Nginx FastCGI</div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>

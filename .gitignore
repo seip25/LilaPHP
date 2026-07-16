@@ -23,6 +23,4 @@ app/cache/schema_cache.php
 app/cache/model_cache.php
 app/cache/route_di_cache.php
 app/cache/route_attribute_cache.php
-app/cache/build_manifest.php
 app/*.sqlite
-/docs

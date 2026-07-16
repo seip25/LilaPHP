@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- Physical File Routing -->
+            <section id="routing" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Physical File-Based API Routing (`backend/routes/*.php`)
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP eliminates traditional routing regex loops, complex method annotations, and massive routing
+                    tables in memory. Instead, it takes inspiration from modern file-based routing systems , backed
+                    directly by Nginx FastCGI at C-level speed.
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
+                    <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">Directory to URI Mapping</span>
+                    </div>
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-plaintext">backend/routes/
+├── ping.php             => GET/POST /api/ping
+├── test.php             => GET/POST /api/test
+├── users/
+│   ├── index.php        => GET/POST /api/users
+│   └── profile.php      => GET/POST /api/users/profile
+└── auth/
+    └── login.php        => POST /api/auth/login</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    When a request comes into your server (e.g., `http://localhost:8080/api/users/profile`), Nginx
+                    forwards it directly to our preloaded dispatcher (`index.php`), which locates and executes
+                    `backend/routes/users/profile.php` instantly.
+                </p>
+            </section>
+
+            <section id="endpoint-structure" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    API-First Endpoint Structure
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    Each endpoint file is an autonomous, self-contained PHP 8.4+ script. Thanks to OPcache preloading
+                    (`_core/bootstrap.php`), you don't need to write class wrappers, controllers, or constructor
+                    injections. Simply use static core helpers directly:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
+                    <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">backend/routes/users/profile.php</span>
+                    </div>
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+/**
+ * API Endpoint: /api/users/profile
+ */
+use Core\Response;
+use Core\Request;
+use Core\Validate;
+use Core\Database;
+
+// 1. Enforce allowed HTTP Methods cleanly with zero boilerplate
+Request::assertMethod('POST'); // Automatically emits 405 Method Not Allowed if not POST
+
+// 2. Validate Payload inputs (`Request::all()`, `Request::json()`, or `$_REQUEST`)
+$payload = Validate::assert(Request::all(), [
+    'user_id' => 'required|numeric'
+]);
+
+// 3. Execute Database Query or Cache lookup
+$pdo = Database::getInstance();
+$stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ?");
+$stmt->execute([$payload['user_id']]);
+$user = $stmt->fetch();
+
+if (!$user) {
+    Response::json(['error' => 'User not found'], 404);
+}
+
+// 4. Return instant JSON response
+Response::json(['status' => 'success', 'data' => $user]);</code></pre>
+                </div>
+
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl border border-indigo-100 dark:border-indigo-900 mb-8">
+                    <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
+                        🔍 Why No `new App()` or `#[GET]` Attributes?
+                    </h3>
+                    <p class="text-sm text-indigo-800 dark:text-indigo-300 mb-3">
+                        In traditional frameworks, every HTTP request must instantiate a monolithic `$app = new App()`, parse config arrays, loop over attribute annotations (`#[GET]`, `#[POST]`), and build a huge routing table in RAM just to find one endpoint.
+                        In <strong>LilaPHP</strong>, Nginx directly maps the request URI (`/api/users/profile`) to the exact script on disk (`backend/routes/users/profile.php`). The script runs instantly via OPcache preloading with zero overhead.
+                    </p>
+                    <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-200 mt-4 mb-2">⚡ How to inspect Request & HTTP Methods (`Core\Request`):</h4>
+                    <ul class="list-disc list-inside text-sm text-indigo-800 dark:text-indigo-300 space-y-1">
+                        <li><strong>Enforce allowed methods:</strong> <code>Request::assertMethod('POST', 'PUT');</code> (Exits immediately with HTTP 405 if not matching).</li>
+                        <li><strong>Check current method dynamically:</strong> <code>if (Request::isPost()) { ... }</code> or <code>Request::getMethod()</code>.</li>
+                        <li><strong>Retrieve JSON / Input payload:</strong> <code>$body = Request::json();</code> or <code>Request::input('email');</code> (`O(1)` memoized RAM lookup).</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Nginx C-Level 404 & 429 Handling -->
+            <section id="c-level-handling" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Nginx C-Level Rate Limiting & 404 Protection
+                    </h2>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    In traditional PHP frameworks, when a bot attempts to brute-force non-existent URLs or floods the
+                    API, PHP-FPM workers must boot up, load the router, check the routes array, and eventually throw a
+                    `RouteNotFoundException`. This consumes server RAM and CPU.
+                </p>
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-600 mb-6">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                        Zero-PHP 404 & 429 Rate Limit Responses
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                        In LilaPHP's Docker setup (`docker/nginx/nginx.conf`), Nginx inspects the file system and
+                        traffic rate strictly at the C-programming layer before invoking PHP:
+                    </p>
+                    <ul class="list-disc list-inside text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                        <li><strong>C-Level 404 Handling:</strong> If an endpoint file does not exist inside
+                            `backend/routes/`, Nginx instantly returns <code
+                                class="text-primary-500">{"error":"Endpoint not found","code":404}</code> without waking
+                            up any PHP-FPM worker.</li>
+                        <li><strong>C-Level Rate Limiting:</strong> Nginx enforces rate limits (<code
+                                class="text-primary-500">limit_req zone=api_limit rate=60r/s burst=30</code>). If an IP
+                            exceeds the threshold, Nginx returns <code
+                                class="text-primary-500">{"error":"Too Many Requests","code":429}</code> directly from C
+                            memory!</li>
+                    </ul>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="responses.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500">
+                    Responses & JSON API
+                </a>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

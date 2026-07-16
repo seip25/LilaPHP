@@ -1,0 +1,6 @@
+[2026-07-16 20:57:07] [error] MySQL Connection error (attempt 1/5): SQLSTATE[HY000] [1045] Access denied for user 'root'@'172.19.0.4' (using password: YES)
+[2026-07-16 20:57:08] [error] MySQL Connection error (attempt 2/5): SQLSTATE[HY000] [1045] Access denied for user 'root'@'172.19.0.4' (using password: YES)
+[2026-07-16 20:57:10] [error] MySQL Connection error (attempt 3/5): SQLSTATE[HY000] [1045] Access denied for user 'root'@'172.19.0.4' (using password: YES)
+[2026-07-16 20:57:13] [error] MySQL Connection error (attempt 4/5): SQLSTATE[HY000] [1045] Access denied for user 'root'@'172.19.0.4' (using password: YES)
+[2026-07-16 20:57:17] [error] MySQL Connection error (attempt 5/5): SQLSTATE[HY000] [1045] Access denied for user 'root'@'172.19.0.4' (using password: YES)
+[2026-07-16 20:57:17] [error] Failed to connect to MySQL after 5 attempts.

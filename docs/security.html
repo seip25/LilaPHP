@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+
+
+            <!-- API Security Layer -->
+            <section id="security" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    API Security & Defense Layer
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    In a stateless API-First environment, traditional session cookies and CSRF tokens are replaced by high-throughput native defense layers: Nginx C-level rate limiting, deep file inspection (`Core\Upload`), and strict payload validation (`Core\Validate`).
+                </p>
+
+                <!-- Nginx Rate Limiting -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-8">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        1. C-Level DDoS & Brute-Force Protection (`limit_req`)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        Our Nginx configuration (`docker/nginx/nginx.conf`) allocates a shared memory zone (`api_limit:10m`) tracking incoming client IPs in native C memory.
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-nginx">limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;
+
+server {
+    location /api/ {
+        limit_req zone=api_limit burst=30 nodelay;
+        limit_req_status 429;
+        ...
+    }
+}</code></pre>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">
+                        If a client exceeds 60 requests per second with a burst threshold of 30, Nginx blocks the connection instantly and returns <code class="text-rose-500">{"error":"Too Many Requests","code":429}</code> without launching PHP workers.
+                    </p>
+                </div>
+
+                <!-- Anti-Malware Uploads -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-8">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        2. Anti-Malware File Upload Scanner (`Core\Upload`)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        Allowing users to upload files is one of the highest attack vectors in PHP. `Core\Upload` mitigates this by performing double verification: `finfo` deep MIME checks AND byte inspection to detect embedded PHP script blocks (`<?php` or `<?=`) even inside image files.
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-6 rounded-xl overflow-hidden"><code class="language-php">use Core\Upload;
+use Core\Response;
+
+// Enforce strictly max 5MB and only PNG/WEBP/PDF MIME types
+$savedFile = Upload::save($_FILES['attachment'], 5242880, [
+    'image/png' => 'png',
+    'image/webp' => 'webp',
+    'application/pdf' => 'pdf'
+]);
+
+if (!$savedFile) {
+    Response::json(['error' => 'Invalid file upload or embedded malware detected'], 422);
+}
+
+Response::json(['status' => 'uploaded', 'filename' => $savedFile]);</code></pre>
+                </div>
+
+                <!-- Token Authentication -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-rose-600">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        3. Stateless API Authentication (Bearer / API Keys)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        Instead of stateful sessions, inspect `Authorization` headers or API keys directly in your endpoint (or via a shared helper) to verify identity in microseconds using local RAM caching (`Cache::api`).
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Response;
+use Core\Cache;
+use Core\Database;
+
+$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+if (!preg_match('/Bearer\s+(\S+)/', $authHeader, $matches)) {
+    Response::json(['error' => 'Missing or invalid Authorization header'], 401);
+}
+
+$token = $matches[1];
+
+// Check token in local RAM cache first (`APCu`), otherwise query database
+$user = Cache::api("auth_token_{$token}", function() use ($token) {
+    $pdo = Database::getInstance();
+    $stmt = $pdo->prepare("SELECT id, username, role FROM users WHERE api_token = ? AND status = 'active'");
+    $stmt->execute([$token]);
+    return $stmt->fetch();
+}, 120); // Cache authentication result for 2 minutes in RAM!
+
+if (!$user) {
+    Response::json(['error' => 'Unauthorized or expired token'], 401);
+}
+
+// Proceed safely with $user data</code></pre>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="features.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    Core Features (`Core\Task`, `Core\Http`)
+                </a>
+            </div>
+
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

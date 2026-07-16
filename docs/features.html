@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+
+
+            <!-- Core\Task Background Workers -->
+            <section id="queues" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Background Workers (`Core\Task`)
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wide">Performance First</span>
+                </div>
+
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    To keep your API responses under a few milliseconds (`Performance First`), never perform heavy tasks synchronously inside request routes (like sending massive emails, resizing images, or processing CSV files). `Core\Task` automatically dispatches them to background worker processes without blocking API throughput.
+                </p>
+
+                <!-- How it works -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                        How `Task::dispatch()` Works Under the Hood
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-3 text-sm">
+                        `Core\Task` dynamically detects your deployment environment:
+                    </p>
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                        <li><strong>Distributed Redis Mode (Default in Docker Prod):</strong> If Redis (`6379`) is active in `backend/.env`, the task payload (`json`) is pushed into the `lilaphp:jobs` queue (`Redis::lPush`). Background CLI workers consume it asynchronously.</li>
+                        <li><strong>Standalone Fallback Mode (`proc_open`):</strong> If Redis is disabled or unavailable, `Task::dispatch()` executes a detached OS background process via `proc_open("php /path/to/_core/cli.php task:run ... > /dev/null 2>&1 &")`, instantly releasing your HTTP worker.</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    1. Dispatching a Task from an API Route
+                </h3>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Task;
+use Core\Response;
+
+// Inside backend/routes/checkout.php:
+Task::dispatch('send_invoice_email', [
+    'user_id' => 123,
+    'invoice_id' => 'INV-2026-8891',
+    'amount' => 149.99
+]);
+
+// Return JSON response immediately (in < 2ms) without waiting for the email!
+Response::json(['status' => 'order_placed', 'invoice_id' => 'INV-2026-8891']);</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    2. Running the Worker Process
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    In production or high-concurrency environments, run one or more worker daemons using `cli.php`:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start continuous Redis worker consuming lilaphp:jobs
+php _core/cli.php task:work
+
+# Or run via Docker CLI container
+docker exec -it lilaphp_dev_cli php _core/cli.php task:work</code></pre>
+                </div>
+            </section>
+
+            <!-- Core\Http cURL Wrapper -->
+            <section id="http-helper" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        API Client & cURL Wrapper (`Core\Http`)
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">New helper</span>
+                </div>
+
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    Need to call external microservices, payment gateways (Stripe/PayPal), or webhooks? `Core\Http` provides an ultra-lightweight cURL wrapper optimized for JSON APIs without requiring Guzzle or heavy HTTP client libraries.
+                </p>
+
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Http;
+use Core\Response;
+
+// 1. Send GET request with headers
+$response = Http::get('https://api.github.com/users/seip25', [
+    'User-Agent: LilaPHP-Engine/2.0',
+    'Accept: application/vnd.github.v3+json'
+]);
+
+// 2. Send POST JSON request automatically
+$postResult = Http::post('https://api.stripe.com/v1/charges', [
+    'amount' => 2000,
+    'currency' => 'usd',
+    'source' => 'tok_visa'
+], [
+    'Authorization: Bearer sk_test_xxxxxx'
+]);
+
+// Check status codes and parse JSON response directly
+if ($postResult['status'] === 200) {
+    Response::json(['payment' => 'success', 'data' => $postResult['body']]);
+} else {
+    Response::json(['error' => 'Gateway rejected transaction'], 502);
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="production.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    Production & Docker
+                </a>
+            </div>
+
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+            <div class="p-6">
+                <a href="#" class="flex items-center gap-2 font-bold text-2xl text-slate-900 dark:text-white mb-8">
+                    <div class="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white">
+                        L
+                    </div>
+                    <span>LilaPHP</span>
+                </a>
+
+                <nav class="space-y-1">
+                    <div class="flex items-center justify-between px-3 mb-2 mt-4">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Getting Started
+                        </p>
+                        <button id="theme-toggle-nav"
+                            class="p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                            aria-label="Toggle theme">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.5" class="w-4 h-4 hidden dark:block">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z" />
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.5" class="w-4 h-4 dark:hidden">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <a href="#introduction"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Introduction</a>
+                    <a href="#why-lilaphp"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Why
+                        LilaPHP?</a>
+                    <a href="#install"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Installation</a>
+
+                    <a href="#spa"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">SPA
+                        Support</a>
+
+                    <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6">
+                        Core Concepts
+                    </p>
+                    <a href="#routing"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Routing</a>
+                    <a href="#routing-attributes"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Routing
+                        Attributes</a>
+                    <a href="#coreapp"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">App
+                        Core</a>
+                    <a href="#core-classes"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Core
+                        Classes</a>
+                    <a href="#responses"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Responses</a>
+                    <a href="#config"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Configuration</a>
+                    <a href="#security"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Security</a>
+                    <a href="#auth-attribute"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Auth
+                        Attribute</a>
+
+                    <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6">
+                        Features
+                    </p>
+                    <a href="#debugging"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Debugging</a>
+                    <a href="#middleware"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Middleware</a>
+                    <a href="#events"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Events</a>
+                    <a href="#queues"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Queues
+                        (Workers)</a>
+                    <a href="#validation"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Validation</a>
+                    <a href="features.html"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Features</a>
+                    <a href="routing.html"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Routing</a>
+                    <a href="#seo"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">SEO
+                        & Sitemap</a>
+                    <a href="#database"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Database
+                        Info</a>
+                    <a href="#cli"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">CLI
+                        & Migrations</a>
+                    <a href="#cli_models"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Model Generator</a>
+                    <a href="#cli_assets"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Assets Minify</a>
+                    <a href="#cli_tests"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Test Runner</a>
+                    <a href="#cli_schedule"
+                        class="block px-3 py-2 pl-6 rounded-md text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">↳
+                        Scheduler</a>
+                    <a href="#example"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Full
+                        Example</a>
+                    <a href="#production"
+                        class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Production</a>
+
+                </nav>
+            </div>
+
+            <div class="p-6 border-t border-gray-200 dark:border-slate-700">
+                <button id="theme-toggle"
+                    class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5 dark:hidden">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-5 h-5 hidden dark:block">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                    </svg>
+                    <span class="dark:hidden">Light Mode</span>
+                    <span class="hidden dark:block">Dark Mode</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- Hero -->
+            <section id="introduction" class="mb-20 pt-10">
+                <div class="text-center md:text-left mb-12">
+                    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+                        Lila<span class="text-primary-600">PHP</span> Framework
+                    </h1>
+                    <p class="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+                        A lightweight, modular, and <strong>performance-first</strong> PHP 8.4+ API micro-framework designed for maximum execution speed, zero overhead, and native Docker orchestration.
+                        <strong>Install in seconds via Composer</strong>, deploy on any environment (Docker Nginx + PHP-FPM, VPS, or cloud containers), and build high-scale APIs with zero boilerplate.
+                    </p>
+
+                    <div class="mt-8 flex flex-wrap gap-4">
+                        <a href="#install"
+                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            Get Started
+                        </a>
+                        <a href="https://github.com/seip25/LilaPHP" target="_blank"
+                            class="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-slate-600 text-base font-medium rounded-lg text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Performance First
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            RAM-pinned OPcache (`preload.php`), C-level Nginx rate limiting (`limit_req`), and micro-second API response times under 2ms.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Anti-Malware Engine
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Deep MIME verification via `finfo_open()`, anti-script inspection (`&lt;?php` screening), and cryptographically randomized upload storage.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Background Workers
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Offload heavy CSV processing, emails, and webhooks to Redis queues or detached OS processes (`Core\Task`) without blocking API workers.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            API-Only Routing
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Direct physical file-based execution in `backend/routes/`. Zero regex routing loops or complex middleware overhead.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Concurrent HTTP Client
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            High-speed `curl_multi_*` asynchronous pooling (`Core\Http`) to fetch multiple external microservices in parallel simultaneously.
+                        </p>
+                    </div>
+
+                    <div
+                        class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8" viewBox="0 0 256 256" fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <ellipse cx="128" cy="128" rx="120" ry="80" />
+                                <text x="128" y="150" text-anchor="middle" font-size="96" font-weight="700"
+                                    font-family="Arial, Helvetica, sans-serif" fill="#fff">
+                                    PHP
+                                </text>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                            Blue-bird Master CLI
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400">
+                            Orchestrate Docker clusters (`php cli.php docker dev`), run database migrations, and manage workers directly from the console.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Features Overview -->
+            <section id="features-overview" class="mb-20">
+                <div
+                    class="bg-gradient-to-br from-primary-50 via-purple-50 to-pink-50 dark:from-primary-900/20 dark:via-purple-900/20 dark:to-pink-900/20 p-8 rounded-2xl border border-primary-200 dark:border-primary-800">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                One-Command Installation
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Install via Composer in seconds. Scaffolds a clean `_core/`, `backend/`, `docker/`, and `frontend/` directory structure.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Native Docker & Nginx
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Pre-configured Docker Compose cluster (`nginx:alpine` + `php:8.5-fpm` + `mysql:8.0` + `redis:7`) optimized for production.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                API-First Microservices
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Decoupled architecture serving pure JSON APIs from `backend/` and static HTML/Astro/JS frontends from `frontend/`.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Multi-Tier Caching
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                APCu in-memory RAM caching for local variables plus Redis for distributed sessions, rate limits, and job queues.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Production-Ready Optimizations
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                OPcache preloading, disabled logger output by default (`LOG_ENABLED=false`), and automatic security headers.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
+                                Zero Boilerplate
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">
+                                Clean, minimal PHP 8.4+ code. No complex dependency injection loops or heavy framework overhead.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Why Choose LilaPHP -->
+            <section id="why-lilaphp" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Why Choose LilaPHP?
+                </h2>
+                <div class="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-400">
+                    <p class="mb-4">
+                        Traditional PHP frameworks load massive global state dictionaries, ORM layers, and template compilation pipelines on every HTTP request.
+                        LilaPHP takes a strict <strong>Performance First</strong> approach: physical file-based routing (`backend/routes/*.php`) combined with Nginx FastCGI direct dispatch.
+                        <strong>No heavy middleware overhead</strong>—just pure API execution.
+                    </p>
+                    <p class="mb-4">
+                        All core classes (`Database`, `Cache`, `Response`, `Http`, `Upload`, `Task`) are pinned directly into RAM via OPcache preloading (`preload.php`).
+                        When an API worker boots up under PHP-FPM, memory allocation is near-zero and cold starts are eliminated.
+                    </p>
+                    <p class="mb-6">
+                        <strong>Docker & Cloud Native:</strong> Pre-scaffolded with Docker Compose (`nginx:alpine`, `php:8.5-fpm`, `mysql:8.0`, `redis:7-alpine`) and fully manageable via our master console tool (`php cli.php`).
+                    </p>
+
+                    <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg my-8">
+                        <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                            <div class="flex gap-1.5">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <span class="text-xs text-slate-400 font-mono">backend/routes/users/profile.php</span>
+                        </div>
+                        <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+/**
+ * Direct file-based API route (`/api/users/profile`)
+ */
+use Core\Response;
+use Core\Database;
+use Core\Cache;
+
+$pdo = Database::getInstance();
+
+// Instant 60s APCu RAM cached query execution
+$user = Cache::api('user_profile_123', function() use ($pdo) {
+    $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ?");
+    $stmt->execute([123]);
+    return $stmt->fetch();
+}, 60);
+
+Response::json(['status' => 'ok', 'data' => $user]);</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Installation -->
+            <section id="install" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Installation & Quick Start
+                </h2>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-8">
+                    Get your full Docker cluster running in <strong>under 60 seconds</strong>.
+                </p>
+                <div class="space-y-8">
+                    <!-- Step 1 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">1</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Create Project via Composer</h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            Scaffold the official LilaPHP project skeleton with its clean `_core/`, `backend/`, and `frontend/` directories:
+                        </p>
+                        <pre
+                            class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash">composer create-project seip25/lila-php LilaPHP
+cd LilaPHP</code></pre>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">2</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Configure Environment & Security Key</h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            Copy the example configuration to `backend/.env` and generate a cryptographically random APP_KEY:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash">cp backend/.env.example backend/.env
+php cli.php key:generate</code></pre>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">3</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Boot Docker Cluster (`docker dev`)</h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            Use the master Blue-bird style CLI command to build and launch your container orchestration (Nginx + PHP 8.5-FPM + MySQL + Redis):
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash">php cli.php docker dev</code></pre>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm">
+                            Once started, visit <code class="text-primary-500">http://localhost:8080/api/test</code> to inspect real-time APCu, Redis, and MySQL latency!
+                        </p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white font-bold text-sm">4</span>
+                            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Production Cluster (`docker prod`)</h3>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
+                            When deploying to production, run our production stack command with strict caching, preloading, and static workers enabled:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash">php cli.php docker prod</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="core.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500">
+                    Core Documentation
+                </a>
+            </div>
+
+
+    </div>
+    </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

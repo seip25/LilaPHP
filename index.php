@@ -1,43 +1,54 @@
 <?php
 
-require_once __DIR__ . '/app/bootstrap.php';
+/**
+ * LilaPHP Unified Front Controller (`Performance First`).
+ * 
+ * In production, Nginx serves `frontend/` static assets directly on `/`
+ * and delegates `/api/*` directly to `backend/routes/*.php` via FastCGI.
+ * 
+ * When running under PHP built-in server (`php -S`) or fallback front controller:
+ * - Requests starting with `/api` are dispatched to `backend/routes/*.php`.
+ * - All other requests serve `frontend/index.html` or physical frontend assets.
+ */
 
-use Core\App;
-use Core\Config;
-use Core\Database;
-use Core\GET;
-use Core\Response;
-use Core\Session;
-use Core\Config as CoreConfig;
-use Core\Translate;
-use Core\SEO;
+require_once __DIR__ . '/_core/bootstrap.php';
 
+use Core\Dispatcher;
 
-$app = new App();
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 
-#[GET]
-#[SEO(key: "index")]// key in locales/seo.php
-function get($req, Response $res, Session $session, Config $config, Translate $translate)
-{
-
-    //Example connect database
-    //Execute command in terminal: php app/cli.php migrate:create 
-    //Uncomment to test database connection and add Database $db in function parameters , Config $config,Database $db...){
-
-    //$pdo = $db->getConnection();
-    // $insert = $pdo->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
-    // $random = rand(1, 100);
-    // $email = "Jhon{$random}@email.com";
-    // $insert->execute(['John Doe', $email, 'password']);
-    // $query = $pdo->query("SELECT * FROM users");
-    // $users = $query->fetchAll(PDO::FETCH_ASSOC); 
-    $debug = $config::$DEBUG;
-    $lang = $session::get(key: "lang") ?? $translate::getLang();
-    //resources/templates/index.twig
-    return $res->render("index");
+// API request routing
+if (str_starts_with($uri, '/api/') || $uri === '/api') {
+    Dispatcher::dispatch();
 }
 
+// Serve physical asset in frontend/ if running under dev server
+$staticPath = __DIR__ . '/frontend' . $uri;
+if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
+    $ext = pathinfo($staticPath, PATHINFO_EXTENSION);
+    $mimeTypes = [
+        'css' => 'text/css',
+        'js' => 'application/javascript',
+        'json' => 'application/json',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'svg' => 'image/svg+xml',
+        'webp' => 'image/webp',
+        'html' => 'text/html'
+    ];
+    if (isset($mimeTypes[$ext])) {
+        header("Content-Type: {$mimeTypes[$ext]}");
+    }
+    readfile($staticPath);
+    exit;
+}
 
-$app->add(callback: 'get');
+// Serve Frontend SPA Landing
+$indexPath = __DIR__ . '/frontend/index.html';
+if (file_exists($indexPath)) {
+    header('Content-Type: text/html; charset=utf-8');
+    readfile($indexPath);
+    exit;
+}
 
-$app->run();
+\Core\Response::error('Frontend index.html not found', 404);

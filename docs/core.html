@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LilaPHP — Lightweight Modern PHP Framework</title>
+
+    <meta name="description"
+        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
+    <meta name="keywords"
+        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
+    <meta name="author" content="LilaPHP Project" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16"            <!-- Config -->
+            <section id="config" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Configuration & Environment (`backend/.env`)
+                </h2>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        Settings in <code>backend/.env</code> control the framework's behavior globally. Under our API-first architecture, no monolithic <code>App</code> instantiation is required—all configuration properties are read into static memory upon boot (`_core/bootstrap.php`).
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-ini">APP_NAME="LilaPHP API Engine"
+APP_ENV="production"
+APP_DEBUG=false
+APP_URL="http://localhost:8080"
+APP_KEY="base64:..." # Generated via: php cli.php key:generate
+
+# Database
+DB_PROVIDER="mysql" # or sqlite
+DB_HOST="mysql"
+DB_PORT=3306
+DB_NAME="lilaphp"
+DB_USER="root"
+DB_PASSWORD="secret"
+
+# High Performance Caching & Queues
+CACHE_DRIVER="apcu"      # RAM in-memory cache
+DB_CACHE_DRIVER="redis"  # Distributed cache & background workers
+REDIS_HOST="redis"
+REDIS_PORT=6379
+
+# Logging
+LOG_ENABLED=false        # Disabled by default for maximum concurrency</code></pre>
+                </div>
+            </section>
+
+            <!-- Architectural Paradigm Shift -->
+            <section id="coreapp" class="scroll-mt-24 mb-20">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                    Direct API Execution (Why No `new App()`?)
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    In previous versions, developers had to instantiate a monolithic object like <code>new App(['security' => ...])</code> on every single HTTP request. This approach created unnecessary CPU allocation, redundant configuration parsing, and dependency injection overhead.
+                </p>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    <strong>LilaPHP's API-First Paradigm:</strong> When Nginx dispatches a request (`/api/ping`) to `/var/www/html/index.php`, our ultra-lightweight bootstrap (`_core/bootstrap.php`) instantly wires all static helpers (`Response`, `Cache`, `Database`, `Validate`) into shared process memory via OPcache preloading (`preload.php`). Your physical endpoint (`backend/routes/ping.php`) executes immediately without class instantiation wrappers or middleware loops.
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg">
+                    <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">index.php -> backend/routes/*.php</span>
+                    </div>
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+/** Direct physical execution */
+use Core\Response;
+use Core\Validate;
+
+// Zero setup or constructor calls needed:
+$clean = Validate::assert($_REQUEST, ['email' => 'required|email']);
+
+Response::json(['status' => 'success', 'data' => $clean]);</code></pre>
+                </div>
+            </section>
+
+            <!-- Core Components -->
+            <section id="core-classes" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Core API Components (`_core/`)
+                    </h2>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP provides high-speed static and singleton core utilities tailored specifically for JSON APIs, database pooling, background tasks, and anti-malware security.
+                </p>
+
+                <div class="space-y-8">
+                    <!-- Database & Cache -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">
+                            `Core\Database` & `Core\Cache`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            <code>Database::getInstance()</code> maintains an active, reusable PDO connection pool across requests. <code>Cache</code> delivers dual-tier speed (`Cache::api()` for local APCu RAM, and `Cache::db()` for distributed Redis).
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Database;
+use Core\Cache;
+use Core\Response;
+
+// Cached query inside process RAM for 60 seconds
+$items = Cache::api('active_items', function() {
+    $pdo = Database::getInstance();
+    $stmt = $pdo->query("SELECT * FROM items WHERE status = 'active'");
+    return $stmt->fetchAll();
+}, 60);
+
+Response::json(['items' => $items]);</code></pre>
+                    </div>
+
+                    <!-- Validate & Response -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">
+                            `Core\Validate` & `Core\Response`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            <code>Validate::assert()</code> inspects payload inputs (using <code>$_REQUEST['lang']</code> for localized error messages) and halts execution instantly on invalid payloads. <code>Response::json()</code> outputs clean JSON with automated CORS and HTTP status headers.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Validate;
+use Core\Response;
+
+// Validate payload with rules
+$data = Validate::assert($_REQUEST, [
+    'username' => 'required|min:3',
+    'age' => 'required|numeric'
+]);
+
+// Return JSON response with HTTP 201 Created
+Response::json(['status' => 'created', 'user' => $data], 201);</code></pre>
+                    </div>
+
+                    <!-- Upload & Task -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">
+                            `Core\Upload` & `Core\Task`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            <code>Upload::save()</code> provides anti-malware MIME scanning and blocks embedded PHP scripts. <code>Task::dispatch()</code> pushes long-running jobs to background Redis queues or OS execution threads without slowing down your API endpoints.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Upload;
+use Core\Task;
+
+// Handle safe file upload
+$savedFile = Upload::save($_FILES['document'], null, ['application/pdf' => 'pdf']);
+
+if ($savedFile) {
+    // Offload heavy text extraction to background CLI worker
+    Task::dispatch('process_pdf_document', ['filename' => $savedFile]);
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <div class="mt-10 px-4">
+                <a href="routing.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
+                    Routing
+                </a>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+</body>
+
+</html>

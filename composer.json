@@ -1,18 +1,24 @@
 {
   "name": "seip25/lila-php",
-  "description": "Modern PHP framework, built for developing scalable web applications and APIs. Vite frontend integration, Twig templating, internationalization (i18n), request validation, flexible environment configuration, Seeders, Migrations and more.",
+  "description": "Ultra-fast API-First PHP 8.4+ framework with Nginx File-Based Routing, OPcache Preload in RAM, Dual-Tier Cache (APCu + Redis), Background Workers, and Blue-bird style CLI.",
   "type": "project",
+  "keywords": ["php", "api", "framework", "opcache", "apcu", "redis", "fastcgi", "high-performance"],
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Core\\": "app/core/",
-      "Models\\": "app/models/",
-      "Cli\\": "app/cli/"
+      "Core\\": "_core/",
+      "Models\\": "backend/models/",
+      "Cli\\": "_core/cli/"
     }
   },
   "require": {
-    "php": ">=8.2",
-    "twig/twig": "^3.21",
-    "vlucas/phpdotenv": "^5.6"
+    "php": ">=8.4"
+  },
+  "suggest": {
+    "ext-pdo_mysql": "Required for MySQL database connection pooling.",
+    "ext-apcu": "Recommended for zero-latency shared RAM caching.",
+    "ext-redis": "Recommended for distributed caching and background job queues.",
+    "ext-opcache": "Required for permanent in-memory preloading in production.",
+    "ext-curl": "Required for Core\\Http client requests."
   }
 }
