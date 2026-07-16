@@ -17,12 +17,10 @@ use Core\Dispatcher;
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 
-// API request routing
 if (str_starts_with($uri, '/api/') || $uri === '/api') {
     Dispatcher::dispatch();
 }
 
-// Serve physical asset in frontend/ if running under dev server
 $staticPath = __DIR__ . '/frontend' . $uri;
 if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
     $ext = pathinfo($staticPath, PATHINFO_EXTENSION);
@@ -43,7 +41,6 @@ if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
     exit;
 }
 
-// Serve Frontend SPA Landing
 $indexPath = __DIR__ . '/frontend/index.html';
 if (file_exists($indexPath)) {
     header('Content-Type: text/html; charset=utf-8');
