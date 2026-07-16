@@ -72,7 +72,7 @@ $token = Request::bearerToken();
 ```
 
 ### 3. Clean Package Distribution (`.gitattributes export-ignore`)
-When publishing releases or running `composer install --prefer-dist`, all non-production directories (`docs/`, `docker/`, `tests/`, `Blue-bird/`) are excluded automatically. Your deployment tarball contains only your pure `_core/`, `backend/`, and entrypoints.
+When publishing releases or running `composer install --prefer-dist`, development documentation and test directories (`docs/`, `tests/`, `.github/`) are excluded automatically. Your deployment tarball cleanly includes your `_core/`, `backend/`, `docker/` cluster configurations, and entrypoints so you can launch containers instantly.
 
 ### 4. Dual-Tier Caching (`APCu` + `Redis`)
 - **`Cache::api()`**: Caches data in shared worker RAM (`APCu`) with zero network round-trip latency.

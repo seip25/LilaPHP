@@ -4,7 +4,6 @@ tests/ export-ignore
 .github/ export-ignore
 .gitignore export-ignore
 .gitattributes export-ignore
-docker-compose.yml export-ignore
 walkthrough.md export-ignore
 task.md export-ignore
 implementation_plan.md export-ignore
