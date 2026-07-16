@@ -1,6 +1,5 @@
 # Export-ignore configuration for clean Composer package & Git archive releases
 docs/ export-ignore
-docker/ export-ignore
 tests/ export-ignore
 .github/ export-ignore
 .gitignore export-ignore
