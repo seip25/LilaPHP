@@ -16,6 +16,7 @@ LilaPHP/
 ├── _core/                     # ⚡ Ultra-fast Engine Core
 │   ├── Config.php             # .env parser and static OPcache array exporter (`_core/cache/env.php`)
 │   ├── Database.php           # PDO MySQL connection pool and prepared query execution
+│   ├── Request.php            # Static O(1) HTTP method checks, memoized JSON parsing, headers & input
 │   ├── Response.php           # JSON/CORS emitter with caching headers
 │   ├── Cache.php              # Dual-Tier Cache (APCu shared RAM + Redis cluster persistence)
 │   ├── Validate.php           # High-speed i18n validator reading $_REQUEST['lang'] (no sessions/Twig)
@@ -56,14 +57,28 @@ LilaPHP/
 - **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
 - **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
 
-### 2. Clean Package Distribution (`.gitattributes export-ignore`)
+### 2. Static O(1) Request & Response Handling (`Core\Request`)
+In traditional frameworks, every HTTP request instantiates heavy `$request` objects. In LilaPHP, all request data is accessed via zero-allocation static helpers:
+```php
+use Core\Request;
+use Core\Response;
+
+// Enforce HTTP Method (emits 405 Method Not Allowed automatically if not matching)
+Request::assertMethod('POST', 'PUT');
+
+// Retrieve JSON body with O(1) RAM memoization
+$body = Request::json();
+$token = Request::bearerToken();
+```
+
+### 3. Clean Package Distribution (`.gitattributes export-ignore`)
 When publishing releases or running `composer install --prefer-dist`, all non-production directories (`docs/`, `docker/`, `tests/`, `Blue-bird/`) are excluded automatically. Your deployment tarball contains only your pure `_core/`, `backend/`, and entrypoints.
 
-### 3. Dual-Tier Caching (`APCu` + `Redis`)
+### 4. Dual-Tier Caching (`APCu` + `Redis`)
 - **`Cache::api()`**: Caches data in shared worker RAM (`APCu`) with zero network round-trip latency.
 - **`Cache::db()`**: Caches across your cluster in `Redis` with automatic failover to `APCu` if Redis experiences a micro-interruption.
 
-### 4. Background Job Queues (`Task::dispatch` & `Task::work`)
+### 5. Background Job Queues (`Task::dispatch` & `Task::work`)
 Execute slow operations (sending emails, processing images, webhooks) asynchronously in background processes:
 ```php
 use Core\Task;
@@ -76,10 +91,10 @@ Consuming jobs via background worker command:
 $ php cli.php task:work
 ```
 
-### 5. Anti-Malware Secure Upload (`Upload::save`)
+### 6. Anti-Malware Secure Upload (`Upload::save`)
 Ensures uploaded files (`$_FILES`) are authentic via `finfo` MIME checking, scans content bytes for embedded `<?php` or script injections, and assigns cryptographically randomized filenames (`bin2hex(random_bytes(16))`).
 
-### 6. Concurrent Multi-cURL Client (`Http::multi`)
+### 7. Concurrent Multi-cURL Client (`Http::multi`)
 Fetch external APIs sequentially (`Http::get()`, `Http::post()`) or run dozens of HTTP requests concurrently in parallel (`Http::multi([...])`).
 
 ---
