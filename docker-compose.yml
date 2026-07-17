@@ -1,7 +1,9 @@
+name: ${APP_NAME:-lilaphp}
+
 services:
   nginx:
     image: nginx:alpine
-    container_name: lilaphp-nginx
+    container_name: ${APP_NAME:-lilaphp}-nginx
     restart: unless-stopped
     ports:
       - "${HTTP_PORT:-8080}:80"
@@ -19,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile.${APP_ENV:-dev}
-    container_name: lilaphp-fpm
+    container_name: ${APP_NAME:-lilaphp}-fpm
     restart: unless-stopped
     volumes:
       - .:/var/www/html
@@ -40,7 +42,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: lilaphp-mysql
+    container_name: ${APP_NAME:-lilaphp}-mysql
     restart: unless-stopped
     ports:
       - "${DB_PORT:-3306}:3306"
@@ -64,7 +66,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: lilaphp-redis
+    container_name: ${APP_NAME:-lilaphp}-redis
     restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"
@@ -78,8 +80,11 @@ services:
 
 networks:
   lila-network:
+    name: ${APP_NAME:-lilaphp}-lila-network
     driver: bridge
 
 volumes:
   mysql-data:
+    name: ${APP_NAME:-lilaphp}-mysql-data
   redis-data:
+    name: ${APP_NAME:-lilaphp}-redis-data
