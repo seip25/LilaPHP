@@ -7,6 +7,10 @@
 
 ---
 
+# 📜 LilaPHP Documentation
+
+[https://seip25.github.io/LilaPHP/](https://seip25.github.io/LilaPHP/)
+
 ## 🏗️ Re-Architected from the Ground Up (`Performance First`)
 
 LilaPHP has been completely re-engineered as an **API-First, ultra-low latency engine**. We stripped out all heavy, slow dependencies (no Twig templating engine, no file-based session overhead, no expensive PHP regex routing loops). Instead, Nginx handles direct physical file routing (`backend/routes/*.php`) and returns high-speed JSON `404` & `429` errors directly at the C/reverse-proxy level!
@@ -54,11 +58,14 @@ LilaPHP/
 ## ⚡ Key Innovations & Performance Features
 
 ### 1. Nginx Native Rate Limiter & JSON 404/429
+
 - **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
 - **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
 
 ### 2. Static O(1) Request & Response Handling (`Core\Request`)
+
 In traditional frameworks, every HTTP request instantiates heavy `$request` objects. In LilaPHP, all request data is accessed via zero-allocation static helpers:
+
 ```php
 use Core\Request;
 use Core\Response;
@@ -72,29 +79,37 @@ $token = Request::bearerToken();
 ```
 
 ### 3. Clean Package Distribution (`.gitattributes export-ignore`)
+
 When publishing releases or running `composer install --prefer-dist`, development documentation and test directories (`docs/`, `tests/`, `.github/`) are excluded automatically. Your deployment tarball cleanly includes your `_core/`, `backend/`, `docker/` cluster configurations, and entrypoints so you can launch containers instantly.
 
 ### 4. Dual-Tier Caching (`APCu` + `Redis`)
+
 - **`Cache::api()`**: Caches data in shared worker RAM (`APCu`) with zero network round-trip latency.
 - **`Cache::db()`**: Caches across your cluster in `Redis` with automatic failover to `APCu` if Redis experiences a micro-interruption.
 
 ### 5. Background Job Queues (`Task::dispatch` & `Task::work`)
+
 Execute slow operations (sending emails, processing images, webhooks) asynchronously in background processes:
+
 ```php
 use Core\Task;
 
 // Dispatch job to Redis list (`lilaphp:jobs`) or detached OS process
 Task::dispatch('send_welcome_email', ['userId' => 42]);
 ```
+
 Consuming jobs via background worker command:
+
 ```bash
 $ php cli.php task:work
 ```
 
 ### 6. Anti-Malware Secure Upload (`Upload::save`)
+
 Ensures uploaded files (`$_FILES`) are authentic via `finfo` MIME checking, scans content bytes for embedded `<?php` or script injections, and assigns cryptographically randomized filenames (`bin2hex(random_bytes(16))`).
 
 ### 7. Concurrent Multi-cURL Client (`Http::multi`)
+
 Fetch external APIs sequentially (`Http::get()`, `Http::post()`) or run dozens of HTTP requests concurrently in parallel (`Http::multi([...])`).
 
 ---
@@ -137,7 +152,9 @@ php cli.php docker [dev|prod|stop|ps|logs]      # Orchestrate Nginx, PHP, MySQL,
 ---
 
 ## 📖 Documentation
+
 Detailed technical guides can be found in the [`docs/`](file:///home/seip/Documentos/GitHub/LilaPHP/docs/README.md) directory.
 
 ## 📄 License
+
 LilaPHP is open-sourced software licensed under the [MIT license](file:///home/seip/Documentos/GitHub/LilaPHP/LICENSE).
