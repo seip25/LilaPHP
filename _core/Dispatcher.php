@@ -23,7 +23,7 @@ class Dispatcher
         Response::handlePreflight();
         Security::applyGeneralSecurityHeaders();
 
-        if (!Security::rateLimit(200, 60)) {
+        if (Config::$RATE_LIMIT > 0 && !Security::rateLimit(Config::$RATE_LIMIT, Config::$RATE_LIMIT_WINDOW)) {
             Response::error('Rate limit exceeded', 429);
         }
 

@@ -25,6 +25,7 @@ class Security
         header('X-XSS-Protection: 0');
         header('Referrer-Policy: strict-origin-when-cross-origin');
         header('Cross-Origin-Opener-Policy: same-origin');
+        header('X-Powered-By: LilaPHP');
 
         if (!Config::$DEBUG && (($_SERVER['HTTPS'] ?? 'off') !== 'off' || ($_SERVER['SERVER_PORT'] ?? 0) == 443)) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
@@ -137,7 +138,7 @@ class Security
         }
 
         $provided = $_SERVER['HTTP_X_API_KEY'] ?? ($_REQUEST['api_key'] ?? '');
-        return hash_equals($expected, (string)$provided);
+        return hash_equals($expected, (string) $provided);
     }
 
     /**
