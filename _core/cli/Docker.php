@@ -28,11 +28,11 @@ class Docker extends Command
         return match ($action) {
             'dev' => $this->launchCluster('development'),
             'prod', 'production' => $this->launchCluster('production'),
-            'stop', 'down' => $this->execShell('docker compose down'),
+            'stop', 'down' => $this->execShell('docker compose --env-file ./backend/.env down'),
             'ps', 'status' => $this->showStatus(),
-            'logs' => $this->execShell('docker compose logs -f --tail=100'),
-            'exec-php' => $this->execShell('docker compose exec php bash'),
-            'exec-mysql' => $this->execShell('docker compose exec mysql mysql -u' . Config::$DB_USER . ' -p' . Config::$DB_PASSWORD . ' ' . Config::$DB_NAME),
+            'logs' => $this->execShell('docker compose --env-file ./backend/.env logs -f --tail=100'),
+            'exec-php' => $this->execShell('docker compose --env-file ./backend/.env exec php bash'),
+            'exec-mysql' => $this->execShell('docker compose --env-file ./backend/.env exec mysql mysql -u' . Config::$DB_USER . ' -p' . Config::$DB_PASSWORD . ' ' . Config::$DB_NAME),
             'clean' => $this->cleanCluster(),
             default => $this->printUsage()
         };
@@ -51,7 +51,7 @@ class Docker extends Command
         $this->info("Dynamic Ports Assigned: HTTP=" . Config::$HTTP_PORT . " | MySQL=" . Config::$DB_PORT . " | Redis=" . Config::$REDIS_PORT);
 
         putenv("APP_ENV={$shortEnv}");
-        $cmd = "docker compose up -d --build";
+        $cmd = "docker compose --env-file ./backend/.env up -d --build";
         $status = $this->execShell($cmd);
 
         if ($status === 0) {
@@ -70,7 +70,7 @@ class Docker extends Command
     private function showStatus(): int
     {
         $this->info("Current Cluster Status (`docker compose ps`):");
-        $status = $this->execShell('docker compose ps');
+        $status = $this->execShell('docker compose --env-file ./backend/.env ps');
 
         echo PHP_EOL;
         $this->info("🌐 Live Endpoints:");
@@ -90,7 +90,7 @@ class Docker extends Command
     private function cleanCluster(): int
     {
         $this->warning("Stopping and cleaning all cluster containers and volumes...");
-        return $this->execShell('docker compose down -v --remove-orphans');
+        return $this->execShell('docker compose --env-file ./backend/.env down -v --remove-orphans');
     }
 
     /**

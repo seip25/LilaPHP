@@ -34,11 +34,11 @@ $commandMap = [
 
 if (isset($commandMap[$commandInput])) {
     if (!file_exists('/.dockerenv') && in_array($commandInput, ['migrate', 'seed', 'optimize', 'task:work', 'task:run'], true)) {
-        if (trim((string)@shell_exec('docker compose ps -q php 2>/dev/null')) !== '') {
+        if (trim((string)@shell_exec('docker compose --env-file ./backend/.env ps -q php 2>/dev/null')) !== '') {
             echo "\033[36m⚡ [LilaPHP Engine] Auto-forwarding `{$commandInput}` command into Docker container...\033[0m" . PHP_EOL;
             $ttyFlag = (function_exists('posix_isatty') && posix_isatty(STDOUT)) ? '' : '-T ';
             $cmdArgs = !empty($args) ? ' ' . implode(' ', array_map('escapeshellarg', $args)) : '';
-            passthru("docker compose exec {$ttyFlag}php php cli.php {$commandInput}{$cmdArgs}", $exitCode);
+            passthru("docker compose --env-file ./backend/.env exec {$ttyFlag}php php cli.php {$commandInput}{$cmdArgs}", $exitCode);
             exit($exitCode);
         }
     }
