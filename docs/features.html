@@ -107,17 +107,199 @@ Response::json(['status' => 'order_placed', 'invoice_id' => 'INV-2026-8891']);</
                 </div>
 
                 <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                    2. Running the Worker Process
+                    2. Creating the Job Processor (`backend/jobs/*.php`)
                 </h3>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    In production or high-concurrency environments, run one or more worker daemons using `cli.php`:
+                    When a job is processed, `Core\Task` automatically includes your PHP script from the `backend/jobs/` folder matching the job name (e.g., `backend/jobs/send_invoice_email.php` or `backend/jobs/testing.php`). Inside the script, `$jobName` and `$payload` are injected into scope:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+/**
+ * Background Job: backend/jobs/send_invoice_email.php
+ * Variables available in scope:
+ *   @var string $jobName ('send_invoice_email')
+ *   @var array  $payload (['user_id' => 123, 'amount' => 149.99, ...])
+ */
+use Core\Logger;
+
+$userId = $payload['user_id'] ?? 0;
+$amount = $payload['amount'] ?? 0.0;
+
+Logger::info("Processing invoice job for User #{$userId} (${amount})...");
+// Perform slow SMTP/PDF rendering work safely outside FPM request
+return true;</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    3. Running the Worker Process (`php cli.php task:work`)
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    In production or high-concurrency environments, run one or more worker daemons using our `cli.php` entry point:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
                     <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start continuous Redis worker consuming lilaphp:jobs
-php _core/cli.php task:work
+php cli.php task:work
 
-# Or run via Docker CLI container
-docker exec -it lilaphp_dev_cli php _core/cli.php task:work</code></pre>
+# Or run inside Docker FPM/CLI container
+docker exec -it lilaphp-fpm php cli.php task:work
+
+# To test a single job immediately without waiting for queue:
+php cli.php task:run testing 'eyJwYXlsb2FkIjp7ImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsImFjdGlvbiI6IndlbGNvbWUifX0='</code></pre>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    4. Running Permanently in Background (`docker-compose.yml`)
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    To keep your background task workers and WebSocket server running continuously 24/7 in production without stopping when you close the terminal, add these permanent services inside your `docker-compose.yml`:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-yaml">services:
+  # ... (existing php, nginx, mysql, redis containers) ...
+
+  # Continuous background worker consuming Redis job queues (`lilaphp:jobs`)
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    command: php cli.php task:work
+    restart: always
+    environment:
+      - APP_ENV=production
+    depends_on:
+      - redis
+      - mysql
+
+  # Real-time Workerman WebSocket server daemon
+  websocket:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    command: php cli.php ws:serve 8001
+    restart: always
+    environment:
+      - APP_ENV=production
+    depends_on:
+      - redis</code></pre>
+                </div>
+            </section>
+
+            <!-- Real-Time WebSockets Engine (`Core\Ws`) -->
+            <section id="websockets-engine" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Real-Time WebSockets & Redis Pub/Sub (`Core\Ws`)
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full uppercase tracking-wide">New Engine</span>
+                </div>
+
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP includes a high-performance **Socket.IO style real-time engine** powered by **Workerman (`workerman/workerman`)** and **Redis Pub/Sub**. Your PHP-FPM API routes (`POST /api/items`) can broadcast messages directly to connected frontend browsers in `< 1ms` without keeping heavy FPM worker connections open!
+                </p>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    1. Broadcasting from PHP-FPM API Routes (`Core\Ws::publish`)
+                </h3>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Ws;
+use Core\Response;
+
+// Inside backend/routes/items.php (when a new item is created via POST):
+Ws::publish('item_created', [
+    'id' => 105,
+    'name' => 'Mechanical Keyboard',
+    'price' => 129.99
+], 'products_room'); // Broadcast exclusively to sockets joined to 'products_room'
+
+Response::json(['status' => 'success', 'message' => 'Item created and broadcasted live']);</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    2. Frontend Client Wrapper (`frontend/js/ws.js`)
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Include `<script src="/js/ws.js"></script>` in your HTML to use the `LilaWS` Socket.IO-style class. Packets sent while connecting are automatically queued (`sendQueue`) and flushed upon connection:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// Connects automatically to Nginx /ws endpoint (proxied to port 8001)
+const ws = new LilaWS('/ws');
+
+// Join a specific room with optional authentication payload
+ws.join('products_room', { password: 'room_password_if_needed' });
+
+// Listen for live events broadcasted by Core\Ws::publish or clients
+ws.on('item_created', (data, room) => {
+    console.log(`Live notification in room [${room}]:`, data);
+});
+
+// Emit event to others in the room (excludes sender socket)
+ws.emit('chat_message', { text: 'Hello others!' }, 'products_room');
+
+// Emit event to ALL clients in the room (including the sender socket)
+ws.broadcastAll('chat_message', { text: 'Hello everyone including me!' }, 'products_room');</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    3. Security & Room Authentication Interceptor (`backend/sockets/Handler.php`)
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Intercept connections, verify room passwords/tokens before allowing join attempts, and handle custom incoming messages directly in `backend/sockets/Handler.php`:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">namespace Sockets;
+
+class Handler
+{
+    // Intercept client connections (assign unique socket IDs or check headers)
+    public static function onConnect(object $connection): void
+    {
+        $connection->socket_id = 'user_' . bin2hex(random_bytes(4));
+    }
+
+    // Intercept room join attempts (`ws.join('admin_room', { password: 'secret' })`)
+    public static function onJoin(object $connection, string $room, array $payload = []): bool
+    {
+        if ($room === 'admin_room') {
+            if (($payload['password'] ?? '') !== 'secret123') {
+                $connection->send(json_encode(['event' => 'error', 'message' => 'Unauthorized access']));
+                return false; // Reject join attempt
+            }
+        }
+        return true; // Allow join
+    }
+
+    // Intercept incoming events before Workerman retransmits to the room
+    public static function onMessage(object $connection, string $event, array $payload, ?string $room, object $wsWorker): bool
+    {
+        if ($event === 'chat_message') {
+            // Persist to MySQL or sanitize input
+        }
+        return true; // Allow automatic broadcast to room members
+    }
+
+    public static function onClose(object $connection): void {}
+}</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    4. Running the WebSocket Server (`php cli.php ws:serve`)
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Run the WebSocket daemon on port `8001` (`/ws` proxy in Nginx) directly via `cli.php`:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
+php cli.php ws:serve 8001 -d
+
+# Stop the running background WebSocket daemon
+php cli.php ws:serve stop 8001
+# Or: php cli.php ws:serve 8001 stop
+
+# Gracefully reload/restart daemon without dropping active connections
+php cli.php ws:serve restart 8001 -d
+
+# Check live connections and worker metrics
+php cli.php ws:serve status 8001</code></pre>
                 </div>
             </section>
 

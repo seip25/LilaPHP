@@ -14,6 +14,10 @@ define('LILAPHP_BOOTSTRAPPED', true);
 
 require_once __DIR__ . '/Config.php';
 
+if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
+}
+
 spl_autoload_register(function (string $class): void {
     $parts = explode('\\', $class);
     $namespace = strtolower($parts[0] ?? '');
@@ -27,6 +31,12 @@ spl_autoload_register(function (string $class): void {
         }
     } elseif ($namespace === 'models' || $namespace === 'backend') {
         $file = dirname(__DIR__) . "/backend/models/{$className}.php";
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    } elseif ($namespace === 'sockets') {
+        $file = dirname(__DIR__) . "/backend/sockets/{$className}.php";
         if (file_exists($file)) {
             require_once $file;
             return;

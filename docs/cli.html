@@ -213,6 +213,24 @@ DB_PORT="5432"</code></pre>
 
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
                         <code
+                            class="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded text-sm font-mono">ws:serve &lt;port&gt; [-d|stop|status|restart]</code>
+                        <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
+                            Boots or controls the real-time Workerman WebSocket server daemon (`Socket.IO` style with Redis Pub/Sub). You can run it in background daemon mode (`-d`) or stop it cleanly (`stop`).
+                        </p>
+                        <pre
+                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
+php cli.php ws:serve 8001 -d
+
+# Stop the running background WebSocket daemon
+php cli.php ws:serve stop 8001
+# Or: php cli.php ws:serve 8001 stop
+
+# Check worker status and active connections
+php cli.php ws:serve status 8001</code></pre>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <code
                             class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [dev|prod|stop|ps|logs|clean]</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
                             Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`) directly from the CLI tool without needing complex `docker-compose` commands.

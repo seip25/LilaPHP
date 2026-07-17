@@ -123,9 +123,133 @@ php cli.php key:generate                        # Generate secure 256-bit crypto
 php cli.php migrate                             # Synchronize all API Model table schemas with MySQL
 php cli.php seed                                # Populate database tables with initial seed records
 php cli.php task:work                           # Start continuous background worker consuming Redis job queues
+php cli.php ws:serve 8001 -d                    # Start Workerman WebSocket server in background daemon mode (-d)
+php cli.php ws:serve stop 8001                  # Stop running background WebSocket daemon
+php cli.php ws:serve restart 8001 -d            # Gracefully restart background WebSocket daemon
 php cli.php make model <Name>                   # Generate boilerplate API Model inside backend/models/
 php cli.php make route <path>                   # Generate file-based API route inside backend/routes/
 php cli.php docker [dev|prod|stop|ps|logs]      # Orchestrate Nginx, PHP, MySQL, Redis cluster
+```
+
+---
+
+## ⚡ Real-Time WebSockets (`Socket.IO Style with Workerman & Redis`)
+
+LilaPHP includes a real-time event broadcasting engine (`Core\Ws`) bridged with **Workerman** (`composer require workerman/workerman`) and **Redis Pub/Sub**.
+
+### 1. Backend Event Broadcasting (`Core\Ws`)
+Inside any `backend/routes/*.php` or background job (e.g. when an item is updated or created):
+```php
+\Core\Ws::publish('item_updated', ['id' => 104, 'status' => 'shipped'], 'orders_room');
+```
+
+### 2. Security & Room Authentication Interceptor (`backend/sockets/Handler.php`)
+You can intercept incoming connections, authenticate room join requests (verify passwords/JWT tokens), and handle custom incoming websocket messages before they are broadcasted by writing your logic in `backend/sockets/Handler.php`:
+
+```php
+namespace Sockets;
+
+class Handler
+{
+    // Intercept client connections (assign unique socket IDs or check headers)
+    public static function onConnect(object $connection): void
+    {
+        $connection->socket_id = 'user_' . bin2hex(random_bytes(4));
+    }
+
+    // Intercept room join attempts (`ws.join('admin_room', { password: 'secret' })`)
+    public static function onJoin(object $connection, string $room, array $payload = []): bool
+    {
+        if ($room === 'admin_room') {
+            if (($payload['password'] ?? '') !== 'secret123') {
+                $connection->send(json_encode(['event' => 'error', 'message' => 'Unauthorized access']));
+                return false; // Reject join
+            }
+        }
+        return true; // Allow join
+    }
+
+    // Intercept client emits/broadcasts before Workerman retransmits to the room
+    public static function onMessage(object $connection, string $event, array $payload, ?string $room, object $wsWorker): bool
+    {
+        if ($event === 'chat_message') {
+            // Save to database, sanitize text, or log event
+        }
+        return true; // Return true to allow automatic broadcast to room members
+    }
+
+    public static function onClose(object $connection): void {}
+}
+```
+
+### 3. Frontend Client (`js/ws.js`)
+Include `/js/ws.js` on your frontend to connect via Nginx reverse proxy (`/ws` -> port `8001`). Packets sent while connecting are automatically buffered in memory (`sendQueue`) and flushed right after the handshake:
+
+```javascript
+const ws = new LilaWS('/ws');
+ws.join('orders_room', { password: 'secret_if_required' });
+
+// Listen for incoming live events
+ws.on('item_updated', (data, room) => console.log(`Update in [${room}]:`, data));
+
+// Emit to other clients in the room (excludes sender socket)
+ws.emit('chat_message', { text: 'Hello others!' }, 'orders_room');
+
+// Emit to ALL clients in the room (including the sender socket)
+ws.broadcastAll('chat_message', { text: 'Hello everyone including me!' }, 'orders_room');
+```
+
+### 4. Workerman WebSocket CLI Management
+You can control the Workerman WebSocket daemon directly using `cli.php`. Action commands can be passed before or after the port number:
+```bash
+# Start WebSocket server in background daemon mode (-d)
+php cli.php ws:serve 8001 -d
+
+# Stop the running WebSocket daemon
+php cli.php ws:serve stop 8001
+# Or: php cli.php ws:serve 8001 stop
+
+# Gracefully reload/restart daemon without dropping active connections
+php cli.php ws:serve restart 8001 -d
+
+# Check live connections and worker status
+php cli.php ws:serve status 8001
+```
+
+---
+
+## 🔄 Running Workers & WebSockets Permanently in Background (`docker-compose.yml`)
+
+To keep your background task workers and WebSocket server running continuously 24/7 in production without stopping when you close the terminal, add these permanent services inside your `docker-compose.yml`:
+
+```yaml
+services:
+  # ... (existing php, nginx, mysql, redis containers) ...
+
+  # Continuous background worker consuming Redis job queues (`lilaphp:jobs`)
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    command: php cli.php task:work
+    restart: always
+    environment:
+      - APP_ENV=production
+    depends_on:
+      - redis
+      - mysql
+
+  # Real-time Workerman WebSocket server daemon
+  websocket:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    command: php cli.php ws:serve 8001
+    restart: always
+    environment:
+      - APP_ENV=production
+    depends_on:
+      - redis
 ```
 
 ---

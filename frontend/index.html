@@ -40,7 +40,8 @@
                         concurrency</span>.</h2>
                 <p class="hero-description">
                     LilaPHP eliminates legacy template engines, heavy session overhead, and regex routing loops.
-                    Powered by ultra-fast direct physical file routing with Nginx C-level rate limiting, OPcache RAM preloading, and hybrid APCu + Redis drivers.
+                    Powered by ultra-fast direct physical file routing with Nginx C-level rate limiting, OPcache RAM
+                    preloading, and hybrid APCu + Redis drivers.
                 </p>
                 <div class="hero-actions">
                     <button id="hero-benchmark-btn" class="btn btn-primary">
@@ -79,7 +80,8 @@
         <section id="diagnostics" class="diagnostics-section">
             <div class="section-header">
                 <h3>Real-Time Cluster Diagnostics</h3>
-                <p>Live metrics returned from <code class="inline-code">backend/routes/test.php</code> via Nginx FastCGI.</p>
+                <p>Live metrics returned from <code class="inline-code">backend/routes/test.php</code> via Nginx
+                    FastCGI.</p>
             </div>
 
             <div class="stats-grid">
@@ -134,22 +136,26 @@
             <div class="feature-card">
                 <div class="feature-icon">🚀</div>
                 <h4>Direct File-Based Routing</h4>
-                <p>Nginx directly routes requests to physical files inside <code>backend/routes/*.php</code>. Zero computational routing loops or regex matching.</p>
+                <p>Nginx directly routes requests to physical files inside <code>backend/routes/*.php</code>. Zero
+                    computational routing loops or regex matching.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">⚡</div>
                 <h4>OPcache RAM Preloading</h4>
-                <p>In production (`preload.php`), all core classes and models are permanently compiled inside shared RAM for PHP-FPM workers.</p>
+                <p>In production (`preload.php`), all core classes and models are permanently compiled inside shared RAM
+                    for PHP-FPM workers.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">💎</div>
                 <h4>Dual-Tier Caching</h4>
-                <p>First-level caching in APCu (native RAM with 0 latency) backed by a secondary Redis Cluster for shared distributed persistence.</p>
+                <p>First-level caching in APCu (native RAM with 0 latency) backed by a secondary Redis Cluster for
+                    shared distributed persistence.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🛡️</div>
                 <h4>High-Throughput Security</h4>
-                <p>C-level rate limiting via Nginx (`limit_req`), rapid JSON payload validation, and anti-malware file upload scanning (`Core\Upload`).</p>
+                <p>C-level rate limiting via Nginx (`limit_req`), rapid JSON payload validation, and anti-malware file
+                    upload scanning (`Core\Upload`).</p>
             </div>
         </section>
     </main>
@@ -162,6 +168,7 @@
     </footer>
 
     <script src="js/app.js"></script>
+
 </body>
 
 </html>

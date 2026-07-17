@@ -30,10 +30,12 @@ $commandMap = [
     'make'          => \Cli\Make::class,
     'task:work'     => \Cli\TaskWork::class,
     'task:run'      => \Cli\TaskWork::class,
+    'ws:serve'      => \Cli\WsServe::class,
+    'ws:start'      => \Cli\WsServe::class,
 ];
 
 if (isset($commandMap[$commandInput])) {
-    if (!file_exists('/.dockerenv') && in_array($commandInput, ['migrate', 'seed', 'optimize', 'task:work', 'task:run'], true)) {
+    if (!file_exists('/.dockerenv') && in_array($commandInput, ['migrate', 'seed', 'optimize', 'task:work', 'task:run', 'ws:serve', 'ws:start'], true)) {
         if (trim((string)@shell_exec('docker compose --env-file ./backend/.env ps -q php 2>/dev/null')) !== '') {
             echo "\033[36m⚡ [LilaPHP Engine] Auto-forwarding `{$commandInput}` command into Docker container...\033[0m" . PHP_EOL;
             $ttyFlag = (function_exists('posix_isatty') && posix_isatty(STDOUT)) ? '' : '-T ';
@@ -62,6 +64,7 @@ if ($commandInput === 'help' || $commandInput === '--help' || $commandInput === 
     echo "  \033[36moptimize\033[0m       Pre-cache .env settings to OPcache memory and flush APCu/Redis" . PHP_EOL;
     echo "  \033[36mkey:generate\033[0m   Generate secure 256-bit cryptographic APP_KEY in backend/.env" . PHP_EOL;
     echo "  \033[36mtask:work\033[0m      Start continuous background worker consuming Redis job queues (`lilaphp:jobs`)" . PHP_EOL;
+    echo "  \033[36mws:serve [port]\033[0m Boot real-time Workerman WebSocket server listening on port 8001" . PHP_EOL;
     echo "  \033[36mdocker [dev|prod|stop|ps|logs|clean]\033[0m  Orchestrate Nginx, PHP, MySQL, Redis cluster" . PHP_EOL;
     echo "  \033[36mmake model <Name>\033[0m      Generate boilerplate API Model inside backend/models/" . PHP_EOL;
     echo "  \033[36mmake route <path>\033[0m      Generate file-based API route inside backend/routes/" . PHP_EOL;
