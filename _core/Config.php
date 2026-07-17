@@ -21,24 +21,24 @@ class Config
     public static string $APP_URL = 'http://localhost:8080';
     public static int $HTTP_PORT = 8080;
     public static int $PROD_HTTP_PORT = 80;
-    
+
     public static string $DB_TYPE = 'mysql';
     public static string $DB_HOST = 'mysql';
     public static int $DB_PORT = 3306;
     public static string $DB_NAME = 'lilaphp';
     public static string $DB_USER = 'root';
     public static string $DB_PASSWORD = 'root';
-    
+
     public static string $REDIS_HOST = 'redis';
     public static int $REDIS_PORT = 6379;
     public static string $REDIS_PASSWORD = '';
-    
+
     public static string $CACHE_DRIVER = 'apcu';
     public static string $DB_CACHE_DRIVER = 'redis';
     public static string $APP_KEY = '';
     public static string $CORS_ALLOWED_ORIGINS = '*';
     public static bool $LOG_ENABLED = false;
-    
+
     private static bool $loaded = false;
 
     /**
@@ -99,8 +99,7 @@ class Config
         self::$PROD_HTTP_PORT = (int) ($_ENV['PROD_HTTP_PORT'] ?? 80);
 
         self::$DB_TYPE = (string) ($_ENV['DB_TYPE'] ?? 'mysql');
-        self::$DB_HOST = (string) ($_ENV['DB_HOST'] ?? 'mysql');
-        self::$DB_PORT = (int) ($_ENV['DB_PORT'] ?? 3306);
+        self::$DB_PORT = (file_exists('/.dockerenv') && self::$DB_HOST === 'mysql') ? 3306 : (int) ($_ENV['DB_PORT'] ?? 3306);
         self::$DB_NAME = (string) ($_ENV['DB_NAME'] ?? 'lilaphp');
         self::$DB_USER = (string) ($_ENV['DB_USER'] ?? 'root');
         self::$DB_PASSWORD = (string) ($_ENV['DB_PASSWORD'] ?? 'root');
