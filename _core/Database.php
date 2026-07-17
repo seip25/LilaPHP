@@ -101,10 +101,14 @@ class Database
     {
         $attempt = 0;
 
+        if (!extension_loaded('pdo_mysql')) {
+            throw new \RuntimeException("MySQL PDO extension (`pdo_mysql`) is not loaded in this PHP environment (" . PHP_BINARY . "). If running locally on host, please run inside Docker (`docker compose exec php php cli.php migrate`).");
+        }
+
         while ($attempt < $this->maxAttempts) {
             try {
                 $dsn = $this->getDsn();
-                $initCmdAttr = defined('Pdo\\Mysql::ATTR_INIT_COMMAND') ? \Pdo\Mysql::ATTR_INIT_COMMAND : \PDO::MYSQL_ATTR_INIT_COMMAND;
+                $initCmdAttr = defined('Pdo\\Mysql::ATTR_INIT_COMMAND') ? \Pdo\Mysql::ATTR_INIT_COMMAND : (defined('PDO::MYSQL_ATTR_INIT_COMMAND') ? \PDO::MYSQL_ATTR_INIT_COMMAND : 1002);
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -429,7 +433,7 @@ class Database
      * @return string
      * @example $mysqlType = $this->mapColumnType('string', 100);
      */
-    private function mapColumnType(string $type, ?int $length): string
+    private function mapColumnType(string $type, int|string|null $length): string
     {
         return match (strtolower($type)) {
             'int', 'integer' => 'INT',
@@ -446,7 +450,7 @@ class Database
             'datetime' => 'DATETIME',
             'timestamp' => 'TIMESTAMP',
             'time' => 'TIME',
-            'decimal' => 'DECIMAL(' . ($length ?? 10) . ',2)',
+            'decimal' => 'DECIMAL(' . (is_string($length) && str_contains($length, ',') ? $length : ($length ?? 10) . ',2') . ')',
             'float' => 'FLOAT',
             'double' => 'DOUBLE',
             'json' => 'JSON',

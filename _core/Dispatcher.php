@@ -54,6 +54,23 @@ class Dispatcher
             exit;
         }
 
+        $parts = explode('/', $uri);
+        if (count($parts) >= 2) {
+            $baseController = $parts[0];
+            $baseFile = "{$routesDir}/{$baseController}.php";
+            $baseIndex = "{$routesDir}/{$baseController}/index.php";
+            if (file_exists($baseFile) || file_exists($baseIndex)) {
+                $_GET['id'] = $_GET['id'] ?? $parts[1];
+                $_SERVER['ROUTE_ID'] = $parts[1];
+                if (file_exists($baseFile)) {
+                    require $baseFile;
+                } else {
+                    require $baseIndex;
+                }
+                exit;
+            }
+        }
+
         $fallback404 = Config::$DIR_CORE . '/routes/404.php';
         if (file_exists($fallback404)) {
             require $fallback404;

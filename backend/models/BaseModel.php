@@ -181,6 +181,12 @@ abstract class BaseModel implements JsonSerializable
         $data = $this->toArray();
         unset($data['table'], $data['primaryKey'], $data['rules'], $data['attributes']);
 
+        foreach (['created_at', 'updated_at'] as $tsField) {
+            if (array_key_exists($tsField, $data) && $data[$tsField] === null) {
+                unset($data[$tsField]);
+            }
+        }
+
         $pk = $this->primaryKey;
         $id = $data[$pk] ?? null;
 

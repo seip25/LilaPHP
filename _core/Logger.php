@@ -67,7 +67,7 @@ class Logger
             $contextStr = !empty($context) ? ' ' . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
             $entry = "[{$timestamp}] [{$type}] {$message}{$contextStr}\n";
 
-            file_put_contents($file, $entry, FILE_APPEND | LOCK_EX);
+            @file_put_contents($file, $entry, FILE_APPEND | LOCK_EX);
         } catch (\Throwable $e) {
             if (PHP_SAPI === 'cli' && Config::$DEBUG) {
                 echo "Logger Error: " . $e->getMessage() . PHP_EOL;

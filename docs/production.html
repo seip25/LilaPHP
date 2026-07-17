@@ -104,7 +104,7 @@
                     Docker Production Stack Command (`docker prod`)
                 </h3>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Before deploying to production, launch your container orchestration using our unified Blue-bird
+                    Before deploying to production, launch your container orchestration using our unified
                     style master command.
                     This command builds and starts `php:8.4-fpm` with `preload.php` active, pinning all core framework
                     classes (`Config`, `Database`, `Cache`, `Response`, `Task`) directly into memory:
@@ -132,7 +132,8 @@ php cli.php docker prod</code></pre>
                     </h3>
                     <ul class="list-disc list-inside text-slate-600 dark:text-slate-400 space-y-2">
                         <li>Set <code>APP_ENV=production</code> and <code>APP_DEBUG=false</code> in
-                            <code>backend/.env</code></li>
+                            <code>backend/.env</code>
+                        </li>
                         <li>Ensure external ports are protected by your firewall/load balancer (Nginx handles rate
                             limits via <code>limit_req zone=api_limit</code>)</li>
                         <li>Enable HTTPS with SSL certificates (e.g., Let's Encrypt / Certbot in Nginx)</li>
