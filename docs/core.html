@@ -86,6 +86,11 @@ DB_CACHE_DRIVER="redis"  # Distributed cache & background workers
 REDIS_HOST="redis"
 REDIS_PORT=6379
 
+# Security & Rate Limiting
+# RATE_LIMIT: Max requests per window. Set to false, 0, or none to disable (useful for benchmarks/load tests)
+RATE_LIMIT=200
+RATE_LIMIT_WINDOW=60
+
 # Logging
 LOG_ENABLED=false        # Disabled by default for maximum concurrency</code></pre>
                 </div>

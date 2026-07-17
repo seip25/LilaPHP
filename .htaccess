@@ -15,9 +15,16 @@
     RewriteRule ^([a-z]{2,3}(?:-[a-z]{2})?)/(.*)$ $2 [QSA,DPI]
 
     # Allow direct access to actual existing files or directories (like frontend CSS/JS)
-    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
+
+    # Check for extensionless HTML file inside frontend or root: e.g., /login -> /login.html
+    RewriteCond %{DOCUMENT_ROOT}/frontend/$1.html -f
+    RewriteRule ^([^/]+|.+/.+)$ frontend/$1.html [L]
+
+    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+    RewriteRule ^([^/]+|.+/.+)$ $1.html [L]
 
     # Forward all API requests directly to index.php front controller
     RewriteRule ^api/(.*)$ index.php [QSA,L]

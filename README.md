@@ -151,6 +151,33 @@ php cli.php docker [dev|prod|stop|ps|logs]      # Orchestrate Nginx, PHP, MySQL,
 
 ---
 
+## ⚡ Nginx Configuration & Rate Limiting (`Benchmarks vs Production`)
+
+LilaPHP uses native **C-level Nginx try_files** to serve extensionless HTML pages (`/login` -> `/login.html`) directly from kernel/RAM memory while forwarding `/api/*` routes to PHP-FPM at maximum FastCGI speed:
+
+```nginx
+# Frontend extensionless HTML & SPA routing
+location / {
+    try_files $uri $uri.html $uri/ $uri/index.html /index.html;
+    add_header Cache-Control "public, max-age=3600, no-transform";
+    add_header X-Powered-By "LilaPHP";
+}
+```
+
+### 💡 Benchmarking / Load Testing Note
+By default, both Nginx and PHP have defensive **Rate Limiting** active to prevent DDoS attacks in production (`HTTP 429 Too Many Requests`). When running high-concurrency stress tests (such as `k6` at 1,000+ VUs):
+1. **Nginx Level:** In [`docker/nginx/nginx.conf`](file:///home/seip/Documentos/GitHub/LilaPHP/docker/nginx/nginx.conf), comment out the rate limit directives inside `location ^~ /api/`:
+   ```nginx
+   # limit_req zone=api_limit burst=30 nodelay;
+   # limit_req_status 429;
+   ```
+2. **PHP Level:** In [`backend/.env`](file:///home/seip/Documentos/GitHub/LilaPHP/backend/.env), set `RATE_LIMIT=0` (or `false`) to disable application-level throttling:
+   ```ini
+   RATE_LIMIT=false
+   ```
+
+---
+
 ## 📖 Documentation
 
 Detailed technical guides can be found in the [`docs/`](file:///home/seip/Documentos/GitHub/LilaPHP/docs/README.md) directory.
