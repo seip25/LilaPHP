@@ -103,7 +103,7 @@ class Config
         self::$PROD_HTTP_PORT = (int) ($_ENV['PROD_HTTP_PORT'] ?? 80);
 
         self::$DB_TYPE = (string) ($_ENV['DB_TYPE'] ?? 'mysql');
-        self::$DB_HOST = (string) ($_ENV['DB_HOST'] ?? 'mysql');
+        self::$DB_HOST = (string) ($_ENV['DB_HOST'] ?? 'localhost');
         self::$DB_PORT = (file_exists('/.dockerenv') && self::$DB_HOST === 'mysql') ? 3306 : (int) ($_ENV['DB_PORT'] ?? 3306);
         self::$DB_NAME = (string) ($_ENV['DB_NAME'] ?? 'lilaphp');
         self::$DB_USER = (string) ($_ENV['DB_USER'] ?? 'root');
