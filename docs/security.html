@@ -117,37 +117,87 @@ Response::json(['status' => 'uploaded', 'filename' => $savedFile]);</code></pre>
                 </div>
 
                 <!-- Token Authentication -->
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-rose-600">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-rose-600 mb-8">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                         3. Stateless API Authentication (Bearer / API Keys)
                     </h3>
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
-                        Instead of stateful sessions, inspect `Authorization` headers or API keys directly in your endpoint (or via a shared helper) to verify identity in microseconds using local RAM caching (`Cache::api`).
+                        For REST APIs, inspect `Authorization: Bearer <token>` headers or API keys directly in your endpoint (or via a middleware) to verify identity in microseconds using local RAM caching (`Cache::api`).
                     </p>
-                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Response;
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Request;
+use Core\Response;
 use Core\Cache;
-use Core\Database;
 
-$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-if (!preg_match('/Bearer\s+(\S+)/', $authHeader, $matches)) {
-    Response::json(['error' => 'Missing or invalid Authorization header'], 401);
+$token = Request::bearerToken();
+if (!$token) {
+    Response::error('Missing Authorization Bearer token', 401);
 }
-
-$token = $matches[1];
 
 // Check token in local RAM cache first (`APCu`), otherwise query database
-$user = Cache::api("auth_token_{$token}", function() use ($token) {
-    $pdo = Database::getInstance();
-    $stmt = $pdo->prepare("SELECT id, username, role FROM users WHERE api_token = ? AND status = 'active'");
-    $stmt->execute([$token]);
-    return $stmt->fetch();
-}, 120); // Cache authentication result for 2 minutes in RAM!
+$user = Cache::api("auth_token_{$token}", fn() => User::all("api_token = ?", [$token])[0] ?? null, 120);
 
 if (!$user) {
-    Response::json(['error' => 'Unauthorized or expired token'], 401);
-}
+    Response::error('Unauthorized or expired token', 401);
+}</code></pre>
+                </div>
 
-// Proceed safely with $user data</code></pre>
+                <!-- Encrypted Session & AuthService -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-600">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        4. Encrypted Session Auth & Brute-Force Protection (`Services\AuthService`)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        For web applications, dashboards, or session-based APIs, LilaPHP provides <code>Services\AuthService</code>. It combines AES-256 encrypted session payloads (`Core\Security::encrypt`), HTTP-only cookie flags, and automated brute-force login attempt lockout throttling.
+                    </p>
+
+                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Example: Session Auth Route (`backend/routes/auth.php`)</h4>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">&lt;?php
+
+use Core\Request;
+use Core\Response;
+use Services\AuthService;
+
+// GET /api/auth -> Check current authentication state
+Request::GET(function () {
+    $user = AuthService::validateAuth(false);
+    return [
+        'status' => 'success',
+        'authenticated' => $user !== false,
+        'user' => $user ?: null
+    ];
+});
+
+// POST /api/auth -> Login or Logout handler
+Request::POST(function () {
+    $action = Request::input('action', 'login');
+
+    if ($action === 'logout') {
+        AuthService::logout();
+        return ['status' => 'success', 'message' => 'Logged out successfully'];
+    }
+
+    $username = trim((string) Request::input('username', ''));
+    $password = (string) Request::input('password', '');
+
+    if (empty($username) || empty($password)) {
+        Response::error('Username and password are required', 400);
+    }
+
+    $result = AuthService::login($username, $password);
+
+    if ($result['success']) {
+        return ['status' => 'success', 'user' => $result['user']];
+    }
+
+    Response::error(
+        $result['message'],
+        401,
+        [
+            'locked' => $result['locked'] ?? false,
+            'remaining_seconds' => $result['remaining_seconds'] ?? 0
+        ]
+    );
+});</code></pre>
                 </div>
             </section>
 

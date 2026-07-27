@@ -70,27 +70,111 @@
 
                 <div class="space-y-6">
                     <!-- Response::json -->
-                    <div
-                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
-                            `Response::json(array $data, int $status = 200, array $headers = [])`
+                            1. `Response::json(array|object $data, int $status = 200, array $headers = [])`
                         </h3>
                         <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            Instantly encodes array or object data into JSON and terminates execution (`exit;`) to prevent trailing output or buffer contamination.
+                            Instantly encodes array or object data into JSON with CORS headers and terminates execution (`exit;`) to prevent buffer contamination.
                         </p>
-                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Response;
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Response;
 
 // Success Response (HTTP 200 OK)
 Response::json([
     'status' => 'success',
-    'user' => ['id' => 1, 'username' => 'seip25']
+    'data' => ['id' => 1, 'name' => 'Keyboard']
 ]);
 
 // Created Resource (HTTP 201 Created)
-Response::json(['status' => 'created', 'id' => 42], 201);
+Response::json(['status' => 'created', 'id' => 42], 201);</code></pre>
 
-// Error Response (HTTP 400 Bad Request)
-Response::json(['error' => 'Invalid parameters provided'], 400);</code></pre>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-6 mb-3">
+                            2. `Response::error(string $message, int $status = 400, ?array $errors = null)`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Emits a standardized API error structure containing status code, error message, and optional detailed validation errors array.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">// Standard 400 Bad Request
+Response::error('Invalid parameters provided', 400);
+
+// HTTP 422 Unprocessable Entity with detailed field errors
+Response::error('Validation failed', 422, [
+    'email' => ['The email field must be a valid email address.'],
+    'password' => ['The password must be at least 8 characters.']
+]);</code></pre>
+
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-6 mb-3">
+                            3. `Response::file(string $filePath, ?string $downloadName = null, bool $inline = false)`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Streams a physical file directly to the browser with automated MIME checking, CORS headers, and inline/attachment disposition.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">// Prompt file download prompt
+Response::file(storage_path('reports/invoice_102.pdf'), 'Invoice-102.pdf');
+
+// Display inline in browser
+Response::file(storage_path('images/avatar.png'), null, true);</code></pre>
+
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-6 mb-3">
+                            4. `Response::stream(callable $callback, int $status = 200, string $contentType = '...')`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Disables output buffering and streams content in real-time (Server-Sent Events / SSE or chunked binary data).
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">Response::stream(function() {
+    for ($i = 1; $i <= 5; $i++) {
+        echo "data: " . json_encode(['progress' => $i * 20]) . "\n\n";
+        ob_flush();
+        flush();
+        sleep(1);
+    }
+}, 200, 'text/event-stream');</code></pre>
+
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-6 mb-3">
+                            5. `Response::redirect(string $url, int $status = 302)`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Issues HTTP redirect header (`Location: $url`) and terminates execution.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">Response::redirect('/login');</code></pre>
+                    </div>
+
+                    <!-- Core\Request Helpers Suite -->
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-600">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                            Request Inspection Helpers (`Core\Request`)
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Zero-allocation static helpers for retrieving memoized JSON payloads, input variables, Bearer tokens, headers, and client IP addresses:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Request;
+
+// 🟢 Parse JSON body from php://input with O(1) RAM memoization
+$json = Request::json();
+
+// 🟢 Retrieve input from $_REQUEST or JSON body with fallback
+$page = Request::input('page', 1);
+$action = Request::input('action', 'login');
+
+// 🟢 Retrieve all inputs merged from $_REQUEST + JSON body
+$allInputs = Request::all();
+
+// 🟢 Extract Bearer Token from 'Authorization: Bearer <token>' header
+$token = Request::bearerToken(); // returns string or null
+
+// 🟢 Get HTTP header case-insensitively
+$apiKey = Request::header('X-API-Key');
+$authHeader = Request::header('Authorization');
+
+// 🟢 Get all HTTP request headers as associative array
+$headers = Request::headers();
+
+// 🟢 Get Client IP address (Supports Nginx X-Forwarded-For)
+$ip = Request::ip();
+
+// 🟢 Get HTTP method in uppercase ('GET', 'POST', 'PUT', etc.)
+$method = Request::getMethod();
+if (Request::isPost()) { ... }</code></pre>
                     </div>
 
                     <!-- Dual-Tier Memory Caching -->
@@ -117,7 +201,6 @@ Response::json(['error' => 'Invalid parameters provided'], 400);</code></pre>
 use Core\Response;
 
 $data = Cache::api('stats_dashboard_v1', function() {
-    // Expensive query run only once every 300 seconds across all workers
     return ['active_users' => 14250, 'load' => '0.12'];
 }, 300);
 
@@ -127,7 +210,7 @@ Response::json($data);</code></pre>
                             `Cache::db(string $key, callable $resolver, int $ttlSeconds)` (Distributed Redis Cluster)
                         </h4>
                         <p class="text-sm text-slate-500 mb-2">
-                            Stores data in Redis (`6379`) so that multiple server instances or containers share the exact same cached payload with graceful failover to `APCu`.
+                            Stores data in Redis (`6379`) so multiple server instances share the cached payload with failover to `APCu`.
                         </p>
                         <pre
                             class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">$userProfile = Cache::db("user_profile_{$id}", fn() => User::find($id), 600);

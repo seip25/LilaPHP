@@ -108,6 +108,30 @@ Request::DELETE(AuthMiddleware::class, function() {
 });
 ```
 
+#### Zero-Allocation `Core\Request` & `Core\Response` Helpers:
+
+```php
+use Core\Request;
+use Core\Response;
+
+// --- Core\Request ---
+$json = Request::json();                          // Memoized O(1) RAM JSON parser
+$page = Request::input('page', 1);                 // Retrieve input from $_REQUEST or JSON with fallback
+$all = Request::all();                             // Merge $_REQUEST and JSON body
+$token = Request::bearerToken();                   // Extract Bearer token string from Authorization header
+$auth = Request::header('Authorization');          // Retrieve header case-insensitively
+$headers = Request::headers();                     // Retrieve all HTTP headers as associative array
+$clientIp = Request::ip();                         // Retrieve client IP (Nginx X-Forwarded-For supported)
+$method = Request::getMethod();                    // Returns uppercase method ('GET', 'POST', etc.)
+
+// --- Core\Response ---
+Response::json(['status' => 'ok'], 200);           // Emit JSON with CORS headers & exit
+Response::error('Invalid input', 400, $errors);    // Emit standardized error structure & exit
+Response::file('/path/to/invoice.pdf', 'Inv.pdf'); // Direct binary file delivery & exit
+Response::stream(fn() => echo "chunk", 200);       // Event-Stream / SSE real-time output & exit
+Response::redirect('/login', 302);                 // HTTP Location redirect & exit
+```
+
 ### 3. Clean Package Distribution (`.gitattributes export-ignore`)
 
 When publishing releases or running `composer install --prefer-dist`, development documentation and test directories (`docs/`, `tests/`, `.github/`) are excluded automatically. Your deployment tarball cleanly includes your `_core/`, `backend/`, `docker/` cluster configurations, and entrypoints so you can launch containers instantly.
@@ -215,6 +239,53 @@ $product->save();
 
 // 7. Delete record
 $product->delete();
+```
+
+### 9. Encrypted Session Authentication (`Services\AuthService`)
+
+For web applications, dashboards, or session-based APIs, `Services\AuthService` provides secure session management with AES-256 encryption (`Core\Security::encrypt`), HTTP-only cookies, and automated brute-force attempt lockout throttling:
+
+```php
+use Core\Request;
+use Core\Response;
+use Services\AuthService;
+
+// GET /api/auth -> Check authentication state
+Request::GET(function () {
+    $user = AuthService::validateAuth(false);
+    return [
+        'status' => 'success',
+        'authenticated' => $user !== false,
+        'user' => $user ?: null
+    ];
+});
+
+// POST /api/auth -> Login / Logout handler
+Request::POST(function () {
+    $action = Request::input('action', 'login');
+
+    if ($action === 'logout') {
+        AuthService::logout();
+        return ['status' => 'success', 'message' => 'Logged out successfully'];
+    }
+
+    $username = trim((string) Request::input('username', ''));
+    $password = (string) Request::input('password', '');
+
+    if (empty($username) || empty($password)) {
+        Response::error('Username and password are required', 400);
+    }
+
+    $result = AuthService::login($username, $password);
+    if ($result['success']) {
+        return ['status' => 'success', 'user' => $result['user']];
+    }
+
+    Response::error($result['message'], 401, [
+        'locked' => $result['locked'] ?? false,
+        'remaining_seconds' => $result['remaining_seconds'] ?? 0
+    ]);
+});
 ```
 
 ---

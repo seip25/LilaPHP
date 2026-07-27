@@ -41,6 +41,12 @@ spl_autoload_register(function (string $class): void {
             require_once $file;
             return;
         }
+    } elseif ($namespace === 'services') {
+        $file = dirname(__DIR__) . "/backend/services/{$className}.php";
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
     } elseif ($namespace === 'cli') {
         $file = __DIR__ . "/cli/{$className}.php";
         if (file_exists($file)) {

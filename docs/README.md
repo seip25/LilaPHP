@@ -128,6 +128,35 @@ $product->assertValid();
 $product->delete();
 ```
 
+### 📢 `Core\Response` (High-Speed JSON & File Emitter)
+
+```php
+use Core\Response;
+
+Response::json(['status' => 'success', 'data' => $payload], 200);
+Response::error('Validation failure', 422, $errors);
+Response::file('/path/to/report.pdf', 'report.pdf');
+Response::stream(fn() => echo "chunk", 200);
+Response::redirect('/login');
+```
+
+### 🔒 `Services\AuthService` (Encrypted Session & Lockout Protection)
+
+Provides AES-256 encrypted session storage (`Core\Security::encrypt`) and brute-force attempt lockout:
+
+```php
+use Services\AuthService;
+
+// Validate authenticated session
+$user = AuthService::validateAuth(true); // Auto-emits 401 if unauthenticated
+
+// Login credentials with brute-force throttling
+$result = AuthService::login($username, $password);
+
+// Destroy session
+AuthService::logout();
+```
+
 ### 🔇 Logging Disabled by Default (`Performance First`)
 
 To prevent disk I/O bottlenecks under high concurrency (thousands of req/s), file logging is disabled by default (`LOG_ENABLED=false` in `.env` and `Config::$LOG_ENABLED = false`). Log entries are only written to disk when explicitly enabled.
