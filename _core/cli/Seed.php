@@ -32,24 +32,6 @@ class Seed extends Command
 
         $this->info("Checking sample User records...");
 
-        $admin = User::find(1);
-        if ($admin === null) {
-            $user = new User([
-                'name' => 'Admin User',
-                'email' => 'admin@lilaphp.dev',
-                'password' => password_hash('secret123', PASSWORD_DEFAULT),
-                'role' => 'admin'
-            ]);
-
-            if ($user->save()) {
-                $this->success("Created default Admin account -> admin@lilaphp.dev / secret123 (ID: {$user->id})");
-            } else {
-                $this->error("Failed to insert default Admin account.");
-            }
-        } else {
-            $this->info("Admin account (ID: 1) already exists. No actions taken.");
-        }
-
         $seedsDir = dirname(__DIR__, 2) . '/backend/seeds';
         if (is_dir($seedsDir)) {
             foreach (glob("{$seedsDir}/*.php") as $seedFile) {
