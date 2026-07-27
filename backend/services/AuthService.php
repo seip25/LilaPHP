@@ -26,7 +26,11 @@ class AuthService
     public static function startSession(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
-            $isSecure = !Config::$DEBUG && (($_SERVER['HTTPS'] ?? 'off') !== 'off' || ($_SERVER['SERVER_PORT'] ?? 0) == 443);
+            $isSecure = !Config::$DEBUG && (
+                ($_SERVER['HTTPS'] ?? 'off') !== 'off' ||
+                ($_SERVER['SERVER_PORT'] ?? 0) == 443 ||
+                strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
+            );
             session_set_cookie_params([
                 'lifetime' => 86400,
                 'path' => '/',
@@ -117,6 +121,11 @@ class AuthService
             $isValidPassword = password_verify($password, $userPassword) || (md5($password) === $userPassword);
 
             if ($isValidPassword) {
+                if (password_needs_rehash($userPassword, PASSWORD_DEFAULT) || md5($password) === $userPassword) {
+                    $user->password = password_hash($password, PASSWORD_DEFAULT);
+                    $user->save();
+                }
+
                 $_SESSION['login_attempts'] = 0;
                 unset($_SESSION['last_failure']);
 

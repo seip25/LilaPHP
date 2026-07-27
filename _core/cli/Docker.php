@@ -78,6 +78,12 @@ class Docker extends Command
     private function launchCluster(string $env): int
     {
         $shortEnv = $env === 'production' ? 'prod' : 'dev';
+        
+        if ($env === 'production') {
+            $this->info("Optimizing environment configuration for production...");
+            $this->execShell(PHP_BINARY . ' cli.php optimize');
+        }
+
         $this->info("Starting cluster in `{$env}` mode using `docker/php/Dockerfile.{$shortEnv}`...");
         $this->info("Dynamic Ports Assigned: HTTP=" . Config::$HTTP_PORT . " | MySQL=" . Config::$DB_PORT . " | Redis=" . Config::$REDIS_PORT);
 

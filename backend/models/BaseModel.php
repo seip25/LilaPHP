@@ -232,13 +232,13 @@ abstract class BaseModel implements JsonSerializable
         $perPage = min(100, max(1, (int) (\Core\Request::input('per_page', 15))));
         $offset = ($page - 1) * $perPage;
 
-        $sort = (string) \Core\Request::input('sort', $pk);
+        $rawSort = (string) \Core\Request::input('sort', $pk);
+        $sort = preg_replace('/[^a-zA-Z0-9_]/', '', $rawSort);
         $order = strtoupper((string) \Core\Request::input('order', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
         $where = ['1=1'];
         $params = [];
 
-        // Date range filtering
         $startDate = \Core\Request::input('start_date', \Core\Request::input('created_at_from'));
         $endDate = \Core\Request::input('end_date', \Core\Request::input('created_at_to'));
 
@@ -252,10 +252,10 @@ abstract class BaseModel implements JsonSerializable
             $params[] = $endDate . (strlen($endDate) === 10 ? ' 23:59:59' : '');
         }
 
-        // Custom column equality filters
         foreach ($customFilters as $col => $val) {
             if ($val !== null && $val !== '') {
-                $where[] = "`{$col}` = ?";
+                $cleanCol = preg_replace('/[^a-zA-Z0-9_]/', '', $col);
+                $where[] = "`{$cleanCol}` = ?";
                 $params[] = $val;
             }
         }
@@ -263,7 +263,7 @@ abstract class BaseModel implements JsonSerializable
         $whereClause = implode(' AND ', $where);
         $cacheKey = "paginate:{$table}:" . md5($whereClause . json_encode($params) . "{$sort}:{$order}:{$page}:{$perPage}");
 
-        $executor = function() use ($table, $whereClause, $params, $sort, $order, $perPage, $offset, $page) {
+        $executor = function () use ($table, $whereClause, $params, $sort, $order, $perPage, $offset, $page) {
             $countSql = "SELECT COUNT(*) as total FROM `{$table}` WHERE {$whereClause}";
             $countRow = Database::fetch($countSql, $params);
             $total = (int) ($countRow['total'] ?? 0);

@@ -88,6 +88,9 @@ class Database
      */
     private function getDsn(): string
     {
+        if (empty($this->dbName)) {
+            return "mysql:host={$this->host};port={$this->port};charset=utf8mb4";
+        }
         return "mysql:host={$this->host};dbname={$this->dbName};port={$this->port};charset=utf8mb4";
     }
 
@@ -119,12 +122,6 @@ class Database
                 $connection = new PDO($dsn, $this->dbUser, $this->dbPassword, $options);
                 return $connection;
             } catch (PDOException $e) {
-                if (($e->getCode() == 1049 || str_contains(strtolower($e->getMessage()), 'unknown database')) && !empty($this->dbName)) {
-                    if ($this->createDatabase($this->dbName)) {
-                        continue;
-                    }
-                }
-
                 $attempt++;
                 $message = "MySQL Connection error (attempt {$attempt}/{$this->maxAttempts}): " . $e->getMessage();
                 Logger::error($message);

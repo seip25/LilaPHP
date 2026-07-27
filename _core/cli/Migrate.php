@@ -26,6 +26,12 @@ class Migrate extends Command
     {
         $this->banner("LilaPHP Schema Migration Engine");
 
+        $dbName = Config::$DB_NAME;
+        $setupDb = new Database(dbName: '');
+        if ($setupDb->getConnection() !== null) {
+            $setupDb->createDatabase($dbName);
+        }
+
         $db = new Database();
         $pdo = $db->getConnection();
 

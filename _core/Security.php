@@ -142,38 +142,40 @@ class Security
     }
 
     /**
-     * Encrypts plaintext data using OpenSSL AES-256-CBC and APP_KEY.
+     * Encrypts plaintext data using OpenSSL AES-256-GCM and APP_KEY.
      * 
      * @param string $plaintext String to encrypt
-     * @return string Base64 encoded IV + Ciphertext
+     * @return string Base64 encoded IV + Tag + Ciphertext
      * @example $cipher = \Core\Security::encrypt('Secret data');
      */
     public static function encrypt(string $plaintext): string
     {
         $key = hash('sha256', Config::$APP_KEY, true);
-        $iv = random_bytes(16);
-        $ciphertext = openssl_encrypt($plaintext, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
-        return base64_encode($iv . $ciphertext);
+        $iv = random_bytes(12);
+        $tag = '';
+        $ciphertext = openssl_encrypt($plaintext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
+        return base64_encode($iv . $tag . $ciphertext);
     }
 
     /**
      * Decrypts ciphertext produced by `encrypt()`.
      * 
-     * @param string $encoded Base64 encoded IV + Ciphertext
+     * @param string $encoded Base64 encoded IV + Tag + Ciphertext
      * @return string|false Decrypted plaintext or false on verification failure
      * @example $plaintext = \Core\Security::decrypt($cipher);
      */
     public static function decrypt(string $encoded): string|false
     {
         $raw = base64_decode($encoded, true);
-        if ($raw === false || strlen($raw) < 17) {
+        if ($raw === false || strlen($raw) < 28) {
             return false;
         }
 
         $key = hash('sha256', Config::$APP_KEY, true);
-        $iv = substr($raw, 0, 16);
-        $ciphertext = substr($raw, 16);
+        $iv = substr($raw, 0, 12);
+        $tag = substr($raw, 12, 16);
+        $ciphertext = substr($raw, 28);
 
-        return openssl_decrypt($ciphertext, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+        return openssl_decrypt($ciphertext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
     }
 }
