@@ -211,7 +211,7 @@ class Product extends BaseModel
 }</code></pre>
 
                     <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">2. Common Operations & Code Examples (`find`, `all`, `fill`, `save`, `delete`, `validate`, `assertValid`)</h4>
-                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Models\Product;
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-6"><code class="language-php">use Models\Product;
 
 // 🟢 Find record by primary key ID (returns instance or null)
 $product = Product::find(1);
@@ -232,9 +232,6 @@ $product->price = 45.00;
 
 // 🟢 Validate model attributes against $rules array
 $errors = $product->validate(); // Returns array of errors (empty array if valid)
-if (!empty($errors)) {
-    // Custom error handling
-}
 
 // 🟢 Assert valid & halt automatically (Emits HTTP 422 JSON response if rules fail)
 $product->assertValid();
@@ -244,6 +241,68 @@ $product->save();
 
 // 🟢 Delete record from database
 $product->delete();</code></pre>
+
+                    <!-- BaseModel::paginate() Detailed Documentation -->
+                    <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+                        <h4 class="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                            3. Smart URL Query Filtering, Pagination & Redis Caching (`BaseModel::paginate`)
+                        </h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            <code>BaseModel::paginate(array $customFilters = [], int $cacheTtl = 0)</code> provides zero-boilerplate pagination with automatic URL query string filtering, total record counting, and optional Redis caching.
+                        </p>
+
+                        <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-gray-200 dark:border-slate-700 mb-4">
+                            <h5 class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">Supported URL Query String Parameters:</h5>
+                            <ul class="list-disc list-inside text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                                <li><code>page</code>: Target page number (default: <code>1</code>).</li>
+                                <li><code>per_page</code>: Number of records per page (default: <code>15</code>, max limit: <code>100</code>).</li>
+                                <li><code>sort</code>: Target column for ordering (default: primary key <code>id</code>).</li>
+                                <li><code>order</code>: Sort direction (<code>ASC</code> or <code>DESC</code>, default: <code>DESC</code>).</li>
+                                <li><code>start_date</code> / <code>created_at_from</code>: Filters records created on or after date (YYYY-MM-DD).</li>
+                                <li><code>end_date</code> / <code>created_at_to</code>: Filters records created on or before date (YYYY-MM-DD).</li>
+                            </ul>
+                        </div>
+
+                        <h5 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Example: Paginated Route (`backend/routes/products.php`)</h5>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">&lt;?php
+
+use Core\Request;
+use Core\Response;
+use Models\Product;
+
+// GET /api/products?page=1&per_page=10&sort=price&order=asc&start_date=2026-01-01
+Request::GET(function () {
+    // 🟢 1. Simple pagination with default filters
+    $result = Product::paginate();
+
+    // 🟢 2. Pagination with column equality filter (status = 'active')
+    $result = Product::paginate(['status' => 'active']);
+
+    // 🟢 3. Pagination with 60-second Redis RAM caching (`Cache::db`)
+    $result = Product::paginate(['category_id' => 4], 60);
+
+    return [
+        'status' => 'success',
+        'data' => $result['data'],   // Array of Product model instances
+        'meta' => $result['meta']    // Pagination metadata payload
+    ];
+});</code></pre>
+
+                        <h5 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Standard JSON Response Structure:</h5>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-json">{
+  "status": "success",
+  "data": [
+    { "id": 102, "name": "Wireless Mouse", "price": 29.99, "status": "active" },
+    { "id": 101, "name": "Mechanical Keyboard", "price": 89.99, "status": "active" }
+  ],
+  "meta": {
+    "total": 142,
+    "page": 1,
+    "per_page": 10,
+    "last_page": 15
+  }
+}</code></pre>
+                    </div>
                 </div>
             </section>
 

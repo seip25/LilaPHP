@@ -141,10 +141,48 @@ if (!$user) {
 }</code></pre>
                 </div>
 
+                <!-- Core\Jwt Engine -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-purple-600 mb-8">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        4. Zero-Dependency JSON Web Tokens (`Core\Jwt`)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        LilaPHP includes <code>Core\Jwt</code> for generating and verifying HMAC-SHA256 (HS256) JWT tokens without external Composer packages. It signs payloads using your <code>APP_KEY</code> and verifies claim expiration in microsecond precision.
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Jwt;
+use Core\Request;
+use Core\Response;
+
+// 🟢 Generate JWT Token upon successful login (24-hour default TTL)
+$token = Jwt::encode([
+    'user_id' => $user->id,
+    'username' => $user->username,
+    'role' => $user->role
+], 86400);
+
+Response::json([
+    'status' => 'success',
+    'token' => $token,
+    'token_type' => 'Bearer'
+]);
+
+// 🟢 Verify JWT Token in API routes or middleware
+$token = Request::bearerToken();
+$claims = $token ? Jwt::decode($token) : false;
+
+if ($claims === false) {
+    Response::error('Invalid or expired JWT token', 401);
+}
+
+// Access claims directly from $claims dictionary
+$userId = $claims['user_id'];
+$userRole = $claims['role'];</code></pre>
+                </div>
+
                 <!-- Encrypted Session & AuthService -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-600">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                        4. Encrypted Session Auth & Brute-Force Protection (`Services\AuthService`)
+                        5. Encrypted Session Auth & Brute-Force Protection (`Services\AuthService`)
                     </h3>
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
                         For web applications, dashboards, or session-based APIs, LilaPHP provides <code>Services\AuthService</code>. It combines AES-256 encrypted session payloads (`Core\Security::encrypt`), HTTP-only cookie flags, and automated brute-force login attempt lockout throttling.

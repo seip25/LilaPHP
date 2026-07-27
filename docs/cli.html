@@ -75,12 +75,16 @@
                 <div class="bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-500 p-6 rounded-xl mb-12">
                     <div class="flex items-center gap-3 mb-2">
                         <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                            </path>
                         </svg>
-                        <h3 class="text-lg font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wide">Essential Command Rule</h3>
+                        <h3 class="text-lg font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wide">
+                            Essential Command Rule</h3>
                     </div>
                     <p class="text-slate-700 dark:text-slate-300">
-                        The `cli.php` tool is located directly in the root directory alongside `index.php`. To execute CLI operations, run `cli.php` from your project root or via Docker.
+                        The `cli.php` tool is located directly in the root directory alongside `index.php`. To execute
+                        CLI operations, run `cli.php` from your project root or via Docker.
                     </p>
                     <div class="mt-4 p-3 bg-white/50 dark:bg-black/20 rounded-lg font-mono text-sm">
                         # Option A: Local PHP / Terminal<br>
@@ -127,26 +131,42 @@ DB_PORT="5432"</code></pre>
                     </h3>
 
                     <!-- migrate -->
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
                         <div class="flex items-start gap-3 mb-3">
                             <code
-                                class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">migrate</code>
+                                class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">migrate [--refresh]</code>
                             <span
-                                class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded">Primary Schema Sync</span>
+                                class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded">Primary
+                                Schema Sync</span>
                         </div>
                         <p class="text-slate-600 dark:text-slate-400 mb-3">
-                            Automatically inspects all database models (`backend/models/*.php`) and synchronizes MySQL/SQLite/PostgreSQL tables in real time based on your `#[FieldDatabase]` definitions.
+                            Automatically inspects all database models (`backend/models/*.php`) and synchronizes
+                            MySQL/SQLite tables in real time based on model definitions. Use `--refresh` to drop
+                            existing tables and re-run migrations from scratch.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash"># Synchronize database tables
+php cli.php migrate
+
+# Drop all tables and re-synchronize from scratch
+php cli.php migrate --refresh</code></pre>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
+                        <div class="flex items-start gap-3 mb-3">
+                            <code
+                                class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded text-sm font-mono">health</code>
+                            <span
+                                class="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs rounded">Microsecond
+                                System Diagnostics</span>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 mb-3">
+                            Runs microsecond system diagnostics inspecting MySQL connectivity, APCu RAM status, Redis
+                            cluster health, OPcache preloading, and disk storage space.
                         </p>
                         <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash">php cli.php migrate</code></pre>
-                        <div class="text-sm text-slate-600 dark:text-slate-400">
-                            <strong>Key features:</strong>
-                            <ul class="list-disc list-inside ml-4 mt-2 space-y-1">
-                                <li>No manual SQL up/down migration files required (`Performance First`).</li>
-                                <li>Creates missing tables automatically using reflection over `backend/models/`.</li>
-                                <li>Configures columns, indexes, and foreign keys directly from model attributes.</li>
-                            </ul>
-                        </div>
+                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash">php cli.php health</code></pre>
                     </div>
                 </div>
 
@@ -160,7 +180,8 @@ DB_PORT="5432"</code></pre>
                         <code
                             class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">seed</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Executes database seeding scripts located inside `backend/seeders/` to populate your API database with initial or test records (`O(1)` bulk insert).
+                            Executes database seeding scripts located inside `backend/seeders/` to populate your API
+                            database with initial or test records (`O(1)` bulk insert).
                         </p>
                         <pre
                             class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash">php cli.php seed</code></pre>
@@ -177,18 +198,21 @@ DB_PORT="5432"</code></pre>
                         <code
                             class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">make route &lt;path&gt;</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Generates a new file-based API route inside `backend/routes/` with standard GET/POST handling and JSON response scaffolding.
+                            Generates a new file-based API route inside `backend/routes/` with standard GET/POST
+                            handling and JSON response scaffolding.
                         </p>
                         <pre
                             class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php make route v1/checkout</code></pre>
-                        <p class="text-xs text-slate-500 mt-2">Creates `backend/routes/v1/checkout.php` automatically.</p>
+                        <p class="text-xs text-slate-500 mt-2">Creates `backend/routes/v1/checkout.php` automatically.
+                        </p>
                     </div>
 
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
                         <code
                             class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">make model &lt;Name&gt;</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Generates a new API database Model inside `backend/models/` equipped with table schema attributes for `migrate` synchronization.
+                            Generates a new API database Model inside `backend/models/` equipped with table schema
+                            attributes for `migrate` synchronization.
                         </p>
                         <pre
                             class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php make model Invoice</code></pre>
@@ -205,7 +229,9 @@ DB_PORT="5432"</code></pre>
                         <code
                             class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-sm font-mono">task:work</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Starts a continuous background worker daemon consuming asynchronous tasks from Redis (`lilaphp:jobs`). Ideal for running email queues and heavy background processing without blocking API routes.
+                            Starts a continuous background worker daemon consuming asynchronous tasks from Redis
+                            (`lilaphp:jobs`). Ideal for running email queues and heavy background processing without
+                            blocking API routes.
                         </p>
                         <pre
                             class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php task:work</code></pre>
@@ -215,15 +241,14 @@ DB_PORT="5432"</code></pre>
                         <code
                             class="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded text-sm font-mono">ws:serve &lt;port&gt; [-d|stop|status|restart]</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Boots or controls the real-time Workerman WebSocket server daemon (`Socket.IO` style with Redis Pub/Sub). You can run it in background daemon mode (`-d`) or stop it cleanly (`stop`).
+                            Boots or controls the real-time Workerman WebSocket server daemon (`Socket.IO` style with
+                            Redis Pub/Sub). You can run it in background daemon mode (`-d`) or stop it cleanly (`stop`).
                         </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
+                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
 php cli.php ws:serve 8001 -d
 
 # Stop the running background WebSocket daemon
 php cli.php ws:serve stop 8001
-# Or: php cli.php ws:serve 8001 stop
 
 # Check worker status and active connections
 php cli.php ws:serve status 8001</code></pre>
@@ -231,19 +256,19 @@ php cli.php ws:serve status 8001</code></pre>
 
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
                         <code
-                            class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [dev|prod|stop|ps|logs|clean]</code>
+                            class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [dev|prod|stop|ps|logs|exec-mysql]</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`) directly from the CLI tool without needing complex `docker-compose` commands.
+                            Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`) and
+                            provides interactive MySQL CLI access or raw SQL query execution.
                         </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Launch development environment (ports 8080 & 80)
+                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Launch development environment
 php cli.php docker dev
 
-# Check container status
-php cli.php docker ps
+# Open interactive MySQL CLI inside DB container
+php cli.php docker exec-mysql
 
-# Stop all containers cleanly
-php cli.php docker stop</code></pre>
+# Execute raw SQL query directly on MySQL database
+php cli.php docker exec-mysql "SELECT id, name FROM products LIMIT 5"</code></pre>
                     </div>
                 </div>
 
@@ -258,14 +283,16 @@ php cli.php docker stop</code></pre>
                             <code
                                 class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">optimize</code>
                             <p class="text-slate-600 dark:text-slate-400">
-                                Pre-caches `.env` settings to `OPcache` memory and flushes APCu/Redis pools (`Performance First`). Run this after deploying updates to production.
+                                Pre-caches `.env` settings to `OPcache` memory and flushes APCu/Redis pools
+                                (`Performance First`). Run this after deploying updates to production.
                             </p>
                         </div>
                         <div class="flex items-start gap-3">
                             <code
                                 class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">key:generate</code>
                             <p class="text-slate-600 dark:text-slate-400">
-                                Generates a cryptographically secure 256-bit `APP_KEY` inside `backend/.env` for AES token encryption and JWT signing.
+                                Generates a cryptographically secure 256-bit `APP_KEY` inside `backend/.env` for AES
+                                token encryption and JWT signing.
                             </p>
                         </div>
                         <div class="flex items-start gap-3">

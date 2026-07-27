@@ -288,15 +288,47 @@ Request::POST(function () {
 });
 ```
 
+### 10. Zero-Dependency JWT Engine (`Core\Jwt`)
+
+Generate and verify HMAC-SHA256 (HS256) JSON Web Tokens without external Composer packages:
+
+```php
+use Core\Jwt;
+
+// Encode claims into a signed JWT token (24-hour default TTL)
+$token = Jwt::encode(['user_id' => 42, 'role' => 'admin']);
+
+// Decode & verify signature / expiration
+$claims = Jwt::decode($token); // Returns array payload or false if expired/invalid
+```
+
+### 11. Event Emitter with Redis Pub/Sub (`Core\Event`)
+
+Listen and dispatch internal application events in memory, automatically broadcasting across Redis cluster workers if connected:
+
+```php
+use Core\Event;
+
+// Register event listener
+Event::listen('user.created', function($payload) {
+    // Process async tasks or notifications
+});
+
+// Dispatch event locally and broadcast via Redis Pub/Sub
+Event::dispatch('user.created', ['user_id' => 42, 'email' => 'user@example.com']);
+```
+
 ---
 
 ## 🛠️ Master CLI Commands (`cli.php`)
 
 ```bash
 php cli.php help                                # Display interactive help menu
+php cli.php health                              # Microsecond system health & service diagnostic check
 php cli.php optimize                            # Pre-cache .env settings to OPcache memory and flush APCu/Redis
 php cli.php key:generate                        # Generate secure 256-bit cryptographic APP_KEY in backend/.env
 php cli.php migrate                             # Synchronize all API Model table schemas with MySQL
+php cli.php migrate --refresh                   # Drop all database tables and re-run migrations from scratch
 php cli.php seed                                # Populate database tables with initial seed records
 php cli.php task:work                           # Start continuous background worker consuming Redis job queues
 php cli.php ws:serve 8001 -d                    # Start Workerman WebSocket server in background daemon mode (-d)
@@ -304,7 +336,8 @@ php cli.php ws:serve stop 8001                  # Stop running background WebSoc
 php cli.php ws:serve restart 8001 -d            # Gracefully restart background WebSocket daemon
 php cli.php make model <Name>                   # Generate boilerplate API Model inside backend/models/
 php cli.php make route <path>                   # Generate file-based API route inside backend/routes/
-php cli.php docker [dev|prod|stop|ps|logs]      # Orchestrate Nginx, PHP, MySQL, Redis cluster
+php cli.php docker dev|prod|stop|ps|logs|clean  # Orchestrate Nginx, PHP, MySQL, Redis cluster
+php cli.php docker exec-mysql "SELECT * FROM users" # Open interactive MySQL CLI or execute SQL query directly
 ```
 
 ---
