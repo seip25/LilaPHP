@@ -3,7 +3,6 @@
 namespace Cli;
 
 use Core\Database;
-use Models\User;
 
 /**
  * Database Seeder Command (`php cli.php seed`).
@@ -30,17 +29,33 @@ class Seed extends Command
             return 1;
         }
 
-        $this->info("Checking sample User records...");
+        $baseBackend = dirname(__DIR__, 2) . '/backend';
+        $seedDirs = array_filter([
+            $baseBackend . '/seed',
+            $baseBackend . '/seeds',
+            $baseBackend . '/seeders'
+        ], 'is_dir');
 
-        $seedsDir = dirname(__DIR__, 2) . '/backend/seeds';
-        if (is_dir($seedsDir)) {
-            foreach (glob("{$seedsDir}/*.php") as $seedFile) {
-                $this->info("Executing seeder: " . basename($seedFile));
-                require $seedFile;
+        $executed = 0;
+        foreach ($seedDirs as $seedsDir) {
+            $seedFiles = glob("{$seedsDir}/*.php");
+            if (!empty($seedFiles)) {
+                sort($seedFiles);
+                foreach ($seedFiles as $seedFile) {
+                    $this->info("Executing seeder: " . basename($seedFile));
+                    require $seedFile;
+                    $executed++;
+                }
             }
         }
 
-        $this->success("Seeding completed.");
+        if ($executed === 0) {
+            $this->warning("No seeders found in backend/seed/, backend/seeds/, or backend/seeders/.");
+        } else {
+            $this->success("Seeding completed successfully ({$executed} seeder(s) executed).");
+        }
+
         return 0;
     }
 }
+
