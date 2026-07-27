@@ -62,20 +62,50 @@ LilaPHP/
 - **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
 - **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
 
-### 2. Static O(1) Request & Response Handling (`Core\Request`)
+### 2. Static O(1) Request Routing & Handlers (`Core\Request`)
 
-In traditional frameworks, every HTTP request instantiates heavy `$request` objects. In LilaPHP, all request data is accessed via zero-allocation static helpers:
+In LilaPHP, physical files map directly to URIs (e.g. `backend/routes/users.php` -> `/api/users`). You can handle HTTP request methods (`Request::GET`, `Request::POST`, `Request::PUT`, `Request::DELETE`, `Request::PATCH`) directly inside route files with full middleware support:
 
 ```php
 use Core\Request;
 use Core\Response;
+use Models\User;
 
-// Enforce HTTP Method (emits 405 Method Not Allowed automatically if not matching)
-Request::assertMethod('POST', 'PUT');
+// Global logic / validations for all methods in this file
+// (Runs before method handlers)
 
-// Retrieve JSON body with O(1) RAM memoization
-$body = Request::json();
-$token = Request::bearerToken();
+// GET /api/users
+Request::GET(function() {
+    $users = User::all("1=1 ORDER BY id DESC");
+    return ['status' => 'success', 'data' => $users];
+});
+
+// POST /api/users with Middlewares
+Request::POST([AuthMiddleware::class, RoleCheck::class], function() {
+    $user = new User(Request::json());
+    $user->assertValid(); // Emits 422 JSON response if validation fails
+    $user->save();
+
+    return ['status' => 'created', 'data' => $user];
+});
+
+// PUT /api/users
+Request::PUT(AuthMiddleware::class, function() {
+    $id = Request::input('id');
+    $user = User::find($id);
+    if (!$user) {
+        Response::error('User not found', 404);
+    }
+    $user->fill(Request::json())->save();
+    return ['status' => 'updated', 'data' => $user];
+});
+
+// DELETE /api/users
+Request::DELETE(AuthMiddleware::class, function() {
+    $user = User::find(Request::input('id'));
+    $user?->delete();
+    return ['status' => 'deleted'];
+});
 ```
 
 ### 3. Clean Package Distribution (`.gitattributes export-ignore`)
@@ -111,6 +141,81 @@ Ensures uploaded files (`$_FILES`) are authentic via `finfo` MIME checking, scan
 ### 7. Concurrent Multi-cURL Client (`Http::multi`)
 
 Fetch external APIs sequentially (`Http::get()`, `Http::post()`) or run dozens of HTTP requests concurrently in parallel (`Http::multi([...])`).
+
+### 8. Lightweight ORM Models (`Models\BaseModel`)
+
+All API Models inherit from `Models\BaseModel`, providing automated CRUD operations, automatic JSON serialization, input validation via `Core\Validate`, and table schema definitions for migrations (`php cli.php migrate`).
+
+#### Defining a Model (`backend/models/Product.php`):
+```php
+namespace Models;
+
+class Product extends BaseModel
+{
+    protected string $table = 'products';
+    protected string $primaryKey = 'id';
+
+    public ?int $id = null;
+    public string $name = '';
+    public float $price = 0.0;
+    public int $stock = 0;
+    public string $sku = '';
+
+    // Validation rules (Core\Validate syntax)
+    protected array $rules = [
+        'name' => 'required|min_length:2|max_length:255',
+        'price' => 'required|numeric',
+        'stock' => 'numeric',
+        'sku' => 'max_length:50'
+    ];
+
+    // Schema definition for `php cli.php migrate`
+    public static function getSchema(): array
+    {
+        return [
+            'id' => ['type' => 'int', 'unsigned' => true, 'autoIncrement' => true, 'primaryKey' => true],
+            'name' => ['type' => 'string', 'length' => 255, 'nullable' => false],
+            'price' => ['type' => 'decimal', 'length' => '10,2', 'default' => '0.00'],
+            'stock' => ['type' => 'int', 'default' => 0],
+            'sku' => ['type' => 'string', 'length' => 50, 'nullable' => true]
+        ];
+    }
+}
+```
+
+#### CRUD & Validation Operations:
+```php
+use Models\Product;
+
+// 1. Find by ID
+$product = Product::find(1);
+
+// 2. Fetch all with optional SQL WHERE conditions
+$products = Product::all("stock > ? ORDER BY price DESC", [0]);
+
+// 3. Create or Populate instance attributes
+$product = new Product();
+$product->fill([
+    'name' => 'Wireless Keyboard',
+    'price' => 49.99,
+    'stock' => 100,
+    'sku' => 'KB-WL-01'
+]);
+// Or set properties directly:
+$product->price = 45.00;
+
+// 4. Validate Model attributes
+$errors = $product->validate(); // Returns array of errors (empty if valid)
+
+// 5. Validate & Halt automatically (Emits HTTP 422 JSON error if invalid)
+$product->assertValid();
+
+// 6. Save (Inserts if new record, Updates if ID exists)
+$product->save();
+
+// 7. Delete record
+$product->delete();
+```
 
 ---
 

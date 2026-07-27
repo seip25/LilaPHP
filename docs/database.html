@@ -117,7 +117,7 @@ Response::json(['categories' => $categories]);</code></pre>
                 </div>
 
                 <!-- Transactions & Bulk Inserts -->
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-8">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
                         Transactions & Bulk Processing
                     </h3>
@@ -141,6 +141,109 @@ try {
     $pdo->rollBack();
     Response::json(['error' => 'Transfer failed: ' . $e->getMessage()], 500);
 }</code></pre>
+                </div>
+
+                <!-- API Models & ORM (Models\BaseModel) -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-primary-600">
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                        API Models & Lightweight ORM (`Models\BaseModel`)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        All models in LilaPHP extend <code>Models\BaseModel</code>. They combine high-speed PDO interaction, automatic JSON serialization, input validation via <code>Core\Validate</code>, and schema definition for CLI migrations (<code>php cli.php migrate</code>).
+                    </p>
+
+                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">1. Model Definition (`backend/models/Product.php`)</h4>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-6"><code class="language-php">&lt;?php
+
+namespace Models;
+
+class Product extends BaseModel
+{
+    protected string $table = 'products';
+    protected string $primaryKey = 'id';
+
+    public ?int $id = null;
+    public string $name = '';
+    public float $price = 0.0;
+    public int $stock = 0;
+    public string $sku = '';
+
+    // Validation rules evaluated by Core\Validate
+    protected array $rules = [
+        'name' => 'required|min_length:2|max_length:255',
+        'price' => 'required|numeric',
+        'stock' => 'numeric',
+        'sku' => 'max_length:50'
+    ];
+
+    // Schema definition for CLI migrations (`php cli.php migrate`)
+    public static function getSchema(): array
+    {
+        return [
+            'id' => [
+                'type' => 'int',
+                'unsigned' => true,
+                'nullable' => false,
+                'autoIncrement' => true,
+                'primaryKey' => true
+            ],
+            'name' => [
+                'type' => 'string',
+                'length' => 255,
+                'nullable' => false
+            ],
+            'price' => [
+                'type' => 'decimal',
+                'length' => '10,2',
+                'default' => '0.00'
+            ],
+            'stock' => [
+                'type' => 'int',
+                'default' => 0
+            ],
+            'sku' => [
+                'type' => 'string',
+                'length' => 50,
+                'nullable' => true
+            ]
+        ];
+    }
+}</code></pre>
+
+                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">2. Common Operations & Code Examples (`find`, `all`, `fill`, `save`, `delete`, `validate`, `assertValid`)</h4>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Models\Product;
+
+// 🟢 Find record by primary key ID (returns instance or null)
+$product = Product::find(1);
+
+// 🟢 Retrieve all records (with optional SQL WHERE condition & bindings)
+$allProducts = Product::all("stock > ? ORDER BY price DESC", [0]);
+$search = Product::all("name LIKE ?", ['%Keyboard%']);
+
+// 🟢 Create or Populate instance attributes via fill() or direct property assignment
+$product = new Product();
+$product->fill([
+    'name' => 'Wireless Keyboard',
+    'price' => 49.99,
+    'stock' => 100,
+    'sku' => 'KB-WL-01'
+]);
+$product->price = 45.00;
+
+// 🟢 Validate model attributes against $rules array
+$errors = $product->validate(); // Returns array of errors (empty array if valid)
+if (!empty($errors)) {
+    // Custom error handling
+}
+
+// 🟢 Assert valid & halt automatically (Emits HTTP 422 JSON response if rules fail)
+$product->assertValid();
+
+// 🟢 Save instance (Inserts if new record, Updates if primary key ID exists)
+$product->save();
+
+// 🟢 Delete record from database
+$product->delete();</code></pre>
                 </div>
             </section>
 

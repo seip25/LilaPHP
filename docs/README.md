@@ -87,6 +87,47 @@ $batch = Http::multi([
 ]);
 ```
 
+### 📡 `Core\Request` (Static Route Method Handlers & Middlewares)
+
+Define HTTP verb handlers (`Request::GET`, `Request::POST`, `Request::PUT`, `Request::DELETE`, `Request::PATCH`) directly inside route files with middleware support:
+
+```php
+use Core\Request;
+use Core\Response;
+use Models\User;
+
+Request::GET(function() {
+    return ['users' => User::all()];
+});
+
+Request::POST([AuthMiddleware::class], function() {
+    $user = new User(Request::json());
+    $user->assertValid();
+    $user->save();
+    return ['status' => 'created', 'data' => $user];
+});
+```
+
+### 🧱 `Models\BaseModel` (Lightweight ORM)
+
+All models inherit from `Models\BaseModel`, supporting `find()`, `all()`, `fill()`, `save()`, `delete()`, `validate()`, and `assertValid()`:
+
+```php
+use Models\Product;
+
+// Find & Fetch
+$product = Product::find(1);
+$products = Product::all("stock > 0 ORDER BY price DESC");
+
+// Fill & Save
+$product = new Product();
+$product->fill(['name' => 'Wireless Keyboard', 'price' => 49.99])->save();
+
+// Validate & Delete
+$product->assertValid();
+$product->delete();
+```
+
 ### 🔇 Logging Disabled by Default (`Performance First`)
 
 To prevent disk I/O bottlenecks under high concurrency (thousands of req/s), file logging is disabled by default (`LOG_ENABLED=false` in `.env` and `Config::$LOG_ENABLED = false`). Log entries are only written to disk when explicitly enabled.

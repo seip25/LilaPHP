@@ -209,4 +209,253 @@ class Request
         }
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     }
+    /**
+     * Executes route middlewares and handler callback if HTTP method matches.
+     * 
+     * Accepts flexible arguments:
+     * - `Request::route('GET', $callback)`
+     * - `Request::route('GET', [$mw1, $mw2], $callback)`
+     * - `Request::route('GET', $mw1, $mw2, $callback)`
+     * - `Request::route('GET', [$mw1, $mw2, $callback])`
+     * 
+     * @param string $method Target HTTP method ('GET', 'POST', 'PUT', 'DELETE', etc.)
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function route(string $method, mixed ...$args): void
+    {
+        if (strtoupper($method) !== self::getMethod()) {
+            return;
+        }
+
+        [$middlewares, $callback] = self::parseRouteArgs($args);
+
+        foreach ($middlewares as $mw) {
+            $ok = self::executeMiddleware($mw);
+            if ($ok === false) {
+                return;
+            }
+        }
+
+        $result = call_user_func($callback);
+
+        if (is_array($result) || is_object($result)) {
+            Response::json($result);
+        } elseif (is_string($result)) {
+            echo $result;
+            exit;
+        }
+
+        exit;
+    }
+
+    /**
+     * Executes route if current HTTP method is GET.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     * @example Request::GET(function() { Response::json(['ok' => true]); });
+     * @example Request::GET([AuthMiddleware::class], function() { Response::json(['user' => 'John']); });
+     */
+    public static function GET(mixed ...$args): void
+    {
+        self::route('GET', ...$args);
+    }
+
+    /**
+     * Executes route if current HTTP method is POST.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function POST(mixed ...$args): void
+    {
+        self::route('POST', ...$args);
+    }
+
+    /**
+     * Executes route if current HTTP method is PUT.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function PUT(mixed ...$args): void
+    {
+        self::route('PUT', ...$args);
+    }
+
+    /**
+     * Executes route if current HTTP method is DELETE.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function DELETE(mixed ...$args): void
+    {
+        self::route('DELETE', ...$args);
+    }
+
+    /**
+     * Executes route if current HTTP method is PATCH.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function PATCH(mixed ...$args): void
+    {
+        self::route('PATCH', ...$args);
+    }
+
+    /**
+     * Executes route if current HTTP method is OPTIONS.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function OPTIONS(mixed ...$args): void
+    {
+        self::route('OPTIONS', ...$args);
+    }
+
+    /**
+     * Executes route if current HTTP method is HEAD.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function HEAD(mixed ...$args): void
+    {
+        self::route('HEAD', ...$args);
+    }
+
+    /**
+     * Executes route if current HTTP method matches any of the specified methods.
+     * 
+     * @param array $methods List of allowed methods (e.g. ['GET', 'POST'])
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function match(array $methods, mixed ...$args): void
+    {
+        $current = self::getMethod();
+        $upper = array_map('strtoupper', $methods);
+        if (in_array($current, $upper, true)) {
+            self::route($current, ...$args);
+        }
+    }
+
+    /**
+     * Executes route regardless of current HTTP method.
+     * 
+     * @param mixed ...$args Middlewares and callback handler
+     * @return void
+     */
+    public static function any(mixed ...$args): void
+    {
+        self::route(self::getMethod(), ...$args);
+    }
+
+    /**
+     * Dynamic static call handler to support custom HTTP methods or case-insensitive calls.
+     * 
+     * @param string $name Method name (e.g. 'GET', 'post', 'PURGE')
+     * @param array $arguments Method arguments
+     * @return void
+     */
+    public static function __callStatic(string $name, array $arguments): void
+    {
+        self::route($name, ...$arguments);
+    }
+
+    /**
+     * Helper to parse middleware list and callback from method arguments.
+     *
+     * @param array $args
+     * @return array{0: array, 1: callable}
+     */
+    private static function parseRouteArgs(array $args): array
+    {
+        if (empty($args)) {
+            throw new \InvalidArgumentException("Route definition requires at least a callable handler.");
+        }
+
+        if (count($args) === 1 && is_array($args[0])) {
+            $flat = $args[0];
+            $last = end($flat);
+            if (is_callable($last)) {
+                $callback = array_pop($flat);
+                return [$flat, $callback];
+            }
+        }
+
+        $last = end($args);
+        if (is_callable($last)) {
+            $callback = array_pop($args);
+            if (count($args) === 1 && is_array($args[0])) {
+                return [$args[0], $callback];
+            }
+            return [$args, $callback];
+        }
+
+        throw new \InvalidArgumentException("The last argument in a route definition must be a valid callable callback.");
+    }
+
+    /**
+     * Executes a single middleware component.
+     *
+     * Supported formats:
+     * - Callable (Closure, anonymous function, array `[Class, 'method']`)
+     * - Class name string with static/instance `handle()`, `process()`, or `__invoke()`
+     * - Object instance with `handle()`, `process()`, or `__invoke()`
+     *
+     * @param mixed $middleware
+     * @return bool Returns false if middleware returned false, true otherwise
+     */
+    public static function executeMiddleware(mixed $middleware): bool
+    {
+        if (is_callable($middleware)) {
+            $res = call_user_func($middleware);
+            return $res !== false;
+        }
+
+        if (is_string($middleware) && class_exists($middleware)) {
+            $ref = new \ReflectionClass($middleware);
+            if ($ref->hasMethod('handle') && $ref->getMethod('handle')->isStatic()) {
+                $res = $middleware::handle();
+                return $res !== false;
+            }
+
+            $instance = new $middleware();
+            if (method_exists($instance, 'handle')) {
+                $res = $instance->handle();
+                return $res !== false;
+            }
+            if (method_exists($instance, 'process')) {
+                $res = $instance->process();
+                return $res !== false;
+            }
+            if (is_callable($instance)) {
+                $res = $instance();
+                return $res !== false;
+            }
+        }
+
+        if (is_object($middleware)) {
+            if (method_exists($middleware, 'handle')) {
+                $res = $middleware->handle();
+                return $res !== false;
+            }
+            if (method_exists($middleware, 'process')) {
+                $res = $middleware->process();
+                return $res !== false;
+            }
+            if (is_callable($middleware)) {
+                $res = $middleware();
+                return $res !== false;
+            }
+        }
+
+        return true;
+    }
 }
+

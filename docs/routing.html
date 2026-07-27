@@ -90,12 +90,10 @@
 
             <section id="endpoint-structure" class="scroll-mt-24 mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                    API-First Endpoint Structure
+                    API-First Endpoint Structure (`Request::GET`, `Request::POST`, etc.)
                 </h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    Each endpoint file is an autonomous, self-contained PHP 8.4+ script. Thanks to OPcache preloading
-                    (`_core/bootstrap.php`), you don't need to write class wrappers, controllers, or constructor
-                    injections. Simply use static core helpers directly:
+                    Because physical route files define the target URI in LilaPHP, request method routing is cleanly handled directly inside each endpoint script using static helpers (`Request::GET()`, `Request::POST()`, `Request::PUT()`, `Request::DELETE()`, `Request::PATCH()`). Any code before the method blocks acts as global validation or middleware for all methods in that file.
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
                     <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
@@ -107,44 +105,54 @@
  */
 use Core\Response;
 use Core\Request;
-use Core\Validate;
-use Core\Database;
+use Models\User;
 
-// 1. Enforce allowed HTTP Methods cleanly with zero boilerplate
-Request::assertMethod('POST'); // Automatically emits 405 Method Not Allowed if not POST
-
-// 2. Validate Payload inputs (`Request::all()`, `Request::json()`, or `$_REQUEST`)
-$payload = Validate::assert(Request::all(), [
-    'user_id' => 'required|numeric'
-]);
-
-// 3. Execute Database Query or Cache lookup
-$pdo = Database::getInstance();
-$stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ?");
-$stmt->execute([$payload['user_id']]);
-$user = $stmt->fetch();
-
-if (!$user) {
-    Response::json(['error' => 'User not found'], 404);
+// 1. Global Validations / Middlewares (Runs for ALL HTTP methods in this file)
+if (!Request::header('Authorization') && !Request::input('token')) {
+    Response::error('Unauthorized request', 401);
 }
 
-// 4. Return instant JSON response
-Response::json(['status' => 'success', 'data' => $user]);</code></pre>
+// 2. GET /api/users/profile
+Request::GET(function() {
+    $userId = Request::input('id', 1);
+    $user = User::find($userId);
+    if (!$user) {
+        Response::error('User not found', 404);
+    }
+    return ['status' => 'success', 'data' => $user];
+});
+
+// 3. POST /api/users/profile (With Middlewares)
+Request::POST([AuthMiddleware::class], function() {
+    $user = new User(Request::json());
+    $user->assertValid(); // Emits HTTP 422 JSON response if invalid
+    $user->save();
+
+    return ['status' => 'created', 'data' => $user];
+});
+
+// 4. DELETE /api/users/profile
+Request::DELETE(AuthMiddleware::class, function() {
+    $user = User::find(Request::input('id'));
+    $user?->delete();
+    return ['status' => 'deleted'];
+});</code></pre>
                 </div>
 
                 <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl border border-indigo-100 dark:border-indigo-900 mb-8">
                     <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
-                        🔍 Why No `new App()` or `#[GET]` Attributes?
+                        🔍 Why `Request::GET()` instead of `Route::get('/path')`?
                     </h3>
                     <p class="text-sm text-indigo-800 dark:text-indigo-300 mb-3">
-                        In traditional frameworks, every HTTP request must instantiate a monolithic `$app = new App()`, parse config arrays, loop over attribute annotations (`#[GET]`, `#[POST]`), and build a huge routing table in RAM just to find one endpoint.
-                        In <strong>LilaPHP</strong>, Nginx directly maps the request URI (`/api/users/profile`) to the exact script on disk (`backend/routes/users/profile.php`). The script runs instantly via OPcache preloading with zero overhead.
+                        In traditional frameworks, every HTTP request must instantiate a monolithic `$app = new App()`, parse URI string arrays, match paths with regex, and execute a central router table.
+                        In <strong>LilaPHP</strong>, Nginx maps the request URI (`/api/users/profile`) directly to the exact file on disk (`backend/routes/users/profile.php`). Because the file path <em>is</em> the route, calling <code>Request::GET()</code> or <code>Request::POST()</code> inside the file executes the specific verb handler with zero routing table overhead!
                     </p>
-                    <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-200 mt-4 mb-2">⚡ How to inspect Request & HTTP Methods (`Core\Request`):</h4>
+                    <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-200 mt-4 mb-2">⚡ Key Capabilities of `Core\Request`:</h4>
                     <ul class="list-disc list-inside text-sm text-indigo-800 dark:text-indigo-300 space-y-1">
-                        <li><strong>Enforce allowed methods:</strong> <code>Request::assertMethod('POST', 'PUT');</code> (Exits immediately with HTTP 405 if not matching).</li>
-                        <li><strong>Check current method dynamically:</strong> <code>if (Request::isPost()) { ... }</code> or <code>Request::getMethod()</code>.</li>
-                        <li><strong>Retrieve JSON / Input payload:</strong> <code>$body = Request::json();</code> or <code>Request::input('email');</code> (`O(1)` memoized RAM lookup).</li>
+                        <li><strong>Static HTTP Verb Handlers:</strong> <code>Request::GET(...)</code>, <code>Request::POST(...)</code>, <code>Request::PUT(...)</code>, <code>Request::DELETE(...)</code>, <code>Request::PATCH(...)</code>.</li>
+                        <li><strong>Middleware Integration:</strong> Pass Closures, Class Names (e.g. <code>AuthMiddleware::class</code>), or arrays of middlewares directly as parameters.</li>
+                        <li><strong>Automatic JSON Response:</strong> Return an array or object from the route callback to emit a formatted JSON response automatically.</li>
+                        <li><strong>Retrieve Payload & Inputs:</strong> <code>$body = Request::json();</code> or <code>Request::input('email');</code> (`O(1)` memoized RAM lookup).</li>
                     </ul>
                 </div>
             </section>
