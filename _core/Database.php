@@ -409,7 +409,7 @@ class Database
         if (!empty($definition['autoIncrement'])) {
             $sql .= " AUTO_INCREMENT";
         } elseif (isset($definition['default']) && $definition['default'] !== null) {
-            if (in_array(strtoupper((string)$definition['default']), ['CURRENT_TIMESTAMP', 'NOW()'], true)) {
+            if (in_array(strtoupper((string) $definition['default']), ['CURRENT_TIMESTAMP', 'NOW()'], true)) {
                 $sql .= " DEFAULT CURRENT_TIMESTAMP";
             } elseif (is_string($definition['default'])) {
                 $sql .= " DEFAULT '" . addslashes($definition['default']) . "'";
@@ -465,14 +465,44 @@ class Database
      * @return array
      * @example $cols = $db->getColumns('users');
      */
-    public function getColumns(string $tableName): array
+    /**
+     * Drops a table if it exists.
+     * 
+     * @param string $tableName Table name
+     * @return bool
+     */
+    public function dropTable(string $tableName): bool
     {
         try {
-            $stmt = $this->db->query("SHOW COLUMNS FROM `{$tableName}`");
-            return $stmt ? $stmt->fetchAll() : [];
+            $this->db->exec("SET FOREIGN_KEY_CHECKS = 0;");
+            $this->db->exec("DROP TABLE IF EXISTS `{$tableName}`;");
+            $this->db->exec("SET FOREIGN_KEY_CHECKS = 1;");
+            return true;
         } catch (PDOException $e) {
-            Logger::error("Failed to get column definitions for table {$tableName}: " . $e->getMessage());
-            return [];
+            Logger::error("Failed to drop table {$tableName}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Drops all tables in the active MySQL database.
+     * 
+     * @return bool
+     */
+    public function dropAllTables(): bool
+    {
+        try {
+            $this->db->exec("SET FOREIGN_KEY_CHECKS = 0;");
+            $stmt = $this->db->query("SHOW TABLES");
+            $tables = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+            foreach ($tables as $table) {
+                $this->db->exec("DROP TABLE IF EXISTS `{$table}`;");
+            }
+            $this->db->exec("SET FOREIGN_KEY_CHECKS = 1;");
+            return true;
+        } catch (PDOException $e) {
+            Logger::error("Failed to drop all tables: " . $e->getMessage());
+            return false;
         }
     }
 }

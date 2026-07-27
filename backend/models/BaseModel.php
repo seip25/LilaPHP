@@ -207,6 +207,92 @@ abstract class BaseModel implements JsonSerializable
     }
 
     /**
+     * Paginates records from database with automatic URL query filtering & optional Redis caching.
+     * 
+     * Supported query parameters from Request / $_GET:
+     * - `page`: Target page number (default: 1)
+     * - `per_page`: Number of records per page (default: 15, max: 100)
+     * - `sort`: Column to sort by (default: primaryKey)
+     * - `order`: Sort order ('ASC' or 'DESC', default: 'DESC')
+     * - `start_date` / `created_at_from`: Date range filtering
+     * - `end_date` / `created_at_to`: Date range filtering
+     * 
+     * @param array $customFilters Custom key-value column equality filters
+     * @param int $cacheTtl Seconds to cache results in Redis (0 = no caching)
+     * @return array{data: static[], meta: array}
+     * @example $result = \Models\Product::paginate(['status' => 'active'], 60);
+     */
+    public static function paginate(array $customFilters = [], int $cacheTtl = 0): array
+    {
+        $instance = new static();
+        $table = $instance->table;
+        $pk = $instance->primaryKey;
+
+        $page = max(1, (int) (\Core\Request::input('page', 1)));
+        $perPage = min(100, max(1, (int) (\Core\Request::input('per_page', 15))));
+        $offset = ($page - 1) * $perPage;
+
+        $sort = (string) \Core\Request::input('sort', $pk);
+        $order = strtoupper((string) \Core\Request::input('order', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+
+        $where = ['1=1'];
+        $params = [];
+
+        // Date range filtering
+        $startDate = \Core\Request::input('start_date', \Core\Request::input('created_at_from'));
+        $endDate = \Core\Request::input('end_date', \Core\Request::input('created_at_to'));
+
+        if (!empty($startDate)) {
+            $where[] = "`created_at` >= ?";
+            $params[] = $startDate . (strlen($startDate) === 10 ? ' 00:00:00' : '');
+        }
+
+        if (!empty($endDate)) {
+            $where[] = "`created_at` <= ?";
+            $params[] = $endDate . (strlen($endDate) === 10 ? ' 23:59:59' : '');
+        }
+
+        // Custom column equality filters
+        foreach ($customFilters as $col => $val) {
+            if ($val !== null && $val !== '') {
+                $where[] = "`{$col}` = ?";
+                $params[] = $val;
+            }
+        }
+
+        $whereClause = implode(' AND ', $where);
+        $cacheKey = "paginate:{$table}:" . md5($whereClause . json_encode($params) . "{$sort}:{$order}:{$page}:{$perPage}");
+
+        $executor = function() use ($table, $whereClause, $params, $sort, $order, $perPage, $offset, $page) {
+            $countSql = "SELECT COUNT(*) as total FROM `{$table}` WHERE {$whereClause}";
+            $countRow = Database::fetch($countSql, $params);
+            $total = (int) ($countRow['total'] ?? 0);
+
+            $dataSql = "SELECT * FROM `{$table}` WHERE {$whereClause} ORDER BY `{$sort}` {$order} LIMIT {$perPage} OFFSET {$offset}";
+            $rows = Database::fetchAll($dataSql, $params);
+
+            return [
+                'data' => $rows,
+                'meta' => [
+                    'total' => $total,
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'last_page' => (int) ceil($total / $perPage)
+                ]
+            ];
+        };
+
+        if ($cacheTtl > 0) {
+            $raw = \Core\Cache::db($cacheKey, $executor, $cacheTtl);
+        } else {
+            $raw = $executor();
+        }
+
+        $raw['data'] = array_map(fn($row) => new static($row), $raw['data']);
+        return $raw;
+    }
+
+    /**
      * Deletes the current record from the database.
      * 
      * @return bool True if deleted

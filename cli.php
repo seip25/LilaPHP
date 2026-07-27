@@ -28,6 +28,7 @@ $commandMap = [
     'key:generate'  => \Cli\KeyGen::class,
     'docker'        => \Cli\Docker::class,
     'make'          => \Cli\Make::class,
+    'health'        => \Cli\Health::class,
     'task:work'     => \Cli\TaskWork::class,
     'task:run'      => \Cli\TaskWork::class,
     'ws:serve'      => \Cli\WsServe::class,
