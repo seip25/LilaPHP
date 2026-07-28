@@ -70,6 +70,15 @@ Task::dispatch('example_mail_blast', ['batch_size' => 15000, 'campaign' => 'Prom
 php cli.php task:work
 ```
 
+### ⚡ `Cli\Benchmark` (Server-Side Concurrency Benchmark Engine)
+
+Executes real OS-level load testing using `curl_multi_exec` sockets. Calculates exact P50/P95/P99 latency percentiles and syncs live snapshots to Redis (`lilaphp:benchmark:{id}`) every ~500ms for `/debug.html` integration:
+
+```bash
+# Run 1,000 concurrent connection stress test for 30 seconds
+php cli.php benchmark --url=/api/init --concurrency=1000 --duration=30
+```
+
 ### 🌐 `Core\Http` (Concurrent cURL Client)
 
 A high-performance cURL client supporting custom timeouts, JSON auto-serialization, and concurrent asynchronous multi-request execution (`curl_multi_*`):

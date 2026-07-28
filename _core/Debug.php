@@ -355,7 +355,6 @@ class Debug
                 return true;
             }
         } catch (\Throwable $e) {
-
         }
         return false;
     }
@@ -389,5 +388,96 @@ class Debug
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    /**
+     * Starts a background CLI server-side benchmark session.
+     * 
+     * @param string $url Target endpoint URL
+     * @param int $concurrency Number of concurrent connections
+     * @param int $duration Test duration in seconds
+     * @return array<string, mixed> Initial benchmark metadata
+     */
+    public static function startBenchmark(string $url = '/api', int $concurrency = 100, int $duration = 5): array
+    {
+        $benchId = 'bench_' . bin2hex(random_bytes(6));
+        $concurrency = max(1, min(2000, $concurrency));
+        $duration = max(1, min(120, $duration));
+
+        $cmdArgs = sprintf(
+            '--url=%s --concurrency=%d --duration=%d --id=%s',
+            escapeshellarg($url),
+            $concurrency,
+            $duration,
+            escapeshellarg($benchId)
+        );
+
+        $cliPath = Config::$DIR_PROJECT . '/cli.php';
+        $envFile = Config::$DIR_BACKEND . '/.env';
+
+        if (file_exists('/.dockerenv')) {
+            $cmd = sprintf('php %s benchmark %s > /dev/null 2>&1 &', escapeshellarg($cliPath), $cmdArgs);
+        } elseif (file_exists($envFile) && trim((string) @shell_exec('docker compose --env-file ' . escapeshellarg($envFile) . ' ps -q php 2>/dev/null')) !== '') {
+            $cmd = sprintf(
+                'docker compose --env-file %s exec -T php php cli.php benchmark %s > /dev/null 2>&1 &',
+                escapeshellarg($envFile),
+                $cmdArgs
+            );
+        } else {
+            $cmd = sprintf('php %s benchmark %s > /dev/null 2>&1 &', escapeshellarg($cliPath), $cmdArgs);
+        }
+
+        exec($cmd);
+
+        return [
+            'status' => 'started',
+            'id' => $benchId,
+            'target_url' => $url,
+            'concurrency' => $concurrency,
+            'duration_sec' => $duration
+        ];
+    }
+
+    /**
+     * Fetches current benchmark progress snapshot from Redis.
+     * 
+     * @param string $id Benchmark ID
+     * @return array<string, mixed>|null Snapshot data or null if not found
+     */
+    public static function getBenchmarkStatus(string $id): ?array
+    {
+        try {
+            $redis = Cache::getRedis();
+            if ($redis) {
+                $raw = $redis->get('lilaphp:benchmark:' . $id);
+                if ($raw) {
+                    $decoded = json_decode($raw, true);
+                    return is_array($decoded) ? $decoded : null;
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return null;
+    }
+
+    /**
+     * Signals a running CLI benchmark process to stop.
+     * 
+     * @param string $id Benchmark ID
+     * @return bool
+     */
+    public static function stopBenchmark(string $id): bool
+    {
+        try {
+            $redis = Cache::getRedis();
+            if ($redis) {
+                $redis->setex('lilaphp:benchmark:stop:' . $id, 60, '1');
+                return true;
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return false;
     }
 }

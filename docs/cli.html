@@ -284,6 +284,13 @@ php cli.php docker exec-mysql "SELECT id, name FROM products LIMIT 5"</code></pr
                     <div class="space-y-4 text-sm">
                         <div class="flex items-start gap-3">
                             <code
+                                class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">benchmark</code>
+                            <p class="text-slate-600 dark:text-slate-400">
+                                Runs real server-side OS-level load tests using asynchronous <code class="text-xs bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">curl_multi</code> handles. Supports <code class="text-xs font-mono">--url=</code>, <code class="text-xs font-mono">--concurrency=</code>, and <code class="text-xs font-mono">--duration=</code> flags with live Redis synchronization to <code class="text-xs font-mono">/debug.html</code>.
+                            </p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <code
                                 class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">optimize</code>
                             <p class="text-slate-600 dark:text-slate-400">
                                 Pre-caches `.env` settings to `OPcache` memory and flushes APCu/Redis pools

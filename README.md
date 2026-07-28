@@ -371,6 +371,7 @@ To perform load testing or benchmark runs at maximum concurrencies (100, 1000, 2
 ```bash
 php cli.php help                                # Display interactive help menu
 php cli.php health                              # Microsecond system health & service diagnostic check
+php cli.php benchmark --url=/api --concurrency=1000 --duration=30 # Real server-side OS-level load test (curl_multi)
 php cli.php optimize                            # Pre-cache .env settings to OPcache memory and flush APCu/Redis
 php cli.php key:generate                        # Generate secure 256-bit cryptographic APP_KEY in backend/.env
 php cli.php migrate                             # Synchronize all API Model table schemas with MySQL
@@ -386,6 +387,26 @@ php cli.php docker dev|prod|stop|ps|stats|logs|clean # Orchestrate Nginx, PHP, M
 php cli.php docker stats                        # Stream real-time CPU/RAM stats filtered for project containers
 php cli.php docker exec-mysql "SELECT * FROM users" # Open interactive MySQL CLI or execute SQL query directly
 ```
+
+---
+
+## ⚡ Server-Side Concurrency Benchmark Engine (`curl_multi`)
+
+LilaPHP includes an OS-level server-side load test runner built directly into the CLI and synchronized in real time with the web dashboard (`/debug.html`).
+
+Unlike client-side browser tests (which are restricted by JavaScript's single-threaded event loop and browser socket connection limits), LilaPHP's benchmark runner uses native asynchronous `curl_multi_exec` sockets.
+
+### CLI Usage:
+```bash
+# Run 1,000 concurrent connection stress test for 30 seconds
+php cli.php benchmark --url=/api/init --concurrency=1000 --duration=30
+```
+
+### Key Metrics Recorded:
+- **Req/Sec (RPS)**: Exact throughput handled by the engine.
+- **Latency Percentiles**: Calculates exact **P50, P95, and P99** latency distributions.
+- **Real-Time Redis Sync**: The CLI worker writes snapshots into Redis every ~500ms (`lilaphp:benchmark:{id}`), allowing `/debug.html` to visualize live load test metrics without interrupting execution.
+- **Zero-Error Execution**: Measures 2xx successes vs 4xx/5xx errors under extreme socket concurrency.
 
 ---
 

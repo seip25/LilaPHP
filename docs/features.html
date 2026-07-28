@@ -410,6 +410,25 @@ DEBUG_LOGGING_ENABLED=false</code></pre>
                 </div>
 
                 <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                        Server-Side Load Test Runner (`curl_multi`)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                        LilaPHP features a built-in OS-level benchmark engine powered by asynchronous <code>curl_multi_exec</code> sockets. Unlike browser-based tests, it executes real concurrent TCP connections and syncs live metrics to <code>/debug.html</code> via Redis.
+                    </p>
+                    <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner mb-4">
+                        <pre class="p-4 text-sm font-mono text-slate-300"><code class="language-bash"># Run 1,000 concurrent connection stress test for 30 seconds
+php cli.php benchmark --url=/api/init --concurrency=1000 --duration=30</code></pre>
+                    </div>
+                    <ul class="list-disc pl-5 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                        <li><strong>Req/Sec (RPS)</strong>: Exact throughput measurement.</li>
+                        <li><strong>Latency Percentiles</strong>: Calculates P50, P95, and P99 distribution.</li>
+                        <li><strong>Real-Time Sync</strong>: Writes snapshots to Redis every ~500ms for web UI polling.</li>
+                    </ul>
+                </div>
+
+                <div
                     class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
                         Running High-Concurrency Benchmark Tests (Bypassing Rate Limiters)
