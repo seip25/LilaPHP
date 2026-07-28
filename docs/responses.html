@@ -207,14 +207,17 @@ $data = Cache::api('stats_dashboard_v1', function() {
 Response::json($data);</code></pre>
 
                         <h4 class="text-md font-medium text-slate-900 dark:text-white mt-4 mb-2">
-                            `Cache::db(string $key, callable $resolver, int $ttlSeconds)` (Distributed Redis Cluster)
+                            `Response::setPrivateCache()` (Explicit Nginx & Browser Cache Bypass)
                         </h4>
                         <p class="text-sm text-slate-500 mb-2">
-                            Stores data in Redis (`6379`) so multiple server instances share the cached payload with failover to `APCu`.
+                            Emits <code class="text-xs bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private</code> to ensure Nginx FastCGI micro-caching bypasses the response for real-time or authenticated endpoints.
                         </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">$userProfile = Cache::db("user_profile_{$id}", fn() => User::find($id), 600);
-Response::json(['data' => $userProfile]);</code></pre>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Response;
+
+Request::GET(function() {
+    Response::setPrivateCache(); // Disables Nginx 5s FastCGI cache for real-time data
+    return ['metrics' => Debug::getMetrics()];
+});</code></pre>
                     </div>
                 </div>
             </section>

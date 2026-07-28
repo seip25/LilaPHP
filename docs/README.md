@@ -30,10 +30,11 @@ Your deployment tarball contains strictly `_core/`, `backend/`, `index.php`, and
 
 In production (`docker/php/Dockerfile.prod`), `backend/preload.php` instructs PHP-FPM to compile all framework classes (`Config`, `Database`, `Response`, `Cache`, `Validate`, `Security`, `Logger`, `Dispatcher`, `Upload`, `Task`, `Http`) directly into shared worker RAM.
 
-### 4. Dual-Tier Caching (`APCu` + `Redis`)
+### 4. Dual-Tier Caching (`APCu` + `Redis`) & Nginx Micro-Caching
 
 - **`Cache::api()`**: Caches data inside local process RAM (`APCu`) with 0 ms network latency.
 - **`Cache::db()`**: Distributed caching across your `Redis` cluster with graceful failover to `APCu` if Redis experiences a micro-outage.
+- **Nginx FastCGI Micro-Caching (5s TTL)**: Public GET API endpoints are cached directly in Nginx RAM (`LILA_API_CACHE`), allowing throughput to scale beyond 30,000+ RPS. Authenticated requests (`Authorization`, `X-API-Key`, session cookies) or private endpoints via `Response::setPrivateCache()` automatically bypass the cache.
 
 ---
 

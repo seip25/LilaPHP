@@ -35,6 +35,7 @@ Request::POST(function () {
 });
 
 Request::GET(function () {
+    Response::setPrivateCache();
     $id = (string) Request::input('id', '');
     if (empty($id)) {
         Response::error('Benchmark ID (`id`) is required for status polling', 400);

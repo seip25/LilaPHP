@@ -62,6 +62,9 @@ LilaPHP/
 
 - **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
 - **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
+- **FastCGI Micro-Caching (5s TTL)**: Public `GET` requests on `/api/` are cached at the Nginx level for 5 seconds (`LILA_API_CACHE`), allowing throughput to scale up to 30,000+ RPS without invoking PHP-FPM.
+- **Smart Security & Auth Bypass**: Nginx automatically bypasses caching (`$skip_api_cache`) for non-GET methods (`POST`, `PUT`, `DELETE`), authenticated requests containing `Authorization` / `X-API-Key` headers, or session cookies (`PHPSESSID`, `user_token`, `jwt`).
+- **Core Private Cache Helper (`Core\Response::setPrivateCache()`)**: Endpoints can explicitly invoke `Response::setPrivateCache()` to emit `Cache-Control: private, no-store, no-cache`, ensuring real-time endpoints (like metrics or debug polling) bypass Nginx caching.
 
 ### 2. Static O(1) Request Routing & Handlers (`Core\Request`)
 
