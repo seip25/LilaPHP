@@ -67,15 +67,20 @@
                         Background Workers (`Core\Task`)
                     </h2>
                     <span
-                        class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wide">Performance First</span>
+                        class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wide">Performance
+                        First</span>
                 </div>
 
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                    To keep your API responses under a few milliseconds (`Performance First`), never perform heavy tasks synchronously inside request routes (like sending massive emails, resizing images, or processing CSV files). `Core\Task` automatically dispatches them to background worker processes without blocking API throughput.
+                    To keep your API responses under a few milliseconds (`Performance First`), never perform heavy tasks
+                    synchronously inside request routes (like sending massive emails, resizing images, or processing CSV
+                    files). `Core\Task` automatically dispatches them to background worker processes without blocking
+                    API throughput.
                 </p>
 
                 <!-- How it works -->
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
                         How `Task::dispatch()` Works Under the Hood
                     </h3>
@@ -83,8 +88,13 @@
                         `Core\Task` dynamically detects your deployment environment:
                     </p>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                        <li><strong>Distributed Redis Mode (Default in Docker Prod):</strong> If Redis (`6379`) is active in `backend/.env`, the task payload (`json`) is pushed into the `lilaphp:jobs` queue (`Redis::lPush`). Background CLI workers consume it asynchronously.</li>
-                        <li><strong>Standalone Fallback Mode (`proc_open`):</strong> If Redis is disabled or unavailable, `Task::dispatch()` executes a detached OS background process via `proc_open("php /path/to/_core/cli.php task:run ... > /dev/null 2>&1 &")`, instantly releasing your HTTP worker.</li>
+                        <li><strong>Distributed Redis Mode (Default in Docker Prod):</strong> If Redis (`6379`) is
+                            active in `backend/.env`, the task payload (`json`) is pushed into the `lilaphp:jobs` queue
+                            (`Redis::lPush`). Background CLI workers consume it asynchronously.</li>
+                        <li><strong>Standalone Fallback Mode (`proc_open`):</strong> If Redis is disabled or
+                            unavailable, `Task::dispatch()` executes a detached OS background process via
+                            `proc_open("php /path/to/_core/cli.php task:run ... > /dev/null 2>&1 &")`, instantly
+                            releasing your HTTP worker.</li>
                     </ul>
                 </div>
 
@@ -110,7 +120,9 @@ Response::json(['status' => 'order_placed', 'invoice_id' => 'INV-2026-8891']);</
                     2. Creating the Job Processor (`backend/jobs/*.php`)
                 </h3>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    When a job is processed, `Core\Task` automatically includes your PHP script from the `backend/jobs/` folder matching the job name (e.g., `backend/jobs/send_invoice_email.php` or `backend/jobs/testing.php`). Inside the script, `$jobName` and `$payload` are injected into scope:
+                    When a job is processed, `Core\Task` automatically includes your PHP script from the `backend/jobs/`
+                    folder matching the job name (e.g., `backend/jobs/send_invoice_email.php` or
+                    `backend/jobs/testing.php`). Inside the script, `$jobName` and `$payload` are injected into scope:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
                     <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
@@ -134,10 +146,12 @@ return true;</code></pre>
                     3. Running the Worker Process (`php cli.php task:work`)
                 </h3>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    In production or high-concurrency environments, run one or more worker daemons using our `cli.php` entry point:
+                    In production or high-concurrency environments, run one or more worker daemons using our `cli.php`
+                    entry point:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start continuous Redis worker consuming lilaphp:jobs
+                    <pre
+                        class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start continuous Redis worker consuming lilaphp:jobs
 php cli.php task:work
 
 # Or run inside Docker FPM/CLI container
@@ -150,7 +164,9 @@ php cli.php task:run testing 'eyJwYXlsb2FkIjp7ImVtYWlsIjoidXNlckBleGFtcGxlLmNvbS
                     4. Running Permanently in Background (`docker-compose.yml`)
                 </h3>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    To keep your background task workers and WebSocket server running continuously 24/7 in production without stopping when you close the terminal, add these permanent services inside your `docker-compose.yml`:
+                    To keep your background task workers and WebSocket server running continuously 24/7 in production
+                    without stopping when you close the terminal, add these permanent services inside your
+                    `docker-compose.yml`:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
                     <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-yaml">services:
@@ -190,18 +206,21 @@ php cli.php task:run testing 'eyJwYXlsb2FkIjp7ImVtYWlsIjoidXNlckBleGFtcGxlLmNvbS
                         Real-Time WebSockets & Redis Pub/Sub (`Core\Ws`)
                     </h2>
                     <span
-                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full uppercase tracking-wide">New Engine</span>
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full uppercase tracking-wide">New
+                        Engine</span>
                 </div>
 
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                    LilaPHP includes a high-performance **Socket.IO style real-time engine** powered by **Workerman (`workerman/workerman`)** and **Redis Pub/Sub**. Your PHP-FPM API routes (`POST /api/items`) can broadcast messages directly to connected frontend browsers in `< 1ms` without keeping heavy FPM worker connections open!
-                </p>
+                    LilaPHP includes a high-performance **Socket.IO style real-time engine** powered by **Workerman
+                    (`workerman/workerman`)** and **Redis Pub/Sub**. Your PHP-FPM API routes (`POST /api/items`) can
+                    broadcast messages directly to connected frontend browsers in `< 1ms` without keeping heavy FPM
+                        worker connections open! </p>
 
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                    1. Broadcasting from PHP-FPM API Routes (`Core\Ws::publish`)
-                </h3>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Ws;
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                            1. Broadcasting from PHP-FPM API Routes (`Core\Ws::publish`)
+                        </h3>
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                            <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Ws;
 use Core\Response;
 
 // Inside backend/routes/items.php (when a new item is created via POST):
@@ -212,16 +231,19 @@ Ws::publish('item_created', [
 ], 'products_room'); // Broadcast exclusively to sockets joined to 'products_room'
 
 Response::json(['status' => 'success', 'message' => 'Item created and broadcasted live']);</code></pre>
-                </div>
+                        </div>
 
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                    2. Frontend Client Wrapper (`frontend/js/ws.js`)
-                </h3>
-                <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Include `<script src="/js/ws.js"></script>` in your HTML to use the `LilaWS` Socket.IO-style class. Packets sent while connecting are automatically queued (`sendQueue`) and flushed upon connection:
-                </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// Connects automatically to Nginx /ws endpoint (proxied to port 8001)
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                            2. Frontend Client Wrapper (`frontend/js/ws.js`)
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Include `
+                            <script src="/js/ws.js"></script>` in your HTML to use the `LilaWS` Socket.IO-style class.
+                            Packets sent while connecting are automatically queued (`sendQueue`) and flushed upon
+                            connection:
+                        </p>
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                            <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// Connects automatically to Nginx /ws endpoint (proxied to port 8001)
 const ws = new LilaWS('/ws');
 
 // Join a specific room with optional authentication payload
@@ -237,16 +259,17 @@ ws.emit('chat_message', { text: 'Hello others!' }, 'products_room');
 
 // Emit event to ALL clients in the room (including the sender socket)
 ws.broadcastAll('chat_message', { text: 'Hello everyone including me!' }, 'products_room');</code></pre>
-                </div>
+                        </div>
 
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                    3. Security & Room Authentication Interceptor (`backend/sockets/Handler.php`)
-                </h3>
-                <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Intercept connections, verify room passwords/tokens before allowing join attempts, and handle custom incoming messages directly in `backend/sockets/Handler.php`:
-                </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">namespace Sockets;
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                            3. Security & Room Authentication Interceptor (`backend/sockets/Handler.php`)
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Intercept connections, verify room passwords/tokens before allowing join attempts, and
+                            handle custom incoming messages directly in `backend/sockets/Handler.php`:
+                        </p>
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                            <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">namespace Sockets;
 
 class Handler
 {
@@ -279,16 +302,16 @@ class Handler
 
     public static function onClose(object $connection): void {}
 }</code></pre>
-                </div>
+                        </div>
 
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                    4. Running the WebSocket Server (`php cli.php ws:serve`)
-                </h3>
-                <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Run the WebSocket daemon on port `8001` (`/ws` proxy in Nginx) directly via `cli.php`:
-                </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                            4. Running the WebSocket Server (`php cli.php ws:serve`)
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Run the WebSocket daemon on port `8001` (`/ws` proxy in Nginx) directly via `cli.php`:
+                        </p>
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                            <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
 php cli.php ws:serve 8001 -d
 
 # Stop the running background WebSocket daemon
@@ -300,7 +323,7 @@ php cli.php ws:serve restart 8001 -d
 
 # Check live connections and worker metrics
 php cli.php ws:serve status 8001</code></pre>
-                </div>
+                        </div>
             </section>
 
             <!-- Core\Http cURL Wrapper -->
@@ -310,11 +333,14 @@ php cli.php ws:serve status 8001</code></pre>
                         API Client & cURL Wrapper (`Core\Http`)
                     </h2>
                     <span
-                        class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">New helper</span>
+                        class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">New
+                        helper</span>
                 </div>
 
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                    Need to call external microservices, payment gateways (Stripe/PayPal), or webhooks? `Core\Http` provides an ultra-lightweight cURL wrapper optimized for JSON APIs without requiring Guzzle or heavy HTTP client libraries.
+                    Need to call external microservices, payment gateways (Stripe/PayPal), or webhooks? `Core\Http`
+                    provides an ultra-lightweight cURL wrapper optimized for JSON APIs without requiring Guzzle or heavy
+                    HTTP client libraries.
                 </p>
 
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
@@ -343,6 +369,79 @@ if ($postResult['status'] === 200) {
     Response::json(['error' => 'Gateway rejected transaction'], 502);
 }</code></pre>
                 </div>
+            </section>
+
+            <!-- Debug & Performance Dashboard -->
+            <section id="debug-dashboard" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Built-in Debug & Concurrency Dashboard
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wide">Real-time
+                        Suite</span>
+                </div>
+
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    LilaPHP features a zero-overhead interactive <strong>Debug & Monitoring Dashboard</strong> located
+                    at <code>/debug</code> or <code>/debug.html</code>. It records live API request streams into Redis,
+                    monitors system health (Redis, MySQL, PHP-FPM, CPU/RAM/Disk), and provides an in-browser stress
+                    testing tool for concurrencies up to 4,000 requests.
+                </p>
+
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                        Configuring Debug Environment (`backend/.env`)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                        Debug logging to Redis is disabled by default (<code>DEBUG_LOGGING_ENABLED=false</code>) to
+                        guarantee zero performance overhead. Enable it in development or staging to stream request logs:
+                    </p>
+                    <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner mb-4">
+                        <pre class="p-4 text-sm font-mono text-slate-300"><code class="language-env"># Enable/disable Redis request stream logging
+DEBUG_LOGGING_ENABLED=false</code></pre>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">
+                        When deploying to production via <code>php cli.php docker prod</code>, if
+                        <code>DEBUG_LOGGING_ENABLED</code> is set to <code>true</code>, the CLI will display an
+                        interactive warning asking for confirmation before proceeding.
+                    </p>
+                </div>
+
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+                        Running High-Concurrency Benchmark Tests (Bypassing Rate Limiters)
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                        To run synthetic load testing at high concurrencies (100, 1000, 2000, 3000, 4000) without
+                        triggering rate limiters:
+                    </p>
+                    <ol class="list-decimal list-inside space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                        <li>Set <code>RATE_LIMIT=0</code> in <code>backend/.env</code> (disables PHP rate limiter).</li>
+                        <li>Comment out Nginx C-level rate limiting in <code>docker/nginx/nginx.conf</code>:</li>
+                    </ol>
+                    <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner">
+                        <pre class="p-4 text-sm font-mono text-slate-300"><code class="language-nginx"># limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;
+
+location ^~ /api/ {
+    # limit_req zone=api_limit burst=30 nodelay;
+    # limit_req_status 429;
+
+    include fastcgi_params;
+    fastcgi_pass php:9000;
+    ...
+}</code></pre>
+                    </div>
+                    <h5 class="mt-4 mb-4 text-lg font-semibold text-slate-900 dark:text-white">Stats in real time with
+                        cli (optional)</h5>
+                    <div class="mt-4 mb-4 bg-slate-900 rounded-lg overflow-hidden shadow-inner">
+                        <pre class="p-4 text-sm font-mono text-slate-300"><code class="language-bash">#Execute docker stats with cli 
+php cli.php docker stats </code></pre>
+                    </div>
+                </div>
+
             </section>
 
             <div class="mt-10 px-4">

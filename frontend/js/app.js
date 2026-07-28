@@ -25,11 +25,11 @@ document.addEventListener("DOMContentLoaded", () => {
       heroBtn.querySelector("span").textContent = "Querying Live API...";
     if (jsonViewer)
       jsonViewer.textContent =
-        "⚡ Requesting /api/test from PHP 8.4+ workers...";
+        "⚡ Requesting /api/health from PHP 8.4+ workers...";
 
     try {
       const startTime = performance.now();
-      const response = await fetch("/api/test", {
+      const response = await fetch("/api/health", {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error in live diagnostics:", error);
       if (jsonViewer) {
         jsonViewer.textContent =
-          `❌ Error contacting /api/test:\n\n${error.message}\n\nMake sure Nginx and PHP containers are running (` +
+          `❌ Error contacting /api/health:\n\n${error.message}\n\nMake sure Nginx and PHP containers are running (` +
           "`php cli.php docker dev`" +
           `).`;
       }

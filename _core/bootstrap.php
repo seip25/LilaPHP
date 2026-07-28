@@ -11,6 +11,9 @@ if (defined('LILAPHP_BOOTSTRAPPED')) {
     return;
 }
 define('LILAPHP_BOOTSTRAPPED', true);
+if (!defined('LILAPHP_START_TIME')) {
+    define('LILAPHP_START_TIME', microtime(true));
+}
 
 require_once __DIR__ . '/Config.php';
 
@@ -87,3 +90,7 @@ set_error_handler(function (int $level, string $message, string $file = '', int 
     }
     throw new \ErrorException($message, 0, $level, $file, $line);
 });
+
+if (PHP_SAPI !== 'cli') {
+    register_shutdown_function([\Core\Debug::class, 'recordRequest']);
+}

@@ -163,6 +163,51 @@ To prevent disk I/O bottlenecks under high concurrency (thousands of req/s), fil
 
 ---
 
+## 🛠️ Built-in Debug & Performance Dashboard (`/debug`)
+
+LilaPHP includes an interactive, zero-overhead **Debug & Performance Monitoring Dashboard** accessible at `/debug` or `/debug.html`.
+
+- **Live Redis Request Stream**: Captures Method, URI, Query Params, Duration (ms), Memory Peak (MB), Status Code, and Client IP into Redis (`lilaphp:debug:requests`).
+- **System Health Profiler**: Real-time status checks for Redis, MySQL, PHP-FPM, CPU Load, RAM Usage, and Disk Free space.
+- **Interactive Concurrency Benchmark Tool**: Run browser-based client-side stress tests with concurrencies from **1 to 4,000** on any autodetected route.
+- **Filters & Search**: Filter logs by URI, Method (GET, POST, PUT, DELETE), Status (2xx, 3xx, 4xx, 5xx), or IP with client-side pagination.
+
+### ⚙️ Debug Environment Configuration (`backend/.env`)
+
+Controlled via `DEBUG_LOGGING_ENABLED` in `backend/.env`:
+
+```env
+# Enable/disable Redis request logging (default: false for zero overhead)
+DEBUG_LOGGING_ENABLED=false
+```
+
+When deploying to production via `php cli.php docker prod`, if `DEBUG_LOGGING_ENABLED` is `true`, the CLI will display an interactive warning asking for confirmation before proceeding.
+
+### 🚀 How to Run Unlimited Concurrency & Benchmark Tests (Disabling Rate Limits)
+
+To perform load testing or benchmark runs at maximum concurrencies (100, 1000, 2000, 3000, 4000) without hitting rate limiters, temporarily disable PHP and Nginx rate limits:
+
+1. **Disable PHP Rate Limiting in `backend/.env`**:
+   ```env
+   RATE_LIMIT=0
+   ```
+2. **Comment out Nginx C-Level Rate Limiting in `docker/nginx/nginx.conf`**:
+   ```nginx
+   # limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;
+
+   location ^~ /api/ {
+       # limit_req zone=api_limit burst=30 nodelay;
+       # limit_req_status 429;
+
+       include fastcgi_params;
+       fastcgi_pass php:9000;
+       ...
+   }
+   ```
+3. Restart containers or reload Nginx (`docker compose exec nginx nginx -s reload` or `php cli.php docker dev`).
+
+---
+
 ## ⚡ Master CLI (`cli.php`)
 
 | Command                    | Description                                                                                |
@@ -172,5 +217,5 @@ To prevent disk I/O bottlenecks under high concurrency (thousands of req/s), fil
 | `php cli.php migrate`      | Scan models in `backend/models/` and synchronize MySQL schemas automatically.              |
 | `php cli.php seed`         | Populate initial database records and check default accounts (`admin@lilaphp.dev`).        |
 | `php cli.php task:work`    | Start continuous background worker consuming Redis job queues.                             |
-| `php cli.php docker dev    | prod                                                                                       | ps                                             | stop` | Orchestrate Nginx, PHP 8.4, MySQL, and Redis with dynamic `.env` ports. |
+| `php cli.php docker dev | prod | ps | stats | stop` | Orchestrate Nginx, PHP 8.4, MySQL, and Redis, and stream real-time project container stats. |
 | `php cli.php make model    | route <Name>`                                                                              | Scaffold API models and route files instantly. |

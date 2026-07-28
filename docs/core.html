@@ -57,14 +57,19 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16"            <!-- Config -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16" <!-- Config -->
             <section id="config" class="scroll-mt-24 mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
                     Configuration & Environment (`backend/.env`)
                 </h2>
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
-                        Settings in <code>backend/.env</code> control the framework's behavior globally. Under our API-first architecture, no monolithic <code>App</code> instantiation is required—all configuration properties are read into static memory upon boot (`_core/bootstrap.php`).
+                        Settings in <code>backend/.env</code> control the framework's behavior globally. Under our
+                        API-first architecture, no monolithic <code>App</code> instantiation is required—all
+                        configuration properties are read into static memory upon boot (`_core/bootstrap.php`). Internal
+                        framework routes (such as <code>/api/debug/*</code> and the JSON <code>404</code> handler) are
+                        cleanly isolated inside <code>_core/routes/</code> so that <code>backend/routes/</code> is
+                        strictly reserved for user application logic.
                     </p>
                     <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-ini">APP_NAME="LilaPHP API Engine"
 APP_ENV="production"
@@ -91,8 +96,10 @@ REDIS_PORT=6379
 RATE_LIMIT=200
 RATE_LIMIT_WINDOW=60
 
-# Logging
-LOG_ENABLED=false        # Disabled by default for maximum concurrency</code></pre>
+# Logger & Debug Settings
+LOG_ENABLED=false        # Disabled by default for maximum concurrency
+DEBUG_LOGGING_ENABLED=true
+</code></pre>
                 </div>
             </section>
 
@@ -102,10 +109,16 @@ LOG_ENABLED=false        # Disabled by default for maximum concurrency</code></p
                     Direct API Execution (Why No `new App()`?)
                 </h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    In previous versions, developers had to instantiate a monolithic object like <code>new App(['security' => ...])</code> on every single HTTP request. This approach created unnecessary CPU allocation, redundant configuration parsing, and dependency injection overhead.
+                    In previous versions, developers had to instantiate a monolithic object like
+                    <code>new App(['security' => ...])</code> on every single HTTP request. This approach created
+                    unnecessary CPU allocation, redundant configuration parsing, and dependency injection overhead.
                 </p>
                 <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    <strong>LilaPHP's API-First Paradigm:</strong> When Nginx dispatches a request (`/api/ping`) to `/var/www/html/index.php`, our ultra-lightweight bootstrap (`_core/bootstrap.php`) instantly wires all static helpers (`Response`, `Cache`, `Database`, `Validate`) into shared process memory via OPcache preloading (`preload.php`). Your physical endpoint (`backend/routes/ping.php`) executes immediately without class instantiation wrappers or middleware loops.
+                    <strong>LilaPHP's API-First Paradigm:</strong> When Nginx dispatches a request (`/api/ping`) to
+                    `/var/www/html/index.php`, our ultra-lightweight bootstrap (`_core/bootstrap.php`) instantly wires
+                    all static helpers (`Response`, `Cache`, `Database`, `Validate`) into shared process memory via
+                    OPcache preloading (`preload.php`). Your physical endpoint (`backend/routes/ping.php`) executes
+                    immediately without class instantiation wrappers or middleware loops.
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg">
                     <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
@@ -131,7 +144,8 @@ Response::json(['status' => 'success', 'data' => $clean]);</code></pre>
                     </h2>
                 </div>
                 <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    LilaPHP provides high-speed static and singleton core utilities tailored specifically for JSON APIs, database pooling, background tasks, and anti-malware security.
+                    LilaPHP provides high-speed static and singleton core utilities tailored specifically for JSON APIs,
+                    database pooling, background tasks, and anti-malware security.
                 </p>
 
                 <div class="space-y-8">
@@ -142,7 +156,9 @@ Response::json(['status' => 'success', 'data' => $clean]);</code></pre>
                             `Core\Database` & `Core\Cache`
                         </h3>
                         <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            <code>Database::getInstance()</code> maintains an active, reusable PDO connection pool across requests. <code>Cache</code> delivers dual-tier speed (`Cache::api()` for local APCu RAM, and `Cache::db()` for distributed Redis).
+                            <code>Database::getInstance()</code> maintains an active, reusable PDO connection pool
+                            across requests. <code>Cache</code> delivers dual-tier speed (`Cache::api()` for local APCu
+                            RAM, and `Cache::db()` for distributed Redis).
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Database;
 use Core\Cache;
@@ -165,7 +181,10 @@ Response::json(['items' => $items]);</code></pre>
                             `Core\Validate` & `Core\Response`
                         </h3>
                         <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            <code>Validate::assert()</code> inspects payload inputs (using <code>$_REQUEST['lang']</code> for localized error messages) and halts execution instantly on invalid payloads. <code>Response::json()</code> outputs clean JSON with automated CORS and HTTP status headers.
+                            <code>Validate::assert()</code> inspects payload inputs (using
+                            <code>$_REQUEST['lang']</code> for localized error messages) and halts execution instantly
+                            on invalid payloads. <code>Response::json()</code> outputs clean JSON with automated CORS
+                            and HTTP status headers.
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Validate;
 use Core\Response;
@@ -187,7 +206,9 @@ Response::json(['status' => 'created', 'user' => $data], 201);</code></pre>
                             `Core\Upload` & `Core\Task`
                         </h3>
                         <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            <code>Upload::save()</code> provides anti-malware MIME scanning and blocks embedded PHP scripts. <code>Task::dispatch()</code> pushes long-running jobs to background Redis queues or OS execution threads without slowing down your API endpoints.
+                            <code>Upload::save()</code> provides anti-malware MIME scanning and blocks embedded PHP
+                            scripts. <code>Task::dispatch()</code> pushes long-running jobs to background Redis queues
+                            or OS execution threads without slowing down your API endpoints.
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Upload;
 use Core\Task;

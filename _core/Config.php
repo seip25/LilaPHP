@@ -39,6 +39,7 @@ class Config
     public static string $APP_KEY = '';
     public static string $CORS_ALLOWED_ORIGINS = '*';
     public static bool $LOG_ENABLED = false;
+    public static bool $DEBUG_LOGGING_ENABLED = false;
     public static int $RATE_LIMIT = 200;
     public static int $RATE_LIMIT_WINDOW = 60;
 
@@ -118,6 +119,7 @@ class Config
         self::$APP_KEY = (string) ($_ENV['APP_KEY'] ?? '');
         self::$CORS_ALLOWED_ORIGINS = (string) ($_ENV['CORS_ALLOWED_ORIGINS'] ?? '*');
         self::$LOG_ENABLED = filter_var($_ENV['LOG_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        self::$DEBUG_LOGGING_ENABLED = filter_var($_ENV['DEBUG_LOGGING_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         $rateLimitVal = strtolower(trim((string) ($_ENV['RATE_LIMIT'] ?? '200')));
         self::$RATE_LIMIT = in_array($rateLimitVal, ['false', '0', 'none', 'off', 'null'], true) ? 0 : (int) $rateLimitVal;

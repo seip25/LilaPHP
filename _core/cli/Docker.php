@@ -30,6 +30,7 @@ class Docker extends Command
             'prod', 'production' => $this->launchCluster('production'),
             'stop', 'down' => $this->execShell('docker compose --env-file ./backend/.env down'),
             'ps', 'status' => $this->showStatus(),
+            'stats' => $this->showStats(),
             'logs' => $this->execShell('docker compose --env-file ./backend/.env logs -f --tail=100'),
             'exec-php' => $this->execShell('docker compose --env-file ./backend/.env exec php bash'),
             'exec-mysql', 'mysql' => $this->execMysql($args),
@@ -80,6 +81,21 @@ class Docker extends Command
         $shortEnv = $env === 'production' ? 'prod' : 'dev';
         
         if ($env === 'production') {
+            if (Config::$DEBUG_LOGGING_ENABLED) {
+                echo PHP_EOL;
+                $this->warning("⚠️  WARNING: `DEBUG_LOGGING_ENABLED` is currently set to TRUE in backend/.env!");
+                $this->warning("   Debug logging will capture request metrics into Redis during production mode.");
+                echo "\033[1;33mDo you want to proceed with production deployment anyway? [y/N or s/n]: \033[0m";
+                $handle = fopen("php://stdin", "r");
+                $answer = trim(fgets($handle) ?: '');
+                $answerLower = strtolower($answer);
+                if (!in_array($answerLower, ['y', 'yes', 's', 'si'], true)) {
+                    $this->error("Deployment aborted by user. Disable `DEBUG_LOGGING_ENABLED=false` in backend/.env to remove this warning.");
+                    return 1;
+                }
+                echo PHP_EOL;
+            }
+
             $this->info("Optimizing environment configuration for production...");
             $this->execShell(PHP_BINARY . ' cli.php optimize');
         }
@@ -119,6 +135,20 @@ class Docker extends Command
     }
 
     /**
+     * Streams real-time Docker stats filtered specifically for LilaPHP project containers.
+     * 
+     * @return int
+     */
+    private function showStats(): int
+    {
+        $appName = strtolower(Config::$APP_NAME);
+        $this->info("Streaming real-time Docker resource consumption filtered for `{$appName}` containers...");
+        
+        $cmd = 'docker stats $(docker compose --env-file ./backend/.env ps -q 2>/dev/null)';
+        return $this->execShell($cmd);
+    }
+
+    /**
      * Completely removes containers, volumes, and dangling images.
      * 
      * @return int
@@ -142,6 +172,7 @@ class Docker extends Command
         echo "  php cli.php docker prod                     # Launch in Production Mode" . PHP_EOL;
         echo "  php cli.php docker stop                     # Stop cluster containers" . PHP_EOL;
         echo "  php cli.php docker ps                       # Show running containers and ports" . PHP_EOL;
+        echo "  php cli.php docker stats                    # Stream real-time CPU/RAM stats of project containers" . PHP_EOL;
         echo "  php cli.php docker logs                     # Tail real-time cluster logs" . PHP_EOL;
         echo "  php cli.php docker exec-php                 # Open interactive bash inside PHP container" . PHP_EOL;
         echo "  php cli.php docker exec-mysql [query]       # Open interactive MySQL CLI or execute SQL query" . PHP_EOL;

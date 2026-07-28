@@ -16,31 +16,37 @@ Request::GET(function () {
     $start = microtime(true);
 
     $mysqlStatus = 'disconnected';
-    try {
-        $pdo = Database::getInstance();
-        if ($pdo !== null) {
-            $stmt = $pdo->query('SELECT 1');
-            if ($stmt && $stmt->fetchColumn() == 1) {
-                $mysqlStatus = 'connected';
-            }
-        }
-    } catch (\Throwable $e) {
-        $mysqlStatus = 'error: ' . $e->getMessage();
-    }
-
-    $apcuTested = function_exists('apcu_enabled') && apcu_enabled();
-
-    $redisStatus = 'disconnected';
-    $redis = Cache::getRedis();
-    if ($redis !== null) {
+    $mysqlStatus = Cache::db("mysql_health", function () {
         try {
-            if ($redis->ping()) {
-                $redisStatus = 'connected';
+            $pdo = Database::getInstance();
+            if ($pdo !== null) {
+                $stmt = $pdo->query('SELECT 1');
+                if ($stmt && $stmt->fetchColumn() == 1) {
+                    return 'connected';
+                }
+                return "disconnected";
             }
         } catch (\Throwable $e) {
-            $redisStatus = 'error: ' . $e->getMessage();
+            return 'error: ' . $e->getMessage();
         }
-    }
+
+    }, 10);
+    $apcuTested = Cache::db("apcu_health", function () {
+        return function_exists('apcu_enabled') && apcu_enabled();
+    }, 10);
+
+    $redisStatus = Cache::db("redis_health", function () {
+        $redis = Cache::getRedis();
+        if ($redis !== null) {
+            try {
+                if ($redis->ping()) {
+                    return 'connected';
+                }
+            } catch (\Throwable $e) {
+                return 'error: ' . $e->getMessage();
+            }
+        }
+    }, 10);
 
     $elapsedMs = round((microtime(true) - $start) * 1000, 3);
 
@@ -49,10 +55,16 @@ Request::GET(function () {
         'engine' => 'LilaPHP API Engine',
         'environment' => Config::$APP_ENV,
         'latency_ms' => $elapsedMs,
+        'performance_ms' => $elapsedMs . ' ms',
         'services' => [
             'mysql' => $mysqlStatus,
             'apcu_ram' => $apcuTested ? 'active' : 'disabled',
             'redis' => $redisStatus
+        ],
+        'drivers' => [
+            'apcu_ram' => ['enabled' => $apcuTested],
+            'redis' => ['functional' => $redisStatus === 'connected', 'status' => $redisStatus],
+            'mysql' => ['functional' => $mysqlStatus === 'connected', 'status' => $mysqlStatus]
         ],
         'timestamp' => time()
     ];

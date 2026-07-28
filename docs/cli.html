@@ -256,13 +256,16 @@ php cli.php ws:serve status 8001</code></pre>
 
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
                         <code
-                            class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [dev|prod|stop|ps|logs|exec-mysql]</code>
+                            class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [dev|prod|stop|ps|stats|logs|exec-mysql]</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`) and
+                            Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`), streams real-time CPU/RAM stats filtered for project containers, and
                             provides interactive MySQL CLI access or raw SQL query execution.
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Launch development environment
 php cli.php docker dev
+
+# Stream real-time CPU & RAM stats filtered for LilaPHP containers
+php cli.php docker stats
 
 # Open interactive MySQL CLI inside DB container
 php cli.php docker exec-mysql

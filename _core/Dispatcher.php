@@ -40,6 +40,18 @@ class Dispatcher
             $uri = 'index';
         }
 
+        if (str_starts_with($uri, 'debug') || str_starts_with($uri, '404')) {
+            $coreFile = Config::$DIR_CORE . "/routes/{$uri}.php";
+            $coreIndex = Config::$DIR_CORE . "/routes/{$uri}/index.php";
+            if (file_exists($coreFile)) {
+                require $coreFile;
+                exit;
+            } elseif (file_exists($coreIndex)) {
+                require $coreIndex;
+                exit;
+            }
+        }
+
         $routesDir = Config::$DIR_BACKEND . '/routes';
         $targetFile = "{$routesDir}/{$uri}.php";
         $targetIndex = "{$routesDir}/{$uri}/index.php";

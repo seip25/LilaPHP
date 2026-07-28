@@ -184,7 +184,7 @@ class Cache
     }
 
     /**
-     * Flushes all cached data across APCu and memory fallback.
+     * Flushes all cached data across APCu, memory fallback, and Redis DB.
      * 
      * @return void
      * @example \Core\Cache::clear();
@@ -195,6 +195,26 @@ class Cache
             apcu_clear_cache();
         }
         self::$memoryFallback = [];
+
+        $redis = self::getRedis();
+        if ($redis !== null) {
+            try {
+                $redis->flushDB();
+            } catch (RedisException $e) {
+                Logger::warning("Redis flushDB failure: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Alias for clear() that returns a boolean status.
+     * 
+     * @return bool
+     */
+    public static function flush(): bool
+    {
+        self::clear();
+        return true;
     }
 
     /**

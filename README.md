@@ -31,11 +31,12 @@ LilaPHP/
 │   ├── Task.php               # Background job dispatcher for Redis (`lilaphp:jobs`) & OS workers
 │   ├── Http.php               # High-performance cURL client with concurrent `curl_multi_*` pooling
 │   ├── bootstrap.php          # Auto-prepend compatible autoloader (`auto_prepend_file`)
+│   ├── routes/                # Core System Endpoints (`404.php`, `debug/health.php`, `debug/metrics.php`)
 │   ├── locales/               # Validation dictionary translations (`es`, `en`, `pt-br`)
 │   └── cli/                   # CLI engine classes (Migrate, Seed, Optimize, KeyGen, Docker, Make, TaskWork)
 ├── backend/                   # 🖥️ Application Backend (PHP API)
 │   ├── models/                # Lightweight JSON-serializable ORM (`User.php`, `Product.php`)
-│   ├── routes/                # Physical route scripts (`index.php`, `test.php`, `ping.php`, `404.php`)
+│   ├── routes/                # User API route scripts (`index.php`, `test.php`, `users.php`)
 │   ├── preload.php            # Production OPcache RAM preload script compiling all core classes
 │   ├── .env                   # Dynamic environment variables (`HTTP_PORT`, `DB_PORT`, `APP_KEY`)
 │   └── .env_example           # Configuration template
@@ -320,6 +321,51 @@ Event::dispatch('user.created', ['user_id' => 42, 'email' => 'user@example.com']
 
 ---
 
+## 🛠️ Built-in Debug & Performance Dashboard (`/debug`)
+
+LilaPHP includes an interactive, zero-overhead **Debug & Performance Monitoring Dashboard** accessible at `/debug` or `/debug.html`.
+
+- **Live Redis Request Stream**: Captures Method, URI, Query Params, Duration (ms), Memory Peak (MB), Status Code, and Client IP into Redis (`lilaphp:debug:requests`).
+- **System Health Profiler**: Real-time status checks for Redis, MySQL, PHP-FPM, CPU Load, RAM Usage, and Disk Free space.
+- **Interactive Concurrency Benchmark Tool**: Run browser-based client-side stress tests with concurrencies from **1 to 4,000** on any autodetected route.
+- **Filters & Search**: Filter logs by URI, Method (GET, POST, PUT, DELETE), Status (2xx, 3xx, 4xx, 5xx), or IP with client-side pagination.
+
+### ⚙️ Debug Environment Configuration (`backend/.env`)
+
+Controlled via `DEBUG_LOGGING_ENABLED` in `backend/.env`:
+
+```env
+# Enable/disable Redis request logging (default: false for zero overhead)
+DEBUG_LOGGING_ENABLED=false
+```
+
+When deploying to production via `php cli.php docker prod`, if `DEBUG_LOGGING_ENABLED` is `true`, the CLI will display an interactive warning asking for confirmation before proceeding.
+
+### 🚀 How to Run Unlimited Concurrency & Benchmark Tests (Disabling Rate Limits)
+
+To perform load testing or benchmark runs at maximum concurrencies (100, 1000, 2000, 3000, 4000) without hitting rate limiters, temporarily disable PHP and Nginx rate limits:
+
+1. **Disable PHP Rate Limiting in `backend/.env`**:
+   ```env
+   RATE_LIMIT=0
+   ```
+2. **Comment out Nginx C-Level Rate Limiting in `docker/nginx/nginx.conf`**:
+   ```nginx
+   # limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;
+
+   location ^~ /api/ {
+       # limit_req zone=api_limit burst=30 nodelay;
+       # limit_req_status 429;
+
+       include fastcgi_params;
+       fastcgi_pass php:9000;
+       ...
+   }
+   ```
+3. Restart containers or reload Nginx (`docker compose exec nginx nginx -s reload` or `php cli.php docker dev`).
+
+---
+
 ## 🛠️ Master CLI Commands (`cli.php`)
 
 ```bash
@@ -336,7 +382,8 @@ php cli.php ws:serve stop 8001                  # Stop running background WebSoc
 php cli.php ws:serve restart 8001 -d            # Gracefully restart background WebSocket daemon
 php cli.php make model <Name>                   # Generate boilerplate API Model inside backend/models/
 php cli.php make route <path>                   # Generate file-based API route inside backend/routes/
-php cli.php docker dev|prod|stop|ps|logs|clean  # Orchestrate Nginx, PHP, MySQL, Redis cluster
+php cli.php docker dev|prod|stop|ps|stats|logs|clean # Orchestrate Nginx, PHP, MySQL, Redis cluster & stream project stats
+php cli.php docker stats                        # Stream real-time CPU/RAM stats filtered for project containers
 php cli.php docker exec-mysql "SELECT * FROM users" # Open interactive MySQL CLI or execute SQL query directly
 ```
 
