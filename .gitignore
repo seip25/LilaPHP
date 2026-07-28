@@ -32,3 +32,4 @@ docker/*/logs/
 Thumbs.db
 .idea/
 .vscode/
+test/
