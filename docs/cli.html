@@ -258,7 +258,8 @@ php cli.php ws:serve status 8001</code></pre>
                         <code
                             class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [dev|prod|stop|ps|stats|logs|exec-mysql]</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`), streams real-time CPU/RAM stats filtered for project containers, and
+                            Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`),
+                            streams real-time CPU/RAM stats filtered for project containers, and
                             provides interactive MySQL CLI access or raw SQL query execution.
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Launch development environment
@@ -275,6 +276,20 @@ php cli.php docker exec-mysql "SELECT id, name FROM products LIMIT 5"</code></pr
                     </div>
                 </div>
 
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <code
+                        class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-sm font-mono">benchmark [--url=] [--concurrency=] [--duration=]</code>
+                    <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
+                        Runs real server-side OS-level load tests using asynchronous <code
+                            class="text-xs bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">curl_multi</code>
+                        handles. Highly efficient and native approach to load testing endpoints. Includes live Redis
+                        synchronization to broadcast test progress to <code
+                            class="text-xs font-mono">/debug.html</code>.
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash"># Run a 30-second load test with 1000 concurrent connections
+php cli.php benchmark --url=/api --concurrency=1000 --duration=30</code></pre>
+                </div>
+
                 <!-- Performance Optimization & Security -->
                 <div
                     class="mt-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
@@ -282,13 +297,6 @@ php cli.php docker exec-mysql "SELECT id, name FROM products LIMIT 5"</code></pr
                         System Optimization & Security Commands
                     </h3>
                     <div class="space-y-4 text-sm">
-                        <div class="flex items-start gap-3">
-                            <code
-                                class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">benchmark</code>
-                            <p class="text-slate-600 dark:text-slate-400">
-                                Runs real server-side OS-level load tests using asynchronous <code class="text-xs bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">curl_multi</code> handles. Supports <code class="text-xs font-mono">--url=</code>, <code class="text-xs font-mono">--concurrency=</code>, and <code class="text-xs font-mono">--duration=</code> flags with live Redis synchronization to <code class="text-xs font-mono">/debug.html</code>.
-                            </p>
-                        </div>
                         <div class="flex items-start gap-3">
                             <code
                                 class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">optimize</code>

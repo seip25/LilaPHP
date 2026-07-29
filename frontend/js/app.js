@@ -1,130 +1,235 @@
-/**
- * LilaPHP Frontend Dashboard & Live API Diagnostics Engine
- */
+let cart = Lila.store("cart", { items: [], total: 0 });
+const { html } = Lila;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const runBtn = document.getElementById("run-test-btn");
-  const heroBtn = document.getElementById("hero-benchmark-btn");
-  const jsonViewer = document.getElementById("json-viewer");
-
-  const metricSpeed = document.getElementById("metric-speed");
-  const statusSpeed = document.getElementById("status-speed");
-
-  const metricApcu = document.getElementById("metric-apcu");
-  const statusApcu = document.getElementById("status-apcu");
-
-  const metricRedis = document.getElementById("metric-redis");
-  const statusRedis = document.getElementById("status-redis");
-
-  const metricMysql = document.getElementById("metric-mysql");
-  const statusMysql = document.getElementById("status-mysql");
-
-  async function runLiveDiagnostics() {
-    if (runBtn) runBtn.textContent = "Running Diagnostics...";
-    if (heroBtn)
-      heroBtn.querySelector("span").textContent = "Querying Live API...";
-    if (jsonViewer)
-      jsonViewer.textContent =
-        "⚡ Requesting /api/health from PHP 8.4+ workers...";
-
-    try {
-      const startTime = performance.now();
-      const response = await fetch("/api/health", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Cache-Control": "no-cache",
-        },
-      });
-
-      const roundTripMs = Math.round(performance.now() - startTime);
-
-      if (!response.ok) {
-        throw new Error(
-          `HTTP Error ${response.status}: ${response.statusText}`,
-        );
-      }
-
-      const data = await response.json();
-
-      if (jsonViewer) {
-        jsonViewer.textContent = JSON.stringify(data, null, 2);
-      }
-
-      if (metricSpeed && data.performance_ms !== undefined) {
-        metricSpeed.textContent = data.performance_ms;
-        statusSpeed.textContent = `Roundtrip Nginx/PHP: ${roundTripMs} ms`;
-        statusSpeed.className = "stat-sub status-green";
-      }
-
-      if (data.drivers && data.drivers.apcu_ram) {
-        if (data.drivers.apcu_ram.enabled) {
-          metricApcu.textContent = "ACTIVE";
-          statusApcu.textContent = "Shared RAM Worker cache ready";
-          statusApcu.className = "stat-sub status-green";
-        } else {
-          metricApcu.textContent = "FALLBACK";
-          statusApcu.textContent = "Using in-memory array (CLI/Dev)";
-          statusApcu.className = "stat-sub status-yellow";
-        }
-      }
-
-      if (data.drivers && data.drivers.redis) {
-        const redis = data.drivers.redis;
-        if (redis.functional) {
-          metricRedis.textContent = "CONNECTED";
-          statusRedis.textContent = "Redis 6379 pool responding";
-          statusRedis.className = "stat-sub status-green";
-        } else {
-          metricRedis.textContent = "INACTIVE";
-          statusRedis.textContent =
-            redis.status || "Not connected in this profile";
-          statusRedis.className = "stat-sub status-yellow";
-        }
-      }
-
-      if (data.drivers && data.drivers.mysql) {
-        const mysql = data.drivers.mysql;
-        if (mysql.functional) {
-          metricMysql.textContent = "CONNECTED";
-          statusMysql.textContent = "PDO Pool with MySQL 3306 ok";
-          statusMysql.className = "stat-sub status-green";
-        } else {
-          metricMysql.textContent = "DISCONNECTED";
-          statusMysql.textContent = mysql.status || "Verify .env variables";
-          statusMysql.className = "stat-sub status-yellow";
-        }
-      }
-    } catch (error) {
-      console.error("Error in live diagnostics:", error);
-      if (jsonViewer) {
-        jsonViewer.textContent =
-          `❌ Error contacting /api/health:\n\n${error.message}\n\nMake sure Nginx and PHP containers are running (` +
-          "`php cli.php docker dev`" +
-          `).`;
-      }
-      if (statusSpeed) {
-        statusSpeed.textContent = "Connection Error";
-        statusSpeed.className = "stat-sub status-red";
-      }
-    } finally {
-      if (runBtn) runBtn.textContent = "Test API Live";
-      if (heroBtn)
-        heroBtn.querySelector("span").textContent = "Run Real-Time Diagnostics";
-    }
-  }
-
-  if (runBtn) {
-    runBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      runLiveDiagnostics();
+Lila.mount("#cart-count", {
+  state: { count: 0 },
+  template: (s) => html`${s.count}`,
+  onMount: (state) => {
+    let c = Lila.getStore("cart");
+    return c.$subscribe(() => {
+      state.count = c.$raw.items.length;
     });
-  }
-
-  if (heroBtn) {
-    heroBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      runLiveDiagnostics();
-    });
-  }
+  },
 });
+
+Lila.route("/", {
+  state: () => ({ count: 0, name: "", doubled: 0 }),
+  template: (s) => html`
+    <div class="page">
+      <div class="hero-banner">
+        <h2>Lila<span class="accent">.js</span> Interactive Demo</h2>
+        <p class="subtitle">
+          Lightweight reactive engine for LilaPHP — hash routing, island
+          reactivity, zero dependencies.
+        </p>
+      </div>
+
+      <div class="demo-grid">
+        <div class="card">
+          <h3>⚡ Reactive Counter</h3>
+          <p class="muted">
+            State updates propagate instantly to all bound elements.
+          </p>
+          <div class="counter-row">
+            <button data-action="decrement" class="btn btn-icon">−</button>
+            <span class="counter-value">${s.count}</span>
+            <button data-action="increment" class="btn btn-icon">+</button>
+          </div>
+          <p class="muted">Doubled: <strong>${s.doubled}</strong></p>
+        </div>
+
+        <div class="card">
+          <h3>🔗 Two-Way Binding</h3>
+          <p class="muted">
+            <code>data-model</code> syncs input ↔ state automatically.
+          </p>
+          <input
+            data-model="name"
+            placeholder="Type your name..."
+            class="input"
+            value="${s.name}"
+          />
+
+          ${s.name
+            ? html`
+                <div class="greeting">
+                  Hello, <strong>${s.name}</strong>! 👋
+                </div>
+              `
+            : html`
+                <div class="muted" style="margin-top:1rem;">
+                  Start typing above...
+                </div>
+              `}
+        </div>
+      </div>
+    </div>
+  `,
+  actions: {
+    increment: (ctx) => {
+      ctx.state.count++;
+      ctx.state.doubled = ctx.state.count * 2;
+    },
+    decrement: (ctx) => {
+      ctx.state.count--;
+      ctx.state.doubled = ctx.state.count * 2;
+    },
+  },
+});
+
+Lila.route("/products", {
+  state: () => ({ products: [], loading: true }),
+  template: (s) => html`
+    <div class="page">
+      <h2>🛍️ Products</h2>
+      <p class="subtitle">
+        Simulated API fetch with skeleton loading & ES6 Template mapping.
+      </p>
+
+      ${s.loading
+        ? html`
+            <div class="skeleton-grid">
+              ${'<div class="lila-skeleton"></div>'.repeat(6)}
+            </div>
+          `
+        : html`
+            <div class="product-grid">
+              ${s.products.map(
+                (item) => html`
+                  <div class="card product-card">
+                    <div class="product-emoji">${item.icon}</div>
+                    <h4>${item.name}</h4>
+                    <p class="price">$${item.price}</p>
+                    <button
+                      data-action="addToCart"
+                      data-id="${item.id}"
+                      class="btn btn-primary"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                `,
+              )}
+            </div>
+          `}
+    </div>
+  `,
+  actions: {
+    addToCart: (ctx) => {
+      let c = Lila.getStore("cart");
+      let id = parseInt(ctx.id);
+      let item = ctx.state.products.find((p) => p.id === id);
+      let exists = c.$raw.items.find((i) => i.id === id);
+
+      if (!exists && item) {
+        c.items.push(Object.assign({}, item));
+        c.total = c.$raw.items.reduce((sum, i) => sum + i.price, 0);
+      }
+    },
+  },
+  onMount: (state) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        state.products = [
+          { id: 1, name: "Mechanical Keyboard", price: 89.99, icon: "⌨️" },
+          { id: 2, name: "Wireless Mouse", price: 49.99, icon: "🖱️" },
+          { id: 3, name: "USB-C Hub", price: 34.99, icon: "🔌" },
+          { id: 4, name: "4K Monitor", price: 399.99, icon: "🖥️" },
+          { id: 5, name: "Webcam HD", price: 59.99, icon: "📷" },
+          { id: 6, name: "LED Desk Lamp", price: 29.99, icon: "💡" },
+        ];
+        state.loading = false;
+        resolve();
+      }, 800);
+    });
+  },
+});
+
+Lila.route("/cart", {
+  state: () => ({ items: [], total: 0 }),
+  template: (s) => html`
+    <div class="page">
+      <h2>🛒 Shopping Cart</h2>
+
+      ${s.items.length === 0
+        ? html`
+            <div class="empty-state">
+              <div class="empty-icon">🛒</div>
+              <p>Your cart is empty</p>
+              <a href="#/products" data-link class="btn btn-primary"
+                >Browse Products</a
+              >
+            </div>
+          `
+        : html`
+            <div>
+              <div class="cart-list">
+                ${s.items.map(
+                  (item, index) => html`
+                    <div class="cart-item">
+                      <span class="cart-item-icon">${item.icon}</span>
+                      <div class="cart-item-info">
+                        <strong>${item.name}</strong>
+                        <span class="price">$${item.price}</span>
+                      </div>
+                      <button
+                        data-action="remove"
+                        data-index="${index}"
+                        class="btn btn-danger btn-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  `,
+                )}
+              </div>
+              <div class="cart-footer">
+                <span class="cart-total"
+                  >Total: $<strong>${s.total.toFixed(2)}</strong></span
+                >
+                <button data-action="clear" class="btn btn-outline">
+                  Clear Cart
+                </button>
+              </div>
+            </div>
+          `}
+    </div>
+  `,
+  actions: {
+    remove: (ctx) => {
+      let idx = parseInt(ctx.index);
+      let c = Lila.getStore("cart");
+      c.items.splice(idx, 1);
+      c.total = c.$raw.items.reduce((sum, i) => sum + i.price, 0);
+      ctx.state.items = c.$raw.items.slice();
+      ctx.state.total = c.$raw.total;
+    },
+    clear: (ctx) => {
+      let c = Lila.getStore("cart");
+      c.items.splice(0, c.$raw.items.length);
+      c.total = 0;
+      ctx.state.items = [];
+      ctx.state.total = 0;
+    },
+  },
+  onMount: (state) => {
+    let c = Lila.getStore("cart");
+    state.items = c.$raw.items.slice();
+    state.total = c.$raw.total;
+  },
+});
+
+Lila.route(
+  "*",
+  () => html`
+    <div class="page" style="text-align:center;padding:4rem 2rem">
+      <h2 style="font-size:3rem;margin-bottom:1rem">404</h2>
+      <p class="subtitle">Page not found</p>
+      <a href="#/" data-link class="btn btn-primary" style="margin-top:1.5rem"
+        >Go Home</a
+      >
+    </div>
+  `,
+);
+
+Lila.start("#app", { transition: "fade" });
