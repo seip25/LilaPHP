@@ -286,6 +286,84 @@ class Database
     }
 
     /**
+     * Begins a database transaction.
+     * 
+     * @return bool
+     * @example \Core\Database::beginTransaction();
+     */
+    public static function beginTransaction(): bool
+    {
+        $pdo = self::getInstance();
+        if (!$pdo) {
+            return false;
+        }
+        return $pdo->beginTransaction();
+    }
+
+    /**
+     * Commits the active database transaction.
+     * 
+     * @return bool
+     * @example \Core\Database::commit();
+     */
+    public static function commit(): bool
+    {
+        $pdo = self::getInstance();
+        if (!$pdo) {
+            return false;
+        }
+        return $pdo->commit();
+    }
+
+    /**
+     * Rolls back the active database transaction.
+     * 
+     * @return bool
+     * @example \Core\Database::rollBack();
+     */
+    public static function rollBack(): bool
+    {
+        $pdo = self::getInstance();
+        if (!$pdo) {
+            return false;
+        }
+        return $pdo->rollBack();
+    }
+
+    /**
+     * Executes a callback within a database transaction context with automatic commit/rollback.
+     * 
+     * @param callable $callback Operation callback to execute
+     * @return mixed Return value of the callback
+     * @throws \Throwable If callback throws an exception, transaction is rolled back and rethrown
+     * @example \Core\Database::transaction(function() { ... });
+     */
+    public static function transaction(callable $callback): mixed
+    {
+        $pdo = self::getInstance();
+        if (!$pdo) {
+            throw new \RuntimeException("Database connection is not available.");
+        }
+
+        if ($pdo->inTransaction()) {
+            return $callback();
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $result = $callback();
+            $pdo->commit();
+            return $result;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+
+    /**
      * Creates a MySQL database if it does not already exist.
      * 
      * @param string $dbName Name of the database

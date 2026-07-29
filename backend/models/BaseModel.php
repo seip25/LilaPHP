@@ -23,6 +23,7 @@ abstract class BaseModel implements JsonSerializable
     protected string $primaryKey = 'id';
     protected array $rules = [];
     protected array $attributes = [];
+    protected bool $softDelete = true;
 
     /**
      * Initializes model instance with optional attribute data.
@@ -95,7 +96,7 @@ abstract class BaseModel implements JsonSerializable
         $ref = new ReflectionClass($this);
         foreach ($ref->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED) as $prop) {
             $name = $prop->getName();
-            if ($name !== 'table' && $name !== 'primaryKey' && $name !== 'rules' && $name !== 'attributes') {
+            if ($name !== 'table' && $name !== 'primaryKey' && $name !== 'rules' && $name !== 'attributes' && $name !== 'softDelete') {
                 $data[$name] = $prop->getValue($this);
             }
         }
@@ -141,13 +142,18 @@ abstract class BaseModel implements JsonSerializable
      * Finds a record by its primary key ID.
      * 
      * @param int|string $id Primary key identifier
+     * @param bool $withTrashed Whether to include soft-deleted records
      * @return static|null
      * @example $user = \Models\User::find(1);
      */
-    public static function find(int|string $id): ?static
+    public static function find(int|string $id, bool $withTrashed = false): ?static
     {
         $instance = new static();
-        $sql = "SELECT * FROM `{$instance->table}` WHERE `{$instance->primaryKey}` = ? LIMIT 1";
+        $whereClause = "`{$instance->primaryKey}` = ?";
+        if ($instance->softDelete && !$withTrashed) {
+            $whereClause .= " AND `deleted_at` IS NULL";
+        }
+        $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause} LIMIT 1";
         $row = Database::fetch($sql, [$id]);
 
         return $row !== null ? (new static($row)) : null;
@@ -158,13 +164,49 @@ abstract class BaseModel implements JsonSerializable
      * 
      * @param string $where SQL WHERE condition (default: '1=1')
      * @param array $params Bound parameters array
+     * @param bool $withTrashed Whether to include soft-deleted records
      * @return static[]
      * @example $activeUsers = \Models\User::all('status = ?', ['active']);
      */
-    public static function all(string $where = '1=1', array $params = []): array
+    public static function all(string $where = '1=1', array $params = [], bool $withTrashed = false): array
     {
         $instance = new static();
-        $sql = "SELECT * FROM `{$instance->table}` WHERE {$where}";
+        $whereClause = "({$where})";
+        if ($instance->softDelete && !$withTrashed) {
+            $whereClause .= " AND `deleted_at` IS NULL";
+        }
+        $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause}";
+        $rows = Database::fetchAll($sql, $params);
+
+        return array_map(fn($row) => new static($row), $rows);
+    }
+
+    /**
+     * Retrieves all records including soft-deleted ones.
+     * 
+     * @param string $where SQL WHERE condition (default: '1=1')
+     * @param array $params Bound parameters array
+     * @return static[]
+     * @example $allUsers = \Models\User::withTrashed('role = ?', ['admin']);
+     */
+    public static function withTrashed(string $where = '1=1', array $params = []): array
+    {
+        return static::all($where, $params, true);
+    }
+
+    /**
+     * Retrieves only soft-deleted records.
+     * 
+     * @param string $where SQL WHERE condition (default: '1=1')
+     * @param array $params Bound parameters array
+     * @return static[]
+     * @example $trashedUsers = \Models\User::onlyTrashed();
+     */
+    public static function onlyTrashed(string $where = '1=1', array $params = []): array
+    {
+        $instance = new static();
+        $whereClause = "({$where}) AND `deleted_at` IS NOT NULL";
+        $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause}";
         $rows = Database::fetchAll($sql, $params);
 
         return array_map(fn($row) => new static($row), $rows);
@@ -179,9 +221,9 @@ abstract class BaseModel implements JsonSerializable
     public function save(): bool
     {
         $data = $this->toArray();
-        unset($data['table'], $data['primaryKey'], $data['rules'], $data['attributes']);
+        unset($data['table'], $data['primaryKey'], $data['rules'], $data['attributes'], $data['softDelete']);
 
-        foreach (['created_at', 'updated_at'] as $tsField) {
+        foreach (['created_at', 'updated_at', 'deleted_at'] as $tsField) {
             if (array_key_exists($tsField, $data) && $data[$tsField] === null) {
                 unset($data[$tsField]);
             }
@@ -190,7 +232,7 @@ abstract class BaseModel implements JsonSerializable
         $pk = $this->primaryKey;
         $id = $data[$pk] ?? null;
 
-        if ($id !== null && self::find($id) !== null) {
+        if ($id !== null && self::find($id, true) !== null) {
             unset($data[$pk]);
             $updated = Database::update($this->table, $data, "`{$pk}` = ?", [$id]);
             return $updated >= 0;
@@ -219,10 +261,11 @@ abstract class BaseModel implements JsonSerializable
      * 
      * @param array $customFilters Custom key-value column equality filters
      * @param int $cacheTtl Seconds to cache results in Redis (0 = no caching)
+     * @param bool $withTrashed Whether to include soft-deleted records in pagination
      * @return array{data: static[], meta: array}
      * @example $result = \Models\Product::paginate(['status' => 'active'], 60);
      */
-    public static function paginate(array $customFilters = [], int $cacheTtl = 0): array
+    public static function paginate(array $customFilters = [], int $cacheTtl = 0, bool $withTrashed = false): array
     {
         $instance = new static();
         $table = $instance->table;
@@ -238,6 +281,10 @@ abstract class BaseModel implements JsonSerializable
 
         $where = ['1=1'];
         $params = [];
+
+        if ($instance->softDelete && !$withTrashed) {
+            $where[] = "`deleted_at` IS NULL";
+        }
 
         $startDate = \Core\Request::input('start_date', \Core\Request::input('created_at_from'));
         $endDate = \Core\Request::input('end_date', \Core\Request::input('created_at_to'));
@@ -293,12 +340,14 @@ abstract class BaseModel implements JsonSerializable
     }
 
     /**
-     * Deletes the current record from the database.
+     * Deletes the current record from the database (soft delete by default, hard delete if $force is true).
      * 
+     * @param bool $force Performs hard delete if true
      * @return bool True if deleted
      * @example $user->delete();
+     * @example $user->delete(true);
      */
-    public function delete(): bool
+    public function delete(bool $force = false): bool
     {
         $pk = $this->primaryKey;
         $id = $this->$pk ?? ($this->attributes[$pk] ?? null);
@@ -306,7 +355,47 @@ abstract class BaseModel implements JsonSerializable
             return false;
         }
 
+        if ($this->softDelete && !$force) {
+            $now = date('Y-m-d H:i:s');
+            $this->deleted_at = $now;
+            $this->attributes['deleted_at'] = $now;
+            return Database::update($this->table, ['deleted_at' => $now], "`{$pk}` = ?", [$id]) >= 0;
+        }
+
         return Database::delete($this->table, "`{$pk}` = ?", [$id]) > 0;
+    }
+
+    /**
+     * Permanently deletes the current record from the database.
+     * 
+     * @return bool True if deleted
+     * @example $user->forceDelete();
+     */
+    public function forceDelete(): bool
+    {
+        return $this->delete(true);
+    }
+
+    /**
+     * Restores a soft-deleted record.
+     * 
+     * @return bool True if restored
+     * @example $user->restore();
+     */
+    public function restore(): bool
+    {
+        if (!$this->softDelete) {
+            return false;
+        }
+        $pk = $this->primaryKey;
+        $id = $this->$pk ?? ($this->attributes[$pk] ?? null);
+        if ($id === null) {
+            return false;
+        }
+
+        $this->deleted_at = null;
+        $this->attributes['deleted_at'] = null;
+        return Database::update($this->table, ['deleted_at' => null], "`{$pk}` = ?", [$id]) >= 0;
     }
 
     /**
@@ -334,6 +423,11 @@ abstract class BaseModel implements JsonSerializable
                 'type' => 'timestamp',
                 'nullable' => false,
                 'default' => 'CURRENT_TIMESTAMP'
+            ],
+            'deleted_at' => [
+                'type' => 'timestamp',
+                'nullable' => true,
+                'default' => null
             ]
         ];
     }

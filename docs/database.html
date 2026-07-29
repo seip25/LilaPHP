@@ -119,26 +119,31 @@ Response::json(['categories' => $categories]);</code></pre>
                 <!-- Transactions & Bulk Inserts -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-8">
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
-                        Transactions & Bulk Processing
+                        Database Transactions (`Database::transaction()`)
                     </h3>
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
-                        Because you have direct access to the underlying `\PDO` object, handling high-concurrency transactions and batch inserts is clean and native:
+                        `Core\Database` provides built-in transaction helpers. You can use the automatic `transaction()` closure block with auto-commit/rollback, or manual transaction controls:
                     </p>
-                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">$pdo = Database::getInstance();
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Database;
+use Core\Response;
 
+// 🟢 Method 1: Automatic transaction closure block
+Database::transaction(function () use ($senderId, $receiverId) {
+    Database::update('accounts', ['balance' => 'balance - 100'], 'id = ?', [$senderId]);
+    Database::update('accounts', ['balance' => 'balance + 100'], 'id = ?', [$receiverId]);
+});
+
+// 🟢 Method 2: Manual transaction control
 try {
-    $pdo->beginTransaction();
+    Database::beginTransaction();
     
-    $stmt = $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE id = ?");
-    $stmt->execute([100.00, $senderId]);
+    $stmt = Database::query("UPDATE accounts SET balance = balance - ? WHERE id = ?", [100.00, $senderId]);
+    $stmt2 = Database::query("UPDATE accounts SET balance = balance + ? WHERE id = ?", [100.00, $receiverId]);
     
-    $stmt2 = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE id = ?");
-    $stmt2->execute([100.00, $receiverId]);
-    
-    $pdo->commit();
+    Database::commit();
     Response::json(['status' => 'transfer_complete']);
-} catch (\Exception $e) {
-    $pdo->rollBack();
+} catch (\Throwable $e) {
+    Database::rollBack();
     Response::json(['error' => 'Transfer failed: ' . $e->getMessage()], 500);
 }</code></pre>
                 </div>
@@ -146,10 +151,10 @@ try {
                 <!-- API Models & ORM (Models\BaseModel) -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-primary-600">
                     <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                        API Models & Lightweight ORM (`Models\BaseModel`)
+                        API Models & Soft Deletes (`Models\BaseModel`)
                     </h3>
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
-                        All models in LilaPHP extend <code>Models\BaseModel</code>. They combine high-speed PDO interaction, automatic JSON serialization, input validation via <code>Core\Validate</code>, and schema definition for CLI migrations (<code>php cli.php migrate</code>).
+                        All models in LilaPHP extend <code>Models\BaseModel</code>. They combine high-speed PDO interaction, automatic soft deletes (via <code>deleted_at</code> timestamp), automatic JSON serialization, input validation via <code>Core\Validate</code>, and schema definition for CLI migrations (<code>php cli.php migrate</code>).
                     </p>
 
                     <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">1. Model Definition (`backend/models/Product.php`)</h4>
@@ -161,12 +166,16 @@ class Product extends BaseModel
 {
     protected string $table = 'products';
     protected string $primaryKey = 'id';
+    protected bool $softDelete = true;
 
     public ?int $id = null;
     public string $name = '';
     public float $price = 0.0;
     public int $stock = 0;
     public string $sku = '';
+    public ?string $created_at = null;
+    public ?string $updated_at = null;
+    public ?string $deleted_at = null;
 
     // Validation rules evaluated by Core\Validate
     protected array $rules = [
@@ -205,20 +214,28 @@ class Product extends BaseModel
                 'type' => 'string',
                 'length' => 50,
                 'nullable' => true
+            ],
+            'deleted_at' => [
+                'type' => 'timestamp',
+                'nullable' => true,
+                'default' => null
             ]
         ];
     }
 }</code></pre>
 
-                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">2. Common Operations & Code Examples (`find`, `all`, `fill`, `save`, `delete`, `validate`, `assertValid`)</h4>
+                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">2. Common Operations & Code Examples (`find`, `all`, `withTrashed`, `onlyTrashed`, `fill`, `save`, `delete`, `restore`, `forceDelete`)</h4>
                     <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-6"><code class="language-php">use Models\Product;
 
-// 🟢 Find record by primary key ID (returns instance or null)
+// 🟢 Find record by primary key ID (excludes soft-deleted records by default)
 $product = Product::find(1);
 
-// 🟢 Retrieve all records (with optional SQL WHERE condition & bindings)
+// 🟢 Retrieve all active records (excluding soft-deleted)
 $allProducts = Product::all("stock > ? ORDER BY price DESC", [0]);
-$search = Product::all("name LIKE ?", ['%Keyboard%']);
+
+// 🟢 Query soft-deleted records
+$withDeleted = Product::withTrashed("stock > ?", [0]);
+$onlyDeleted = Product::onlyTrashed();
 
 // 🟢 Create or Populate instance attributes via fill() or direct property assignment
 $product = new Product();
@@ -231,7 +248,7 @@ $product->fill([
 $product->price = 45.00;
 
 // 🟢 Validate model attributes against $rules array
-$errors = $product->validate(); // Returns array of errors (empty array if valid)
+$errors = $product->validate();
 
 // 🟢 Assert valid & halt automatically (Emits HTTP 422 JSON response if rules fail)
 $product->assertValid();
@@ -239,8 +256,14 @@ $product->assertValid();
 // 🟢 Save instance (Inserts if new record, Updates if primary key ID exists)
 $product->save();
 
-// 🟢 Delete record from database
-$product->delete();</code></pre>
+// 🟢 Soft Delete (sets deleted_at = NOW())
+$product->delete();
+
+// 🟢 Restore soft-deleted record (sets deleted_at = NULL)
+$product->restore();
+
+// 🟢 Permanently hard delete record
+$product->forceDelete(); // or $product->delete(true);</code></pre>
 
                     <!-- BaseModel::paginate() Detailed Documentation -->
                     <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">

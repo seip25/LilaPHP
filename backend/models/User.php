@@ -20,6 +20,7 @@ class User extends BaseModel
     public string $role = 'user';
     public ?string $created_at = null;
     public ?string $updated_at = null;
+    public ?string $deleted_at = null;
 
     protected array $rules = [
         'name' => 'required|min_length:3|max_length:100',
@@ -88,6 +89,11 @@ class User extends BaseModel
                 'type' => 'timestamp',
                 'nullable' => false,
                 'default' => 'CURRENT_TIMESTAMP'
+            ],
+            'deleted_at' => [
+                'type' => 'timestamp',
+                'nullable' => true,
+                'default' => null
             ]
         ];
     }

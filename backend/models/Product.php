@@ -15,6 +15,7 @@ class Product extends BaseModel
     public string $name = '';
     public ?string $created_at = null;
     public ?string $updated_at = null;
+    public ?string $deleted_at = null;
 
     protected array $rules = [
         'name' => 'required|min_length:2|max_length:100'
@@ -44,6 +45,11 @@ class Product extends BaseModel
                 'type' => 'timestamp',
                 'nullable' => false,
                 'default' => 'CURRENT_TIMESTAMP'
+            ],
+            'deleted_at' => [
+                'type' => 'timestamp',
+                'nullable' => true,
+                'default' => null
             ]
         ];
     }

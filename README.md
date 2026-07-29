@@ -215,13 +215,17 @@ class Product extends BaseModel
 ```php
 use Models\Product;
 
-// 1. Find by ID
+// 1. Find by ID (excludes soft-deleted records by default)
 $product = Product::find(1);
 
 // 2. Fetch all with optional SQL WHERE conditions
 $products = Product::all("stock > ? ORDER BY price DESC", [0]);
 
-// 3. Create or Populate instance attributes
+// 3. Include or fetch only soft-deleted records
+$allProducts = Product::withTrashed();
+$trashedProducts = Product::onlyTrashed();
+
+// 4. Create or Populate instance attributes
 $product = new Product();
 $product->fill([
     'name' => 'Wireless Keyboard',
@@ -229,21 +233,51 @@ $product->fill([
     'stock' => 100,
     'sku' => 'KB-WL-01'
 ]);
-// Or set properties directly:
 $product->price = 45.00;
 
-// 4. Validate Model attributes
-$errors = $product->validate(); // Returns array of errors (empty if valid)
+// 5. Validate Model attributes
+$errors = $product->validate();
 
-// 5. Validate & Halt automatically (Emits HTTP 422 JSON error if invalid)
+// 6. Validate & Halt automatically (Emits HTTP 422 JSON error if invalid)
 $product->assertValid();
 
-// 6. Save (Inserts if new record, Updates if ID exists)
+// 7. Save (Inserts if new record, Updates if ID exists)
 $product->save();
 
-// 7. Delete record
+// 8. Soft delete (updates deleted_at timestamp)
 $product->delete();
+
+// 9. Restore soft-deleted record or permanently force delete
+$product->restore();
+$product->forceDelete(); // or $product->delete(true);
+
+// 10. Paginate with soft-delete filtering
+$paginated = Product::paginate(['stock' => 10], 60, false);
 ```
+
+#### Database Transactions (`Core\Database`):
+```php
+use Core\Database;
+use Core\Response;
+
+// Automatic transaction block (auto commit / rollback on exception)
+Database::transaction(function () use ($senderId, $receiverId, $amount) {
+    Database::update('accounts', ['balance' => 'balance - ' . $amount], 'id = ?', [$senderId]);
+    Database::update('accounts', ['balance' => 'balance + ' . $amount], 'id = ?', [$receiverId]);
+});
+
+// Manual transaction control
+try {
+    Database::beginTransaction();
+    Database::update('accounts', ['balance' => 900], 'id = ?', [$senderId]);
+    Database::update('accounts', ['balance' => 1100], 'id = ?', [$receiverId]);
+    Database::commit();
+} catch (\Throwable $e) {
+    Database::rollBack();
+    Response::json(['error' => $e->getMessage()], 500);
+}
+```
+
 
 ### 9. Encrypted Session Authentication (`Services\AuthService`)
 

@@ -120,22 +120,32 @@ Request::POST([AuthMiddleware::class], function() {
 
 ### 🧱 `Models\BaseModel` (Lightweight ORM)
 
-All models inherit from `Models\BaseModel`, supporting `find()`, `all()`, `fill()`, `save()`, `delete()`, `validate()`, and `assertValid()`:
+All models inherit from `Models\BaseModel`, supporting `find()`, `all()`, `withTrashed()`, `onlyTrashed()`, `fill()`, `save()`, `delete()`, `forceDelete()`, `restore()`, `validate()`, and `assertValid()`:
 
 ```php
 use Models\Product;
+use Core\Database;
 
-// Find & Fetch
+// Find & Fetch (soft-deleted excluded by default)
 $product = Product::find(1);
 $products = Product::all("stock > 0 ORDER BY price DESC");
+$allProducts = Product::withTrashed();
+$trashedProducts = Product::onlyTrashed();
 
 // Fill & Save
 $product = new Product();
 $product->fill(['name' => 'Wireless Keyboard', 'price' => 49.99])->save();
 
-// Validate & Delete
-$product->assertValid();
-$product->delete();
+// Soft Delete, Restore & Hard Delete
+$product->delete(); // Soft delete
+$product->restore(); // Restore
+$product->forceDelete(); // Hard delete
+
+// Database Transactions
+Database::transaction(function () use ($senderId, $receiverId) {
+    Database::update('accounts', ['balance' => 900], 'id = ?', [$senderId]);
+    Database::update('accounts', ['balance' => 1100], 'id = ?', [$receiverId]);
+});
 ```
 
 ### 📢 `Core\Response` (High-Speed JSON & File Emitter)
