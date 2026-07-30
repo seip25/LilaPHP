@@ -100,9 +100,8 @@ class Migrate extends Command
                 ];
             }
 
-            $refClass = new ReflectionClass($className);
-            $softDeleteProp = $refClass->getProperty('softDelete');
-            if ($softDeleteProp->getValue($instance) && !isset($schema['deleted_at'])) {
+            $hasSoftDelete = (fn() => $this->softDelete)->call($instance);
+            if ($hasSoftDelete && !isset($schema['deleted_at'])) {
                 $schema['deleted_at'] = [
                     'type' => 'timestamp',
                     'nullable' => true,
