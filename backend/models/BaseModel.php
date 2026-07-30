@@ -413,21 +413,6 @@ abstract class BaseModel implements JsonSerializable
                 'nullable' => false,
                 'autoIncrement' => true,
                 'primaryKey' => true
-            ],
-            'created_at' => [
-                'type' => 'timestamp',
-                'nullable' => false,
-                'default' => 'CURRENT_TIMESTAMP'
-            ],
-            'updated_at' => [
-                'type' => 'timestamp',
-                'nullable' => false,
-                'default' => 'CURRENT_TIMESTAMP'
-            ],
-            'deleted_at' => [
-                'type' => 'timestamp',
-                'nullable' => true,
-                'default' => null
             ]
         ];
     }

@@ -85,6 +85,31 @@ class Migrate extends Command
             $table = $instance->table;
             $schema = $className::getSchema();
 
+            if (!isset($schema['created_at'])) {
+                $schema['created_at'] = [
+                    'type' => 'timestamp',
+                    'nullable' => false,
+                    'default' => 'CURRENT_TIMESTAMP'
+                ];
+            }
+            if (!isset($schema['updated_at'])) {
+                $schema['updated_at'] = [
+                    'type' => 'timestamp',
+                    'nullable' => false,
+                    'default' => 'CURRENT_TIMESTAMP'
+                ];
+            }
+
+            $refClass = new ReflectionClass($className);
+            $softDeleteProp = $refClass->getProperty('softDelete');
+            if ($softDeleteProp->getValue($instance) && !isset($schema['deleted_at'])) {
+                $schema['deleted_at'] = [
+                    'type' => 'timestamp',
+                    'nullable' => true,
+                    'default' => null
+                ];
+            }
+
             $this->info("Migrating Table: `{$table}` (Model: {$className})...");
             if ($db->createTable($table, $schema)) {
                 $this->success("Table `{$table}` synchronized successfully.");
