@@ -168,7 +168,7 @@ abstract class BaseModel implements JsonSerializable
      * @return static[]
      * @example $activeUsers = \Models\User::all('status = ?', ['active']);
      */
-    public static function all(string $where = '1=1', array $params = [], bool $withTrashed = false): array
+    public static function all(string $where = '1=1', array $params = [], bool $withTrashed = false, $limit = null): array
     {
         $instance = new static();
         $whereClause = "({$where})";
@@ -176,6 +176,9 @@ abstract class BaseModel implements JsonSerializable
             $whereClause .= " AND `deleted_at` IS NULL";
         }
         $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause}";
+        if ($limit) {
+            $sql .= " LIMIT {$limit}";
+        }
         $rows = Database::fetchAll($sql, $params);
 
         return array_map(fn($row) => new static($row), $rows);
