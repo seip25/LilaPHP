@@ -118,10 +118,10 @@ class AuthService
 
         if ($user) {
             $userPassword = $user->password ?? '';
-            $isValidPassword = password_verify($password, $userPassword) || (md5($password) === $userPassword);
+            $isValidPassword = password_verify($password, $userPassword);
 
             if ($isValidPassword) {
-                if (password_needs_rehash($userPassword, PASSWORD_DEFAULT) || md5($password) === $userPassword) {
+                if (password_needs_rehash($userPassword, PASSWORD_DEFAULT)) {
                     $user->password = password_hash($password, PASSWORD_DEFAULT);
                     $user->save();
                 }
