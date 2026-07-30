@@ -68,9 +68,14 @@ if ($commandInput === 'help' || $commandInput === '--help' || $commandInput === 
     echo "  \033[36mtask:work\033[0m      Start continuous background worker consuming Redis job queues (`lilaphp:jobs`)" . PHP_EOL;
     echo "  \033[36mws:serve [port]\033[0m Boot real-time Workerman WebSocket server listening on port 8001" . PHP_EOL;
     echo "  \033[36mbenchmark\033[0m       Run real server-side OS-level load test (--url= --concurrency= --duration=)" . PHP_EOL;
-    echo "  \033[36mdocker [dev|prod|stop|ps|stats|logs|clean]\033[0m  Orchestrate Nginx, PHP, MySQL, Redis cluster" . PHP_EOL;
-    echo "  \033[36mmake model <Name>\033[0m      Generate boilerplate API Model inside backend/models/" . PHP_EOL;
-    echo "  \033[36mmake route <path>\033[0m      Generate file-based API route inside backend/routes/" . PHP_EOL;
+    echo "  \033[36mdocker [action]\033[0m    Orchestrate Docker cluster (Nginx, PHP, MySQL, Redis)" . PHP_EOL;
+    echo "                       \033[2mdev | prod | stop | ps | stats | logs | clean\033[0m" . PHP_EOL;
+    echo "                       \033[2mexec-php | exec-mysql [query] | exec-redis [cmd]\033[0m" . PHP_EOL;
+    echo "                       \033[2mmysql <shortcut>  Smart queries (tables, find, where...)\033[0m" . PHP_EOL;
+    echo "                       \033[2mredis <shortcut>  Smart commands (keys, get, logs...)\033[0m" . PHP_EOL;
+    echo "  \033[36mmake model <Name>\033[0m  Generate boilerplate API Model inside backend/models/" . PHP_EOL;
+    echo "  \033[36mmake route <path>\033[0m  Generate file-based API route inside backend/routes/" . PHP_EOL;
+    echo "  \033[36mhealth\033[0m             Run system health diagnostics (MySQL, Redis, OPcache)" . PHP_EOL;
     echo PHP_EOL;
     exit(0);
 }
