@@ -139,6 +139,22 @@ abstract class BaseModel implements JsonSerializable
     }
 
     /**
+     * Extracts trailing clauses (GROUP BY, ORDER BY, LIMIT) from a WHERE string.
+     * 
+     * @param string $where 
+     * @return array{0: string, 1: string} [where, clauses]
+     */
+    protected static function extractClauses(string $where): array
+    {
+        $clauses = '';
+        if (preg_match('/^(.*?)(?:\s+((?:GROUP BY|ORDER BY|LIMIT)\s+.*))$/is', $where, $matches)) {
+            $where = $matches[1];
+            $clauses = ' ' . $matches[2];
+        }
+        return [trim($where) ?: '1=1', $clauses];
+    }
+
+    /**
      * Finds a record by its primary key ID.
      * 
      * @param int|string $id Primary key identifier
@@ -171,11 +187,13 @@ abstract class BaseModel implements JsonSerializable
     public static function all(string $where = '1=1', array $params = [], bool $withTrashed = false, $limit = null): array
     {
         $instance = new static();
-        $whereClause = "({$where})";
+        [$whereCore, $trailingClauses] = static::extractClauses($where);
+        
+        $whereClause = "({$whereCore})";
         if ($instance->softDelete && !$withTrashed) {
             $whereClause .= " AND `deleted_at` IS NULL";
         }
-        $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause}";
+        $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause}{$trailingClauses}";
         if ($limit) {
             $sql .= " LIMIT {$limit}";
         }
@@ -208,8 +226,10 @@ abstract class BaseModel implements JsonSerializable
     public static function onlyTrashed(string $where = '1=1', array $params = []): array
     {
         $instance = new static();
-        $whereClause = "({$where}) AND `deleted_at` IS NOT NULL";
-        $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause}";
+        [$whereCore, $trailingClauses] = static::extractClauses($where);
+        
+        $whereClause = "({$whereCore}) AND `deleted_at` IS NOT NULL";
+        $sql = "SELECT * FROM `{$instance->table}` WHERE {$whereClause}{$trailingClauses}";
         $rows = Database::fetchAll($sql, $params);
 
         return array_map(fn($row) => new static($row), $rows);
@@ -280,6 +300,9 @@ abstract class BaseModel implements JsonSerializable
 
         $rawSort = (string) \Core\Request::input('sort', $pk);
         $sort = preg_replace('/[^a-zA-Z0-9_]/', '', $rawSort);
+        if ($sort === '') {
+            $sort = $pk;
+        }
         $order = strtoupper((string) \Core\Request::input('order', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
         $where = ['1=1'];
@@ -303,7 +326,14 @@ abstract class BaseModel implements JsonSerializable
         }
 
         foreach ($customFilters as $col => $val) {
-            if ($val !== null && $val !== '') {
+            if (is_array($val) && !empty($val)) {
+                $cleanCol = preg_replace('/[^a-zA-Z0-9_]/', '', $col);
+                $placeholders = implode(', ', array_fill(0, count($val), '?'));
+                $where[] = "`{$cleanCol}` IN ({$placeholders})";
+                foreach ($val as $v) {
+                    $params[] = $v;
+                }
+            } elseif ($val !== null && $val !== '' && !is_array($val)) {
                 $cleanCol = preg_replace('/[^a-zA-Z0-9_]/', '', $col);
                 $where[] = "`{$cleanCol}` = ?";
                 $params[] = $val;

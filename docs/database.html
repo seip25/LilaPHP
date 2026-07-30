@@ -231,7 +231,9 @@ class Product extends BaseModel
 $product = Product::find(1);
 
 // 🟢 Retrieve all active records (excluding soft-deleted)
-$allProducts = Product::all("stock > ? ORDER BY price DESC", [0]);
+// Note: BaseModel automatically extracts ORDER BY, GROUP BY, and LIMIT from the $where string
+// to properly append soft delete conditions without causing syntax errors.
+$allProducts = Product::all("stock > ? ORDER BY price DESC LIMIT 50", [0]);
 
 // 🟢 Query soft-deleted records
 $withDeleted = Product::withTrashed("stock > ?", [0]);
@@ -301,7 +303,10 @@ Request::GET(function () {
     // 🟢 2. Pagination with column equality filter (status = 'active')
     $result = Product::paginate(['status' => 'active']);
 
-    // 🟢 3. Pagination with 60-second Redis RAM caching (`Cache::db`)
+    // 🟢 3. Pagination with IN (?, ?) array filters
+    $result = Product::paginate(['status' => ['active', 'pending']]);
+
+    // 🟢 4. Pagination with 60-second Redis RAM caching (`Cache::db`)
     $result = Product::paginate(['category_id' => 4], 60);
 
     return [

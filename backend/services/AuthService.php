@@ -113,7 +113,7 @@ class AuthService
             }
         }
 
-        $users = User::all("(email = ? OR username = ?)", [$username, $username], false, 1);
+        $users = User::all("email = ? OR username = ? LIMIT 1", [$username, $username]);
         $user = $users[0] ?? null;
 
         if ($user) {
