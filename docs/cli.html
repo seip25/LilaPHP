@@ -256,23 +256,52 @@ php cli.php ws:serve status 8001</code></pre>
 
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
                         <code
-                            class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [dev|prod|stop|ps|stats|logs|exec-mysql]</code>
+                            class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [action]</code>
                         <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Orchestrates your Docker container cluster (`Nginx`, `PHP-FPM`, `MySQL`, and `Redis`),
-                            streams real-time CPU/RAM stats filtered for project containers, and
-                            provides interactive MySQL CLI access or raw SQL query execution.
+                            Orchestrates your Docker container cluster (<code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">Nginx</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">PHP-FPM</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">MySQL</code>, and <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">Redis</code>),
+                            provides interactive container access (<code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">exec-php</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">exec-mysql</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">exec-redis</code>), and includes smart CLI shortcuts for instant MySQL queries and Redis inspection without typing raw SQL or Redis protocol syntax.
                         </p>
-                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Launch development environment
+                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-4"><code class="language-bash"># Launch development or production cluster
 php cli.php docker dev
+php cli.php docker prod
 
 # Stream real-time CPU & RAM stats filtered for LilaPHP containers
 php cli.php docker stats
 
-# Open interactive MySQL CLI inside DB container
-php cli.php docker exec-mysql
+# Interactive container execution
+php cli.php docker exec-php                  # Interactive bash in PHP container
+php cli.php docker exec-mysql                # Interactive MySQL console
+php cli.php docker exec-mysql "SELECT 1"     # Raw SQL execution
+php cli.php docker exec-redis                # Interactive redis-cli console
+php cli.php docker exec-redis PING           # Raw Redis command execution</code></pre>
 
-# Execute raw SQL query directly on MySQL database
-php cli.php docker exec-mysql "SELECT id, name FROM products LIMIT 5"</code></pre>
+                        <h4 class="font-semibold text-slate-800 dark:text-slate-200 text-sm mt-4 mb-2">🗃️ Smart MySQL Shortcuts (<code class="text-xs font-mono">php cli.php docker mysql &lt;shortcut&gt;</code>)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono text-slate-600 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">tables</span> &rarr; Show all database tables</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">describe &lt;tbl&gt;</span> &rarr; Describe table schema</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">count &lt;tbl&gt;</span> &rarr; Count table rows</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">find &lt;tbl&gt; &lt;id&gt;</span> &rarr; Find record by ID</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">all &lt;tbl&gt; [limit]</span> &rarr; List records (default 25)</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">last &lt;tbl&gt; [n]</span> &rarr; Latest N records (by ID desc)</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">first &lt;tbl&gt; [n]</span> &rarr; First N records (by ID asc)</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">where &lt;tbl&gt; &lt;col&gt; &lt;val&gt;</span> &rarr; Filter by column value</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">delete &lt;tbl&gt; &lt;id&gt;</span> &rarr; Delete record by ID</div>
+                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">truncate &lt;tbl&gt;</span> &rarr; Empty table</div>
+                        </div>
+
+                        <h4 class="font-semibold text-slate-800 dark:text-slate-200 text-sm mt-4 mb-2">🔴 Smart Redis Shortcuts (<code class="text-xs font-mono">php cli.php docker redis &lt;shortcut&gt;</code>)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">ping</span> &rarr; Test Redis connection</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">keys [pattern]</span> &rarr; List keys (default *)</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">get &lt;key&gt;</span> &rarr; Fetch value of key</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">set &lt;key&gt; &lt;val&gt;</span> &rarr; Set key-value pair</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">del &lt;key&gt;</span> &rarr; Delete key</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">ttl / type &lt;key&gt;</span> &rarr; Key metadata</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">info / dbsize</span> &rarr; Server stats & key count</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">logs [n]</span> &rarr; Tail app log queue</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">jobs [n]</span> &rarr; List pending Redis jobs</div>
+                            <div><span class="text-red-600 dark:text-red-400 font-bold">monitor / flush</span> &rarr; Live stream or purge DB</div>
+                        </div>
                     </div>
                 </div>
 

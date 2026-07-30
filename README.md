@@ -453,7 +453,11 @@ php cli.php make model <Name>                   # Generate boilerplate API Model
 php cli.php make route <path>                   # Generate file-based API route inside backend/routes/
 php cli.php docker dev|prod|stop|ps|stats|logs|clean # Orchestrate Nginx, PHP, MySQL, Redis cluster & stream project stats
 php cli.php docker stats                        # Stream real-time CPU/RAM stats filtered for project containers
-php cli.php docker exec-mysql "SELECT * FROM users" # Open interactive MySQL CLI or execute SQL query directly
+php cli.php docker exec-php                     # Open interactive bash inside PHP container
+php cli.php docker exec-mysql [query]           # Open interactive MySQL CLI or execute raw SQL query
+php cli.php docker exec-redis [command]         # Open interactive Redis CLI or execute raw Redis command
+php cli.php docker mysql <shortcut>              # Smart MySQL queries without SQL (tables, find, count, where, last...)
+php cli.php docker redis <shortcut>              # Smart Redis commands (keys, get, set, logs, jobs, monitor, flush...)
 ```
 
 ---

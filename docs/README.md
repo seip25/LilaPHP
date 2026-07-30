@@ -237,5 +237,5 @@ To perform load testing or benchmark runs at maximum concurrencies (100, 1000, 2
 | `php cli.php migrate`      | Scan models in `backend/models/` and synchronize MySQL schemas automatically.              |
 | `php cli.php seed`         | Populate initial database records and check default accounts (`admin@lilaphp.dev`).        |
 | `php cli.php task:work`    | Start continuous background worker consuming Redis job queues.                             |
-| `php cli.php docker dev | prod | ps | stats | stop` | Orchestrate Nginx, PHP 8.4, MySQL, and Redis, and stream real-time project container stats. |
-| `php cli.php make model    | route <Name>`                                                                              | Scaffold API models and route files instantly. |
+| `php cli.php docker [action]` | Orchestrate Nginx, PHP 8.4, MySQL, and Redis cluster (`dev`, `prod`, `stop`, `ps`, `stats`, `logs`, `clean`). Also provides container access (`exec-php`, `exec-mysql`, `exec-redis`) and smart query/command shortcuts (`docker mysql`, `docker redis`). |
+| `php cli.php make model \| route <Name>` | Scaffold API models and route files instantly. |
