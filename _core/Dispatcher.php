@@ -72,8 +72,10 @@ class Dispatcher
             $baseFile = "{$routesDir}/{$baseController}.php";
             $baseIndex = "{$routesDir}/{$baseController}/index.php";
             if (file_exists($baseFile) || file_exists($baseIndex)) {
-                $_GET['id'] = $_GET['id'] ?? $parts[1];
-                $_SERVER['ROUTE_ID'] = $parts[1];
+                if (isset($parts[1]) && $parts[1] !== '') {
+                    $_GET['id'] = $_GET['id'] ?? $parts[1];
+                    $_SERVER['ROUTE_ID'] = $parts[1];
+                }
                 if (file_exists($baseFile)) {
                     require $baseFile;
                 } else {

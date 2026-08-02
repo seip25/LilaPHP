@@ -166,7 +166,7 @@ class Config
                 $value = false;
             } elseif (strtolower($value) === 'null') {
                 $value = '';
-            } elseif (is_numeric($value) && !str_starts_with($value, '0')) {
+            } elseif (is_numeric($value) && ($value === '0' || !str_starts_with($value, '0') || str_starts_with($value, '0.'))) {
                 $value = str_contains($value, '.') ? (float) $value : (int) $value;
             }
 

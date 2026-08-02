@@ -20,10 +20,12 @@ RUN echo "opcache.enable = 1" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.memory_consumption = 256" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.interned_strings_buffer = 32" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.max_accelerated_files = 10000" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.max_accelerated_files = 20000" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.validate_timestamps = 0" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.preload = /var/www/html/backend/preload.php" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.preload_user = www-data" >> /usr/local/etc/php/conf.d/opcache.ini
+    echo "opcache.preload_user = www-data" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.jit_buffer_size = 128M" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.jit = tracing" >> /usr/local/etc/php/conf.d/opcache.ini
 
 # Production PHP & FPM Optimization
 RUN echo "auto_prepend_file = /var/www/html/_core/bootstrap.php" >> /usr/local/etc/php/conf.d/lila.ini && \
@@ -33,13 +35,10 @@ RUN echo "auto_prepend_file = /var/www/html/_core/bootstrap.php" >> /usr/local/e
     echo "apc.enabled = 1" >> /usr/local/etc/php/conf.d/apcu.ini && \
     echo "apc.shm_size = 128M" >> /usr/local/etc/php/conf.d/apcu.ini
 
-# Multi-worker high concurrency FPM settings
+# Multi-worker high performance FPM settings (static mode for maximum throughput)
 RUN echo "[www]" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    echo "pm = dynamic" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    echo "pm.max_children = 64" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    echo "pm.start_servers = 16" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    echo "pm.min_spare_servers = 8" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    echo "pm.max_spare_servers = 32" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "pm = static" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    echo "pm.max_children = 100" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
     echo "pm.max_requests = 1000" >> /usr/local/etc/php-fpm.d/zz-docker.conf
 
 WORKDIR /var/www/html
