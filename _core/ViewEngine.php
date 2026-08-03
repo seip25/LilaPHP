@@ -55,6 +55,33 @@ class ViewEngine
             }
         }
 
+        if (!$isDev && ($options['cache'] ?? true)) {
+            $cacheKey = 'view_engine_html_' . md5($uri . json_encode($seoRoutes[$uri] ?? []));
+            $ttl = (int) ($options['cacheTtl'] ?? 3600);
+
+            $html = Cache::api($cacheKey, function () use ($seoRoutes, $options, $uri, $appEnv, $isDev) {
+                return self::generateHtml($seoRoutes, $options, $uri, $appEnv, $isDev);
+            }, $ttl);
+
+            echo $html;
+            return;
+        }
+
+        echo self::generateHtml($seoRoutes, $options, $uri, $appEnv, $isDev);
+    }
+
+    /**
+     * Generates and returns the complete HTML document string for a route.
+     * 
+     * @param array $seoRoutes Map of URI paths to SEO metadata.
+     * @param array $options Additional execution options.
+     * @param string $uri Current request URI.
+     * @param string $appEnv Application environment name.
+     * @param bool $isDev Whether development mode is active.
+     * @return string Complete HTML document string.
+     */
+    private static function generateHtml(array $seoRoutes, array $options, string $uri, string $appEnv, bool $isDev): string
+    {
         $seo = $seoRoutes[$uri] ?? ($options['defaultSeo'] ?? [
             'title' => 'LilaPHP Framework',
             'description' => 'High-Performance API & React Engine',
@@ -108,6 +135,7 @@ class ViewEngine
             'user' => null,
         ];
 
+        ob_start();
         echo '<!DOCTYPE html>' . PHP_EOL;
         echo '<html lang="' . htmlspecialchars($lang) . '">' . PHP_EOL;
         echo '<head>' . PHP_EOL;
@@ -135,5 +163,7 @@ class ViewEngine
         }
         echo '</body>' . PHP_EOL;
         echo '</html>' . PHP_EOL;
+
+        return ob_get_clean();
     }
 }
