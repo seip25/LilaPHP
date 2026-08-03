@@ -34,6 +34,7 @@ $commandMap = [
     'ws:serve' => \Cli\WsServe::class,
     'ws:start' => \Cli\WsServe::class,
     'benchmark' => \Cli\Benchmark::class,
+    'build:react' => \Cli\BuildReact::class,
 ];
 
 if (isset($commandMap[$commandInput])) {

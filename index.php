@@ -21,7 +21,7 @@ if (str_starts_with($uri, '/api/') || $uri === '/api') {
     Dispatcher::dispatch();
 }
 
-$staticPath = __DIR__ . '/frontend' . $uri;
+$staticPath = str_starts_with($uri, '/frontend/') ? __DIR__ . $uri : __DIR__ . '/frontend' . $uri;
 if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
     $ext = pathinfo($staticPath, PATHINFO_EXTENSION);
     $mimeTypes = [
@@ -41,11 +41,10 @@ if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
     exit;
 }
 
-$indexPath = __DIR__ . '/frontend/index.html';
-if (file_exists($indexPath)) {
-    header('Content-Type: text/html; charset=utf-8');
-    readfile($indexPath);
+$viewPath = __DIR__ . '/backend/views/index.php';
+if (file_exists($viewPath)) {
+    require $viewPath;
     exit;
 }
 
-\Core\Response::error('Frontend index.html not found', 404);
+\Core\Response::error('Backend view index.php not found', 404);

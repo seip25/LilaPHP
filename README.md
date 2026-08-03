@@ -356,35 +356,57 @@ Event::listen('user.created', function($payload) {
 Event::dispatch('user.created', ['user_id' => 42, 'email' => 'user@example.com']);
 ```
 
-### 12. Lila.js — Zero-Dependency Frontend Engine & SPA Router
+### 12. React 19 & Vite Engine with PHP Server-Side Pre-Rendering
 
-`lila.js` (`frontend/js/lila.js`) is an optional ultra-lightweight (~350 lines, zero dependencies) frontend reactive engine and hash router designed specifically for LilaPHP.
+LilaPHP integrates React 19, React Router DOM, and Vite for modern SPA client-side rendering backed by server-side PHP SEO pre-rendering and session middleware checks.
 
-- **Island Reactivity**: Mount reactive components anywhere on static HTML pages (`Lila.mount('#target', config)`).
-- **Hash SPA Router**: Hash-based routing (`#/`, `#/products`) with built-in CSS fade transitions and skeleton loaders.
-- **Deep State Proxy & DOM Morphing**: Fine-grained reactive state tracking with automatic DOM diffing (Morphing). Write pure ES6 literal templates (JSX style) without losing input focus.
-- **Global Reactive Stores**: Shared state across independent components (`Lila.store('name', initial)`).
-- **Built-in API Helpers**: Native wrappers like `Lila.fetch` for API calls, and `Lila.Validator` for client-side form validation.
-- **Auth Guards & PWA Installer**: Global routing middleware (`Lila.beforeRoute`) for auth checks, and an automated PWA Service Worker installer (`Lila.start({ pwa: ... })`).
+- **Vite HMR Development**: Seamless Hot Module Replacement with automatic React Refresh preamble injection served via Vite in development (`php cli.php docker dev`).
+- **Clean View Configuration**: Declarative route SEO metadata (`title`, `description`, `keywords`), protected route flags (`'protected' => true`), and custom authentication callbacks (`'callback' => fn() => ...`) configured directly in `backend/views/index.php`.
+- **Core ViewEngine**: `\Core\ViewEngine` executes server-side authentication guards, handles dynamic SEO resolution, and streams optimized HTML output.
+- **Server-Side Auth Middleware**: Pre-validates protected routes in PHP (via custom callbacks or session headers) to perform instant 302 redirects before returning HTML, eliminating client-side UI flashing.
+- **Compiled Asset Cache**: In production (`php cli.php docker prod`), Vite builds static bundles into `frontend/js/.vite/`, and `php cli.php build:react` caches asset path arrays in `_core/cache/build_cache.php` for 0ms lookup latency.
+
+```php
+// backend/views/index.php
+use Services\AuthService;
+
+$seoRoutes = [
+    '/' => [
+        'title' => 'LilaPHP | High-Performance React & PHP 8.4 Framework',
+        'description' => 'Ultra-fast PHP 8.4 API engine integrated with React 19.',
+    ],
+    '/dashboard' => [
+        'title' => 'Dashboard | LilaPHP',
+        'protected' => true,
+        'redirectTo' => '/login',
+        'callback' => fn() => AuthService::validateAuth(autoEmit401: false),
+    ],
+];
+
+\Core\ViewEngine::render($seoRoutes);
+```
 
 ```javascript
-const { html } = Lila;
+// frontend/src/main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import App from './App';
+import Home from './pages/Home';
 
-// Register SPA routes using pure ES6 Literals
-Lila.route('/', {
-    state: () => ({ count: 0 }),
-    template: (s) => html`
-        <div>
-            <h2>Count: <span>${s.count}</span></h2>
-            <button data-action="inc">+</button>
-        </div>
-    `,
-    actions: {
-        inc: ({ state }) => state.count++
-    }
-});
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+    children: [{ index: true, element: <Home /> }],
+  },
+]);
 
-Lila.start('#app');
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
 ```
 
 ---

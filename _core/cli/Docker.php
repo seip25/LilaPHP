@@ -375,6 +375,10 @@ class Docker extends Command
 
             $this->info("Optimizing environment configuration for production...");
             $this->execShell(PHP_BINARY . ' cli.php optimize');
+
+            $this->info("Building React frontend assets for production...");
+            $this->execShell("docker run --rm -v " . escapeshellarg(getcwd()) . ":/app -w /app node:20-alpine sh -c 'npm install && npm run build'");
+            $this->execShell(PHP_BINARY . ' cli.php build:react');
         }
 
         $this->info("Starting cluster in `{$env}` mode using `docker/php/Dockerfile.{$shortEnv}`...");

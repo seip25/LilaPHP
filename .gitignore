@@ -33,3 +33,5 @@ Thumbs.db
 .idea/
 .vscode/
 test/
+node_modules/
+frontend/js/.vite/
