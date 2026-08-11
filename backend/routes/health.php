@@ -29,7 +29,6 @@ Request::GET(function () {
         } catch (\Throwable $e) {
             return 'error: ' . $e->getMessage();
         }
-
     }, 10);
     $apcuTested = Cache::db("apcu_health", function () {
         return function_exists('apcu_enabled') && apcu_enabled();
@@ -50,7 +49,7 @@ Request::GET(function () {
 
     $elapsedMs = round((microtime(true) - $start) * 1000, 3);
 
-    return [
+    Response::json([
         'status' => $mysqlStatus === 'connected' ? 'ok' : 'degraded',
         'engine' => 'LilaPHP API Engine',
         'environment' => Config::$APP_ENV,
@@ -67,5 +66,5 @@ Request::GET(function () {
             'mysql' => ['functional' => $mysqlStatus === 'connected', 'status' => $mysqlStatus]
         ],
         'timestamp' => time()
-    ];
+    ]);
 });

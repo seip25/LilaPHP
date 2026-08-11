@@ -35,3 +35,4 @@ Thumbs.db
 test/
 node_modules/
 frontend/js/.vite/
+package-lock.json
