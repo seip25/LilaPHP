@@ -62,24 +62,20 @@ LilaPHP/
 
 - **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
 - **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
-- **FastCGI Micro-Caching (5s TTL)**: Public `GET` requests on `/api/` are cached at the Nginx level for 5 seconds (`LILA_API_CACHE`), allowing throughput to scale up to 30,000+ RPS without invoking PHP-FPM.
-- **Smart Security & Auth Bypass**: Nginx automatically bypasses caching (`$skip_api_cache`) for non-GET methods (`POST`, `PUT`, `DELETE`), authenticated requests containing `Authorization` / `X-API-Key` headers, or session cookies (`PHPSESSID`, `user_token`, `jwt`).
-- **Core Private Cache Helper (`Core\Response::setPrivateCache()`)**: Endpoints can explicitly invoke `Response::setPrivateCache()` to emit `Cache-Control: private, no-store, no-cache`, ensuring real-time endpoints (like metrics or debug polling) bypass Nginx caching.
+- **Decoupled React SPA Routing**: All non-`/api/` web requests (e.g. `/`, `/routes`, `/about`, `/dashboard`) fall back cleanly to `frontend/index.html` so React Router handles client-side UI rendering.
+- **Native PHP Route Caching**: Caching is handled inside LilaPHP via `Request::GET(['cache' => true, 'cache_ttl' => 0], ...)` after executing route middlewares, eliminating rigid Nginx FastCGI micro-caching.
 
 ### 2. Static O(1) Request Routing & Handlers (`Core\Request`)
 
-In LilaPHP, physical files map directly to URIs (e.g. `backend/routes/users.php` -> `/api/users`). You can handle HTTP request methods (`Request::GET`, `Request::POST`, `Request::PUT`, `Request::DELETE`, `Request::PATCH`) directly inside route files with full middleware support:
+In LilaPHP, physical files map directly to URIs (e.g. `backend/routes/users.php` -> `/api/users`). You can handle HTTP request methods (`Request::GET`, `Request::POST`, `Request::PUT`, `Request::DELETE`, `Request::PATCH`) directly inside route files with full middleware support and instant response caching:
 
 ```php
 use Core\Request;
 use Core\Response;
 use Models\User;
 
-// Global logic / validations for all methods in this file
-// (Runs before method handlers)
-
-// GET /api/users
-Request::GET(function() {
+// GET /api/users with instant route caching (cache_ttl = 0 for infinite RAM caching after middlewares)
+Request::GET(['cache' => true, 'cache_ttl' => 0], function() {
     $users = User::all("1=1 ORDER BY id DESC");
     return ['status' => 'success', 'data' => $users];
 });
@@ -93,8 +89,8 @@ Request::POST([AuthMiddleware::class, RoleCheck::class], function() {
     return ['status' => 'created', 'data' => $user];
 });
 
-// PUT /api/users
-Request::PUT(AuthMiddleware::class, function() {
+// PUT /api/users with Session-Aware Route Caching
+Request::PUT(['cache' => true, 'cache_ttl' => 60, 'by_session' => true], AuthMiddleware::class, function() {
     $id = Request::input('id');
     $user = User::find($id);
     if (!$user) {

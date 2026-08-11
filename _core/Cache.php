@@ -41,14 +41,17 @@ class Cache
             return $data;
         }
 
-        if (isset(self::$memoryFallback[$key]) && self::$memoryFallback[$key]['expire'] > time()) {
-            return self::$memoryFallback[$key]['data'];
+        if (isset(self::$memoryFallback[$key])) {
+            $exp = self::$memoryFallback[$key]['expire'];
+            if ($exp === 0 || $exp > time()) {
+                return self::$memoryFallback[$key]['data'];
+            }
         }
 
         $data = $callback();
         self::$memoryFallback[$key] = [
             'data' => $data,
-            'expire' => time() + $ttl
+            'expire' => $ttl === 0 ? 0 : time() + $ttl
         ];
         return $data;
     }
@@ -58,7 +61,7 @@ class Cache
      * 
      * @param string $key Cache key identifier
      * @param callable $callback Generator callback if cache miss occurs
-     * @param int $ttl Time to live in seconds (default: 300)
+     * @param int $ttl Time to live in seconds (default: 300, 0 = forever)
      * @return mixed
      * @example $stats = \Core\Cache::db('daily_stats', fn() => $model->computeStats(), 600);
      */
@@ -75,7 +78,11 @@ class Cache
 
                 $data = $callback();
                 $serialized = is_scalar($data) ? (string) $data : json_encode($data, JSON_UNESCAPED_UNICODE);
-                $redis->setex($key, $ttl, $serialized);
+                if ($ttl === 0) {
+                    $redis->set($key, $serialized);
+                } else {
+                    $redis->setex($key, $ttl, $serialized);
+                }
                 return $data;
             } catch (RedisException $e) {
                 Logger::warning("Redis execution error for key {$key}, falling back to APCu: " . $e->getMessage());
@@ -90,7 +97,7 @@ class Cache
      * 
      * @param string $key Cache key identifier
      * @param mixed $value Value to store
-     * @param int $ttl Time to live in seconds (default: 300)
+     * @param int $ttl Time to live in seconds (default: 300, 0 = forever)
      * @param string $driver Target driver ('apcu' or 'redis')
      * @return bool
      * @example \Core\Cache::set('user_token_123', ['userId' => 5], 3600, 'redis');
@@ -102,6 +109,9 @@ class Cache
             if ($redis !== null) {
                 try {
                     $serialized = is_scalar($value) ? (string) $value : json_encode($value, JSON_UNESCAPED_UNICODE);
+                    if ($ttl === 0) {
+                        return $redis->set($key, $serialized);
+                    }
                     return $redis->setex($key, $ttl, $serialized);
                 } catch (RedisException $e) {
                     Logger::warning("Redis store failure, falling back to APCu: " . $e->getMessage());
@@ -115,7 +125,7 @@ class Cache
 
         self::$memoryFallback[$key] = [
             'data' => $value,
-            'expire' => time() + $ttl
+            'expire' => $ttl === 0 ? 0 : time() + $ttl
         ];
         return true;
     }
@@ -152,8 +162,11 @@ class Cache
             return $success ? $val : $default;
         }
 
-        if (isset(self::$memoryFallback[$key]) && self::$memoryFallback[$key]['expire'] > time()) {
-            return self::$memoryFallback[$key]['data'];
+        if (isset(self::$memoryFallback[$key])) {
+            $exp = self::$memoryFallback[$key]['expire'];
+            if ($exp === 0 || $exp > time()) {
+                return self::$memoryFallback[$key]['data'];
+            }
         }
 
         return $default;

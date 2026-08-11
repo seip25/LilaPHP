@@ -41,10 +41,11 @@ if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
     exit;
 }
 
-$viewPath = __DIR__ . '/backend/views/index.php';
-if (file_exists($viewPath)) {
-    require $viewPath;
+$frontendIndex = __DIR__ . '/frontend/index.html';
+if (file_exists($frontendIndex)) {
+    header("Content-Type: text/html; charset=utf-8");
+    readfile($frontendIndex);
     exit;
 }
 
-\Core\Response::error('Backend view index.php not found', 404);
+\Core\Response::error('Frontend index.html entry point not found', 404);

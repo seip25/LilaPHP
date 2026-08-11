@@ -12,40 +12,30 @@ use Core\Config;
 use Core\Database;
 use Core\Cache;
 
-Request::GET(function () {
+Request::GET(['cache' => true, 'cache_ttl' => 10], function () {
     $start = microtime(true);
 
     $mysqlStatus = 'disconnected';
-    $mysqlStatus = Cache::db("mysql_health", function () {
+    $pdo = Database::getInstance();
+    if ($pdo !== null) {
+        $stmt = $pdo->query('SELECT 1');
+        if ($stmt && $stmt->fetchColumn() == 1) {
+            $mysqlStatus = 'connected';
+        }
+    }
+    $apcuTested = function_exists('apcu_enabled') && apcu_enabled();
+
+    $redisStatus = 'disconnected';
+    $redis = Cache::getRedis();
+    if ($redis !== null) {
         try {
-            $pdo = Database::getInstance();
-            if ($pdo !== null) {
-                $stmt = $pdo->query('SELECT 1');
-                if ($stmt && $stmt->fetchColumn() == 1) {
-                    return 'connected';
-                }
-                return "disconnected";
+            if ($redis->ping()) {
+                $redisStatus = 'connected';
             }
         } catch (\Throwable $e) {
-            return 'error: ' . $e->getMessage();
+            $redisStatus = 'error: ' . $e->getMessage();
         }
-    }, 10);
-    $apcuTested = Cache::db("apcu_health", function () {
-        return function_exists('apcu_enabled') && apcu_enabled();
-    }, 10);
-
-    $redisStatus = Cache::db("redis_health", function () {
-        $redis = Cache::getRedis();
-        if ($redis !== null) {
-            try {
-                if ($redis->ping()) {
-                    return 'connected';
-                }
-            } catch (\Throwable $e) {
-                return 'error: ' . $e->getMessage();
-            }
-        }
-    }, 10);
+    }
 
     $elapsedMs = round((microtime(true) - $start) * 1000, 3);
 

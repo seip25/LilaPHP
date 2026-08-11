@@ -60,45 +60,15 @@
             </div>
 
             <section class="space-y-6 mb-12">
-                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">Hybrid Architecture & Lifecycle</h2>
+                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">Decoupled Architecture & Client-Side SPA</h2>
                 <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Unlike traditional SPAs that load empty HTML or heavy node-based SSR setups, LilaPHP uses a zero-latency hybrid workflow:
+                    LilaPHP cleanly decouples the PHP 8.4 API backend from the React 19 SPA frontend using a direct HTML loading model:
                 </p>
                 <ul class="list-disc pl-6 space-y-3 text-slate-600 dark:text-slate-400">
-                    <li><strong class="text-slate-900 dark:text-white">Clean Route Configuration:</strong> <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">backend/views/index.php</code> contains only declarative route SEO configuration arrays and middleware flags, keeping application logic entirely inside <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">\Core\ViewEngine</code>.</li>
-                    <li><strong class="text-slate-900 dark:text-white">Server-Side Middleware Guards:</strong> Before sending HTML, <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">\Core\ViewEngine</code> checks if the requested route is marked as protected (<code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">'protected' => true</code>). If unauthenticated, it issues an immediate 302 HTTP header redirect to prevent screen flicker.</li>
-                    <li><strong class="text-slate-900 dark:text-white">Development HMR & React Refresh:</strong> In development, <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">\Core\ViewEngine</code> automatically injects the Vite React Refresh preamble script prior to loading <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/@vite/client</code> and <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/src/main.jsx</code> on port 5173.</li>
-                    <li><strong class="text-slate-900 dark:text-white">Production Asset Cache:</strong> In production (<code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">php cli.php docker prod</code> or <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">php cli.php build:react</code>), Vite compiles static bundles into <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/js/.vite/</code> and pre-caches asset tags in <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">_core/cache/build_cache.php</code> for 0ms lookup latency.</li>
+                    <li><strong class="text-slate-900 dark:text-white">Standalone Entry Point:</strong> <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/index.html</code> serves as the primary entry point for all web routes, eliminating PHP server-side template wrappers.</li>
+                    <li><strong class="text-slate-900 dark:text-white">Client-Side SPA Routing:</strong> Nginx and the PHP front controller automatically fall back web routes (like <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/</code>, <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/routes</code>, <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/about</code>) to <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/index.html</code> so React Router handles UI states in the browser.</li>
+                    <li><strong class="text-slate-900 dark:text-white">Vite HMR & Fast Bundling:</strong> Loads <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/src/main.jsx</code> directly during development and outputs optimized static bundles to <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/js/.vite/</code> for production deployment.</li>
                 </ul>
-            </section>
-
-            <section class="space-y-6 mb-12">
-                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">Route SEO & Middleware Usage</h2>
-                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    To add routes, dynamic titles, meta descriptions, protected session guards, or custom authentication callbacks, edit <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">backend/views/index.php</code>:
-                </p>
-                <div class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-sm overflow-x-auto">
-                    <pre>&lt;?php
-
-use Services\AuthService;
-
-$seoRoutes = [
-    '/' => [
-        'title' => 'LilaPHP | High-Performance React & PHP 8.4 Framework',
-        'description' => 'Ultra-fast PHP 8.4 API engine integrated with React 19.',
-        'keywords' => 'PHP 8.4, React 19, Vite, High Performance',
-    ],
-    '/dashboard' => [
-        'title' => 'Dashboard | LilaPHP',
-        'description' => 'Protected administrative control panel.',
-        'protected' => true,
-        'redirectTo' => '/login',
-        'callback' => fn() => AuthService::validateAuth(autoEmit401: false),
-    ],
-];
-
-\Core\ViewEngine::render($seoRoutes);</pre>
-                </div>
             </section>
 
             <section class="space-y-6 mb-12">

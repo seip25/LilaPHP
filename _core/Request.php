@@ -14,6 +14,10 @@ namespace Core;
 class Request
 {
     private static ?array $jsonPayload = null;
+    private static ?string $activeRouteCacheKey = null;
+    private static int $activeRouteCacheTtl = 0;
+    private static string $activeRouteCacheDriver = 'apcu';
+
 
     /**
      * Returns the current HTTP request method in uppercase (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `OPTIONS`).
@@ -217,9 +221,48 @@ class Request
      * - `Request::route('GET', [$mw1, $mw2], $callback)`
      * - `Request::route('GET', $mw1, $mw2, $callback)`
      * - `Request::route('GET', [$mw1, $mw2, $callback])`
+     * Checks if route caching is active for the current request execution.
+     */
+    public static function hasActiveRouteCache(): bool
+    {
+        return self::$activeRouteCacheKey !== null;
+    }
+
+    /**
+     * Retrieves the active route cache configuration.
+     *
+     * @return array{0: string, 1: int, 2: string} [Key, TTL, Driver]
+     */
+    public static function getActiveRouteCache(): array
+    {
+        return [
+            self::$activeRouteCacheKey ?? '',
+            self::$activeRouteCacheTtl,
+            self::$activeRouteCacheDriver
+        ];
+    }
+
+    /**
+     * Clears the active route cache context.
+     */
+    public static function clearActiveRouteCache(): void
+    {
+        self::$activeRouteCacheKey = null;
+        self::$activeRouteCacheTtl = 0;
+        self::$activeRouteCacheDriver = 'apcu';
+    }
+
+    /**
+     * Executes route middlewares and handler callback if HTTP method matches.
+     * 
+     * Accepts flexible arguments:
+     * - `Request::route('GET', $callback)`
+     * - `Request::route('GET', ['cache' => true, 'cache_ttl' => 0], $callback)`
+     * - `Request::route('GET', ['cache' => true, 'cache_ttl' => 60], [$mw1, $mw2], $callback)`
+     * - `Request::route('GET', $mw1, $mw2, $callback)`
      * 
      * @param string $method Target HTTP method ('GET', 'POST', 'PUT', 'DELETE', etc.)
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function route(string $method, mixed ...$args): void
@@ -228,7 +271,7 @@ class Request
             return;
         }
 
-        [$middlewares, $callback] = self::parseRouteArgs($args);
+        [$options, $middlewares, $callback] = self::parseRouteArgs($args);
 
         foreach ($middlewares as $mw) {
             $ok = self::executeMiddleware($mw);
@@ -237,7 +280,49 @@ class Request
             }
         }
 
+        $isCacheEnabled = !empty($options['cache']);
+        $cacheKey = null;
+        $cacheTtl = (int)($options['cache_ttl'] ?? $options['ttl'] ?? 0);
+        $driver = $options['driver'] ?? 'apcu';
+
+        if ($isCacheEnabled) {
+            $uri = $_SERVER['REQUEST_URI'] ?? '/';
+            $keyBase = 'route_cache_' . strtoupper($method) . '_' . md5($uri);
+            if (!empty($options['by_session']) || !empty($options['vary_session'])) {
+                $token = self::bearerToken() ?: ($_COOKIE[session_name()] ?? 'anon');
+                $keyBase .= '_' . md5($token);
+            }
+            $cacheKey = $keyBase;
+
+            $cached = Cache::get($cacheKey, null, $driver);
+            if ($cached !== null) {
+                header('X-Lila-Cache: HIT');
+                if (is_array($cached) && isset($cached['payload'])) {
+                    if (isset($cached['headers']) && is_array($cached['headers'])) {
+                        foreach ($cached['headers'] as $hName => $hVal) {
+                            header("{$hName}: {$hVal}");
+                        }
+                    }
+                    Response::json($cached['payload'], $cached['status'] ?? 200);
+                } elseif (is_array($cached) || is_object($cached)) {
+                    Response::json($cached);
+                } elseif (is_string($cached)) {
+                    echo $cached;
+                    exit;
+                }
+            }
+
+            self::$activeRouteCacheKey = $cacheKey;
+            self::$activeRouteCacheTtl = $cacheTtl;
+            self::$activeRouteCacheDriver = $driver;
+        }
+
         $result = call_user_func($callback);
+
+        if ($isCacheEnabled && $cacheKey !== null && $result !== null) {
+            Cache::set($cacheKey, ['payload' => $result, 'status' => 200], $cacheTtl, $driver);
+            self::clearActiveRouteCache();
+        }
 
         if (is_array($result) || is_object($result)) {
             Response::json($result);
@@ -252,9 +337,10 @@ class Request
     /**
      * Executes route if current HTTP method is GET.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      * @example Request::GET(function() { Response::json(['ok' => true]); });
+     * @example Request::GET(['cache' => true, 'cache_ttl' => 0], function() { Response::json(['ok' => true]); });
      * @example Request::GET([AuthMiddleware::class], function() { Response::json(['user' => 'John']); });
      */
     public static function GET(mixed ...$args): void
@@ -265,7 +351,7 @@ class Request
     /**
      * Executes route if current HTTP method is POST.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function POST(mixed ...$args): void
@@ -276,7 +362,7 @@ class Request
     /**
      * Executes route if current HTTP method is PUT.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function PUT(mixed ...$args): void
@@ -287,7 +373,7 @@ class Request
     /**
      * Executes route if current HTTP method is DELETE.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function DELETE(mixed ...$args): void
@@ -298,7 +384,7 @@ class Request
     /**
      * Executes route if current HTTP method is PATCH.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function PATCH(mixed ...$args): void
@@ -309,7 +395,7 @@ class Request
     /**
      * Executes route if current HTTP method is OPTIONS.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function OPTIONS(mixed ...$args): void
@@ -320,7 +406,7 @@ class Request
     /**
      * Executes route if current HTTP method is HEAD.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function HEAD(mixed ...$args): void
@@ -332,7 +418,7 @@ class Request
      * Executes route if current HTTP method matches any of the specified methods.
      * 
      * @param array $methods List of allowed methods (e.g. ['GET', 'POST'])
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function match(array $methods, mixed ...$args): void
@@ -347,7 +433,7 @@ class Request
     /**
      * Executes route regardless of current HTTP method.
      * 
-     * @param mixed ...$args Middlewares and callback handler
+     * @param mixed ...$args Options, Middlewares, and callback handler
      * @return void
      */
     public static function any(mixed ...$args): void
@@ -368,10 +454,10 @@ class Request
     }
 
     /**
-     * Helper to parse middleware list and callback from method arguments.
+     * Helper to parse options array, middleware list, and callback from method arguments.
      *
      * @param array $args
-     * @return array{0: array, 1: callable}
+     * @return array{0: array, 1: array, 2: callable}
      */
     private static function parseRouteArgs(array $args): array
     {
@@ -379,25 +465,52 @@ class Request
             throw new \InvalidArgumentException("Route definition requires at least a callable handler.");
         }
 
+        $options = [
+            'cache' => false,
+            'cache_ttl' => 0,
+            'by_session' => false,
+            'driver' => 'apcu'
+        ];
+        $middlewares = [];
+
+        // Check single array wrapper format e.g. Request::GET([$options, $mw, $callback])
         if (count($args) === 1 && is_array($args[0])) {
-            $flat = $args[0];
-            $last = end($flat);
-            if (is_callable($last)) {
-                $callback = array_pop($flat);
-                return [$flat, $callback];
-            }
+            $args = $args[0];
         }
 
         $last = end($args);
-        if (is_callable($last)) {
-            $callback = array_pop($args);
-            if (count($args) === 1 && is_array($args[0])) {
-                return [$args[0], $callback];
-            }
-            return [$args, $callback];
+        if (!is_callable($last)) {
+            throw new \InvalidArgumentException("The last argument in a route definition must be a valid callable callback.");
         }
 
-        throw new \InvalidArgumentException("The last argument in a route definition must be a valid callable callback.");
+        $callback = array_pop($args);
+
+        foreach ($args as $arg) {
+            if (is_array($arg)) {
+                // Determine if this array is a route options array or an array of middlewares
+                $isOptionsArray = isset($arg['cache']) || isset($arg['cache_ttl']) || isset($arg['ttl']) || isset($arg['by_session']) || isset($arg['driver']);
+                if (!$isOptionsArray) {
+                    // Check if non-sequential or string keys exist
+                    $keys = array_keys($arg);
+                    $isOptionsArray = array_keys($keys) !== $keys;
+                }
+
+                if ($isOptionsArray) {
+                    if (isset($arg['cache_ttl']) || isset($arg['ttl'])) {
+                        $arg['cache'] = $arg['cache'] ?? true;
+                    }
+                    $options = array_merge($options, $arg);
+                } else {
+                    foreach ($arg as $subMw) {
+                        $middlewares[] = $subMw;
+                    }
+                }
+            } else {
+                $middlewares[] = $arg;
+            }
+        }
+
+        return [$options, $middlewares, $callback];
     }
 
     /**
@@ -458,4 +571,3 @@ class Request
         return true;
     }
 }
-

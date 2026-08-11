@@ -23,6 +23,12 @@ class Response
      */
     public static function json(array|object $data, int $status = 200, array $headers = []): void
     {
+        if (Request::hasActiveRouteCache()) {
+            [$key, $ttl, $driver] = Request::getActiveRouteCache();
+            Cache::set($key, ['payload' => $data, 'status' => $status, 'headers' => $headers], $ttl, $driver);
+            Request::clearActiveRouteCache();
+        }
+
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
         self::applyCorsHeaders();
