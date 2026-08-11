@@ -60,14 +60,16 @@
             </div>
 
             <section class="space-y-6 mb-12">
-                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">Decoupled Architecture & Client-Side SPA</h2>
+                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">ViewEngine Architecture & APCu Caching</h2>
                 <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    LilaPHP cleanly decouples the PHP 8.4 API backend from the React 19 SPA frontend using a direct HTML loading model:
+                    LilaPHP renders React SPA HTML shells server-side via <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">\Core\ViewEngine</code> with full APCu template caching for maximum RPS:
                 </p>
                 <ul class="list-disc pl-6 space-y-3 text-slate-600 dark:text-slate-400">
-                    <li><strong class="text-slate-900 dark:text-white">Standalone Entry Point:</strong> <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/index.html</code> serves as the primary entry point for all web routes, eliminating PHP server-side template wrappers.</li>
-                    <li><strong class="text-slate-900 dark:text-white">Client-Side SPA Routing:</strong> Nginx and the PHP front controller automatically fall back web routes (like <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/</code>, <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/routes</code>, <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/about</code>) to <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/index.html</code> so React Router handles UI states in the browser.</li>
-                    <li><strong class="text-slate-900 dark:text-white">Vite HMR & Fast Bundling:</strong> Loads <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/src/main.jsx</code> directly during development and outputs optimized static bundles to <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/js/.vite/</code> for production deployment.</li>
+                    <li><strong class="text-slate-900 dark:text-white">APCu Template Cache:</strong> In production, rendered HTML is stored as raw strings in APCu shared RAM. Subsequent requests serve the cached template in ~0.01ms without any template processing.</li>
+                    <li><strong class="text-slate-900 dark:text-white">Server-Side Route Guards:</strong> Protected routes are checked server-side BEFORE cache lookup. Unauthenticated users receive an instant 302 redirect without rendering.</li>
+                    <li><strong class="text-slate-900 dark:text-white">SEO Metadata Injection:</strong> Title, description, and keywords are injected per-route from <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/index.php</code> configuration arrays.</li>
+                    <li><strong class="text-slate-900 dark:text-white">Vite HMR & Production Bundles:</strong> In development, Vite React Refresh preamble and HMR client are injected. In production, compiled bundles from <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">_core/cache/build_cache.php</code> are served.</li>
+                    <li><strong class="text-slate-900 dark:text-white">Dynamic File-Based Routing:</strong> React pages in <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/src/pages/</code> are auto-discovered via Vite's <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">import.meta.glob</code> and lazy-loaded with auth guards configured in <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">routes.jsx</code>.</li>
                 </ul>
             </section>
 
@@ -75,20 +77,22 @@
                 <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">Project Directory Layout</h2>
                 <div class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-sm overflow-x-auto">
                     <pre>├── _core/
-│   ├── ViewEngine.php         # Layout engine, asset resolver & middleware guard
+│   ├── ViewEngine.php         # APCu-cached layout engine, asset resolver & route guards
 │   └── cache/
 │       └── build_cache.php    # Compiled production Vite script & CSS tags
-├── backend/
-│   └── views/
-│       └── index.php          # Declarative SEO & route middleware configuration
 ├── frontend/
+│   ├── index.php              # Declarative SEO & route middleware configuration
 │   ├── js/
 │   │   └── .vite/             # Vite production build output directory
 │   └── src/
-│       ├── main.jsx           # React Router DOM entry point
-│       ├── App.jsx            # Main layout wrapper
+│       ├── main.jsx           # Dynamic file-based router with lazy loading
+│       ├── routes.jsx         # Route config, auth flags & import.meta.glob discovery
+│       ├── App.jsx            # Main layout wrapper with Outlet
+│       ├── components/
+│       │   ├── Auth.jsx       # Auth guard (checks /api/auth, shows skeleton)
+│       │   └── Public.jsx     # Public route passthrough wrapper
 │       └── pages/
-│           └── Home.jsx       # Primary Home component
+│           └── Home.jsx       # Auto-discovered page → route /
 ├── vite.config.js             # Vite build configuration (outDir: frontend/js/.vite)
 └── package.json               # NPM dependencies & scripts</pre>
                 </div>

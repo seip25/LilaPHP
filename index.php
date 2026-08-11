@@ -8,7 +8,7 @@
  * 
  * When running under PHP built-in server (`php -S`) or fallback front controller:
  * - Requests starting with `/api` are dispatched to `backend/routes/*.php`.
- * - All other requests serve `frontend/index.html` or physical frontend assets.
+ * - All other requests are rendered by `frontend/index.php` via ViewEngine.
  */
 
 require_once __DIR__ . '/_core/bootstrap.php';
@@ -32,7 +32,8 @@ if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
         'jpg' => 'image/jpeg',
         'svg' => 'image/svg+xml',
         'webp' => 'image/webp',
-        'html' => 'text/html'
+        'html' => 'text/html',
+        'jsx' => 'application/javascript'
     ];
     if (isset($mimeTypes[$ext])) {
         header("Content-Type: {$mimeTypes[$ext]}");
@@ -41,11 +42,10 @@ if ($uri !== '/' && file_exists($staticPath) && is_file($staticPath)) {
     exit;
 }
 
-$frontendIndex = __DIR__ . '/frontend/index.html';
-if (file_exists($frontendIndex)) {
-    header("Content-Type: text/html; charset=utf-8");
-    readfile($frontendIndex);
+$viewPath = __DIR__ . '/frontend/index.php';
+if (file_exists($viewPath)) {
+    require $viewPath;
     exit;
 }
 
-\Core\Response::error('Frontend index.html entry point not found', 404);
+\Core\Response::error('Frontend index.php entry point not found', 404);

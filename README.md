@@ -40,17 +40,22 @@ LilaPHP/
 │   ├── preload.php            # Production OPcache RAM preload script compiling all core classes
 │   ├── .env                   # Dynamic environment variables (`HTTP_PORT`, `DB_PORT`, `APP_KEY`)
 │   └── .env_example           # Configuration template
-├── frontend/                  # 🌐 Static Frontend Dashboard (Vanilla HTML / JS / CSS)
-│   ├── index.html             # Modern Glassmorphism Dark Mode API testing landing page
+├── frontend/                  # 🌐 React SPA Frontend
+│   ├── index.php              # SEO route config & ViewEngine::render() entry point
 │   ├── css/style.css          # Curated dark theme tokens, neon gradients, and micro-animations
-│   └── js/app.js              # Real-time diagnostic benchmark client checking `/api/test`
+│   └── src/                   # React source (Vite-compiled)
+│       ├── main.jsx           # Dynamic file-based router with lazy loading
+│       ├── routes.jsx         # Route config, auth flags & import.meta.glob auto-discovery
+│       ├── App.jsx            # Main layout wrapper with React Router Outlet
+│       ├── components/        # Auth.jsx (guard), Public.jsx (passthrough)
+│       └── pages/             # Auto-discovered pages (Home.jsx → /, About.jsx → /about)
 ├── docker/                    # 🐳 Infrastructure & Container Profiles
 │   ├── php/Dockerfile.dev     # PHP 8.4 FPM/CLI for development (pdo_mysql, gd, redis, apcu)
 │   ├── php/Dockerfile.prod    # PHP 8.4 FPM/CLI with permanent OPcache RAM Preload and dynamic workers
-│   └── nginx/nginx.conf       # Static caching on `/`, API try_files on `/api/`, native C 404 & 429 JSON
+│   └── nginx/nginx.conf       # SPA routing via PHP ViewEngine, API try_files, native C 404 & 429
 ├── docs/                      # 📚 Comprehensive documentation (`export-ignore` on release)
 ├── cli.php                    # 🛠️ Master Unified CLI Dispatcher (`Blue-bird` style)
-├── index.php                  # 🎯 Front Controller fallback for dev server and direct PHP access
+├── index.php                  # 🎯 Front Controller (API dispatch + ViewEngine SPA rendering)
 └── docker-compose.yml         # 🚀 Multi-container orchestration (Nginx, PHP 8.4, MySQL 8.0, Redis 7)
 ```
 
@@ -62,7 +67,7 @@ LilaPHP/
 
 - **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
 - **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
-- **Decoupled React SPA Routing**: All non-`/api/` web requests (e.g. `/`, `/routes`, `/about`, `/dashboard`) fall back cleanly to `frontend/index.html` so React Router handles client-side UI rendering.
+- **React SPA via ViewEngine**: All non-`/api/` web requests are rendered by `\Core\ViewEngine` with APCu-cached HTML templates, SEO metadata injection, server-side route guards, and Vite asset resolution. React Router handles client-side navigation.
 - **Native PHP Route Caching**: Caching is handled inside LilaPHP via `Request::GET(['cache' => true, 'cache_ttl' => 0], ...)` after executing route middlewares, eliminating rigid Nginx FastCGI micro-caching.
 
 ### 2. Static O(1) Request Routing & Handlers (`Core\Request`)
