@@ -1,3 +1,15 @@
+<?php
+
+use Core\Config;
+use Core\Response;
+
+$isDebug = filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+$isLoggingEnabled = filter_var(getenv('DEBUG_LOGGING_ENABLED') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+
+if (!$isDebug || !$isLoggingEnabled) {
+    Response::error('Not Found', 404);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1191,7 +1203,6 @@
     </footer>
 
     <script>
-        // API Base Endpoints
         const API_HEALTH = '/api/debug/health';
         const API_METRICS = '/api/debug/metrics';
         const API_ROUTES = '/api/debug/routes';
@@ -1201,7 +1212,6 @@
         let benchAbortController = null;
         let healthTimer = null;
 
-        // Log Data, Sorting & Pagination State
         let rawLogRequests = [];
         let filteredLogRequests = [];
         let currentPage = 1;
@@ -1209,7 +1219,6 @@
         let sortColumn = 'timestamp';
         let sortDirection = 'desc';
 
-        // Document Ready
         document.addEventListener('DOMContentLoaded', () => {
             fetchHealth();
             fetchMetrics();
@@ -1222,7 +1231,6 @@
                 }
             }, 2500);
 
-            // Controls & Filters
             document.getElementById('bench-start').addEventListener('click', startBenchmark);
             document.getElementById('bench-stop').addEventListener('click', stopBenchmark);
             document.getElementById('btn-clear-logs').addEventListener('click', clearLogs);
@@ -1233,7 +1241,6 @@
             document.getElementById('filter-status').addEventListener('change', applyLogFilters);
             document.getElementById('filter-ip').addEventListener('input', applyLogFilters);
 
-            // Click-to-Sort Headers
             document.querySelectorAll('.debug-table th[data-sort]').forEach(th => {
                 th.addEventListener('click', () => {
                     const col = th.getAttribute('data-sort');
@@ -1263,7 +1270,6 @@
             });
         });
 
-        // Click-to-Sort Logic
         function handleSort(col) {
             if (sortColumn === col) {
                 sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -1291,7 +1297,6 @@
             });
         }
 
-        // 1. Fetch System Health & Docker Container Stats
         async function fetchHealth() {
             try {
                 const res = await fetch(API_HEALTH);
@@ -1307,7 +1312,6 @@
                     statusMsg.style.color = '#f87171';
                 }
 
-                // Redis Card
                 const pillRedis = document.getElementById('pill-redis');
                 const valRedisMem = document.getElementById('val-redis-mem');
                 const subRedis = document.getElementById('sub-redis');
@@ -1323,7 +1327,6 @@
                     subRedis.textContent = 'Redis disconnected';
                 }
 
-                // MySQL Card
                 const pillDb = document.getElementById('pill-db');
                 const valDbPing = document.getElementById('val-db-ping');
                 const subDb = document.getElementById('sub-db');
@@ -1339,11 +1342,9 @@
                     subDb.textContent = 'MySQL disconnected';
                 }
 
-                // PHP-FPM Card
                 document.getElementById('val-php-mem').textContent = `${data.php.memory_used_mb} MB`;
                 document.getElementById('sub-php').textContent = `PHP v${data.php.version} | Peak: ${data.php.peak_memory_mb} MB`;
 
-                // System & Docker Container Card
                 const pillContainer = document.getElementById('pill-container');
                 const valCpuLoad = document.getElementById('val-cpu-load');
                 const subDisk = document.getElementById('sub-disk');
@@ -1360,7 +1361,6 @@
                     subDisk.textContent = `Free Disk: ${data.system.disk_free_gb} GB | Used: ${data.system.disk_used_percent}%`;
                 }
 
-                // Render Live Docker Container Cluster Stats Grid if available
                 const dockerContainer = document.getElementById('docker-stats-container');
                 const dockerGrid = document.getElementById('docker-stats-grid');
                 if (data.system.containers && data.system.containers.length > 0) {
@@ -1383,7 +1383,6 @@
             }
         }
 
-        // 2. Fetch Metrics & Logs
         async function fetchMetrics() {
             try {
                 const res = await fetch(`${API_METRICS}?limit=200`);
@@ -1397,7 +1396,6 @@
             }
         }
 
-        // 3. Filter, Sort & Paginate Logs
         function applyLogFilters() {
             const filterUri = document.getElementById('filter-uri').value.toLowerCase().trim();
             const filterMethod = document.getElementById('filter-method').value;
@@ -1419,7 +1417,6 @@
                 return true;
             });
 
-            // Apply Sorting
             filteredLogRequests.sort((a, b) => {
                 let valA = a[sortColumn];
                 let valB = b[sortColumn];
@@ -1494,7 +1491,6 @@
             document.getElementById('btn-page-next').style.opacity = (page >= totalPages) ? '0.5' : '1';
         }
 
-        // 4. Fetch Available Routes for Concurrency Selector
         async function fetchRoutes() {
             try {
                 const res = await fetch(API_ROUTES);
@@ -1512,7 +1508,6 @@
             }
         }
 
-        // 5. Server-Side Concurrency Benchmark via Redis Polling
         const API_BENCHMARK = '/api/debug/benchmark';
         let currentBenchId = null;
         let benchPollTimer = null;
@@ -1527,7 +1522,9 @@
             try {
                 const res = await fetch(API_BENCHMARK, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         route: selectedRoute,
                         concurrency: concurrency,
@@ -1606,7 +1603,9 @@
             try {
                 await fetch(API_BENCHMARK, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         action: 'stop',
                         id: currentBenchId
@@ -1635,7 +1634,6 @@
             setTimeout(fetchMetrics, 500);
         }
 
-        // 6. Actions: Clear Logs & Purge Cache
         async function clearLogs() {
             if (!confirm('Do you want to clear request log history from Redis?')) return;
             try {

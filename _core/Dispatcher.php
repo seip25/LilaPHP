@@ -30,31 +30,37 @@ class Dispatcher
         $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
         $uri = trim($uri, '/');
 
-        if (str_starts_with($uri, 'api/')) {
-            $uri = substr($uri, 4);
-        } elseif ($uri === 'api') {
-            $uri = '';
-        }
-
         if ($uri === '' || $uri === 'index') {
             $uri = 'index';
         }
 
-        if (str_starts_with($uri, 'debug') || str_starts_with($uri, '404')) {
-            $coreFile = Config::$DIR_CORE . "/routes/{$uri}.php";
-            $coreIndex = Config::$DIR_CORE . "/routes/{$uri}/index.php";
-            if (file_exists($coreFile)) {
-                require $coreFile;
-                exit;
-            } elseif (file_exists($coreIndex)) {
-                require $coreIndex;
+        if ($uri === 'debug') {
+            $debugFile = Config::$DIR_CORE . '/routes/frontend/debug.php';
+            if (file_exists($debugFile)) {
+                require $debugFile;
                 exit;
             }
         }
 
-        $routesDir = Config::$DIR_BACKEND . '/routes';
-        $targetFile = "{$routesDir}/{$uri}.php";
-        $targetIndex = "{$routesDir}/{$uri}/index.php";
+        if (str_starts_with($uri, '404')) {
+            $coreFile = Config::$DIR_CORE . "/routes/{$uri}.php";
+            if (file_exists($coreFile)) {
+                require $coreFile;
+                exit;
+            }
+        }
+
+        $isApi = str_starts_with($uri, 'api/') || $uri === 'api';
+
+        if ($isApi) {
+            $uri = $uri === 'api' ? 'index' : substr($uri, 4);
+            $baseDir = Config::$DIR_BACKEND . '/routes';
+        } else {
+            $baseDir = Config::$DIR_BACKEND . '/views';
+        }
+
+        $targetFile = "{$baseDir}/{$uri}.php";
+        $targetIndex = "{$baseDir}/{$uri}/index.php";
 
         if (file_exists($targetFile)) {
             require $targetFile;
@@ -69,8 +75,9 @@ class Dispatcher
         $parts = explode('/', $uri);
         if (count($parts) >= 2) {
             $baseController = $parts[0];
-            $baseFile = "{$routesDir}/{$baseController}.php";
-            $baseIndex = "{$routesDir}/{$baseController}/index.php";
+            $baseFile = "{$baseDir}/{$baseController}.php";
+            $baseIndex = "{$baseDir}/{$baseController}/index.php";
+
             if (file_exists($baseFile) || file_exists($baseIndex)) {
                 if (isset($parts[1]) && $parts[1] !== '') {
                     $_GET['id'] = $_GET['id'] ?? $parts[1];

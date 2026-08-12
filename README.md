@@ -40,22 +40,16 @@ LilaPHP/
 │   ├── preload.php            # Production OPcache RAM preload script compiling all core classes
 │   ├── .env                   # Dynamic environment variables (`HTTP_PORT`, `DB_PORT`, `APP_KEY`)
 │   └── .env_example           # Configuration template
-├── frontend/                  # 🌐 React SPA Frontend
-│   ├── index.php              # SEO route config & ViewEngine::render() entry point
+├── frontend/                  # 🌐 Public Static Assets (CSS, JS, Images)
 │   ├── css/style.css          # Curated dark theme tokens, neon gradients, and micro-animations
-│   └── src/                   # React source (Vite-compiled)
-│       ├── main.jsx           # Dynamic file-based router with lazy loading
-│       ├── routes.jsx         # Route config, auth flags & import.meta.glob auto-discovery
-│       ├── App.jsx            # Main layout wrapper with React Router Outlet
-│       ├── components/        # Auth.jsx (guard), Public.jsx (passthrough)
-│       └── pages/             # Auto-discovered pages (Home.jsx → /, About.jsx → /about)
+│   └── images/                # Static images served directly by Nginx
 ├── docker/                    # 🐳 Infrastructure & Container Profiles
 │   ├── php/Dockerfile.dev     # PHP 8.4 FPM/CLI for development (pdo_mysql, gd, redis, apcu)
 │   ├── php/Dockerfile.prod    # PHP 8.4 FPM/CLI with permanent OPcache RAM Preload and dynamic workers
 │   └── nginx/nginx.conf       # SPA routing via PHP ViewEngine, API try_files, native C 404 & 429
 ├── docs/                      # 📚 Comprehensive documentation (`export-ignore` on release)
 ├── cli.php                    # 🛠️ Master Unified CLI Dispatcher (`Blue-bird` style)
-├── index.php                  # 🎯 Front Controller (API dispatch + ViewEngine SPA rendering)
+├── index.php                  # 🎯 Front Controller (API dispatch + Native SSR rendering)
 └── docker-compose.yml         # 🚀 Multi-container orchestration (Nginx, PHP 8.4, MySQL 8.0, Redis 7)
 ```
 
@@ -67,7 +61,7 @@ LilaPHP/
 
 - **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
 - **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
-- **React SPA via ViewEngine**: All non-`/api/` web requests are rendered by `\Core\ViewEngine` with APCu-cached HTML templates, SEO metadata injection, server-side route guards, and Vite asset resolution. React Router handles client-side navigation.
+- **Native PHP Views (SSR)**: All non-`/api/` web requests are rendered natively using `\Core\View` with APCu-cached HTML templates, server-side route guards, and direct PHP logic integration.
 - **Native PHP Route Caching**: Caching is handled inside LilaPHP via `Request::GET(['cache' => true, 'cache_ttl' => 0], ...)` after executing route middlewares, eliminating rigid Nginx FastCGI micro-caching.
 
 ### 2. Static O(1) Request Routing & Handlers (`Core\Request`)
@@ -357,57 +351,28 @@ Event::listen('user.created', function($payload) {
 Event::dispatch('user.created', ['user_id' => 42, 'email' => 'user@example.com']);
 ```
 
-### 12. React 19 & Vite Engine with PHP Server-Side Pre-Rendering
+### 12. Native PHP Server-Side Rendering
 
-LilaPHP integrates React 19, React Router DOM, and Vite for modern SPA client-side rendering backed by server-side PHP SEO pre-rendering and session middleware checks.
+LilaPHP includes a high-performance native PHP View engine that leverages PHP's built-in output buffering to deliver secure, server-rendered HTML while taking full advantage of OPcache and APCu for caching.
 
-- **Vite HMR Development**: Seamless Hot Module Replacement with automatic React Refresh preamble injection served via Vite in development (`php cli.php docker dev`).
-- **Clean View Configuration**: Declarative route SEO metadata (`title`, `description`, `keywords`), protected route flags (`'protected' => true`), and custom authentication callbacks (`'callback' => fn() => ...`) configured directly in `backend/views/index.php`.
-- **Core ViewEngine**: `\Core\ViewEngine` executes server-side authentication guards, handles dynamic SEO resolution, and streams optimized HTML output.
-- **Server-Side Auth Middleware**: Pre-validates protected routes in PHP (via custom callbacks or session headers) to perform instant 302 redirects before returning HTML, eliminating client-side UI flashing.
-- **Compiled Asset Cache**: In production (`php cli.php docker prod`), Vite builds static bundles into `frontend/js/.vite/`, and `php cli.php build:react` caches asset path arrays in `_core/cache/build_cache.php` for 0ms lookup latency.
+- **Native PHP Templates**: Write views using standard PHP and HTML (`backend/views/*.php`).
+- **APCu Output Caching**: Optionally cache the final rendered HTML in APCu by passing `['cache' => true]`. This skips view evaluation entirely on subsequent requests.
+- **Seamless Integration**: Views are processed by the same dispatcher as API routes, meaning you can use the same Rate Limiters, CSRF protection, and Middlewares natively on your frontend routes.
+- **Clean Variable Extraction**: Data passed to the view is automatically extracted into the local scope for clean usage (`<?= $title ?>`).
 
 ```php
-// backend/views/index.php
-use Services\AuthService;
+// backend/views/home.php
+<?php
+use Core\View;
 
-$seoRoutes = [
-    '/' => [
-        'title' => 'LilaPHP | High-Performance React & PHP 8.4 Framework',
-        'description' => 'Ultra-fast PHP 8.4 API engine integrated with React 19.',
-    ],
-    '/dashboard' => [
-        'title' => 'Dashboard | LilaPHP',
-        'protected' => true,
-        'redirectTo' => '/login',
-        'callback' => fn() => AuthService::validateAuth(autoEmit401: false),
-    ],
+$data = [
+    'title' => 'Welcome to LilaPHP',
+    'users' => [/* ... */]
 ];
 
-\Core\ViewEngine::render($seoRoutes);
-```
-
-```javascript
-// frontend/src/main.jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import App from './App';
-import Home from './pages/Home';
-
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    children: [{ index: true, element: <Home /> }],
-  },
-]);
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
-);
+// Render template and cache output for 60 seconds
+View::render('home_template', $data, ['cache' => true, 'cacheTtl' => 60]);
+?>
 ```
 
 ---
