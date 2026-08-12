@@ -4,8 +4,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { generateRoutes } from './routes';
 import Auth from './components/Auth';
 import Public from './components/Public';
-import App from './App';
-import './style.css';
+import './assets/styles.css';
+import './assets/bundle.js';
 
 /**
  * Loading fallback component shown while lazy pages load.
@@ -67,28 +67,17 @@ function wrapRoute(routeDef) {
  */
 const dynamicRoutes = generateRoutes();
 
-const children = dynamicRoutes.map((routeDef) => {
-  if (routeDef.path === '/') {
-    return {
-      index: true,
-      element: wrapRoute(routeDef),
-    };
-  }
-  return {
+const router = createBrowserRouter(
+  dynamicRoutes.map((routeDef) => ({
     path: routeDef.path,
     element: wrapRoute(routeDef),
-  };
-});
+  }))
+);
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    children,
-  },
-]);
+const rootElement = document.getElementById('root');
+rootElement.innerHTML = '';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <RouterProvider router={router} />
   </React.StrictMode>

@@ -73,86 +73,124 @@ export default function Home() {
     }
   };
 
+  const toggleTheme = () => {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-bs-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-bs-theme', newTheme);
+    html.setAttribute('data-theme', newTheme);
+  };
+
   return (
     <>
-      <section className="hero">
-        <div className="hero-text">
-          <div className="tagline">React 19 • Vite • PHP 8.4 SSR & API</div>
-          <h2 className="hero-title">
-            The PHP & React engine engineered for maximum{' '}
-            <span className="gradient-text">speed and concurrency</span>.
-          </h2>
-          <p className="hero-description">
-            LilaPHP combines PHP server-side SEO pre-rendering, session middleware checks, and fast caching with React SPA hydration and Vite hot-reloading.
-          </p>
-          <div className="hero-actions">
-            <button
-              onClick={runDiagnostics}
-              disabled={loading}
-              className="btn btn-primary"
-            >
-              <span>{loading ? 'Querying Live API...' : 'Run Real-Time Diagnostics'}</span>
-              <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
+      <header>
+        <nav className='navbar bg-body-tertiary'>
+          <div className='container'>
+            <a className='navbar-brand' href='#'>LilaPHP</a>
+            <button className='btn btn-outline' onClick={toggleTheme}>
+              Toggle Theme
             </button>
-            <a href="/api/" target="_blank" rel="noreferrer" className="btn btn-secondary">
-              View JSON Endpoint (/api/)
-            </a>
+          </div>
+        </nav>
+      </header>
+      <section className="container text-center py-5 mt-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-8">
+            <div className="text-uppercase text-muted fw-bold mb-3 small">React 19 • Vite • PHP 8.4 SSR & API</div>
+            <h2 className="display-5 fw-bold mb-4">
+              The PHP & React engine engineered for maximum{' '}
+              <span className="text-primary">speed and concurrency</span>.
+            </h2>
+            <p className="lead text-muted mb-5">
+              LilaPHP combines PHP server-side SEO pre-rendering, session middleware checks, and fast caching with React SPA hydration and Vite hot-reloading.
+            </p>
+            <div className="d-flex gap-3 justify-content-center flex-column flex-sm-row">
+              <button
+                onClick={runDiagnostics}
+                disabled={loading}
+                className="btn btn-primary btn-lg px-4"
+              >
+                <span>{loading ? 'Querying Live API...' : 'Run Real-Time Diagnostics'}</span>
+              </button>
+              <a href="/api/" target="_blank" rel="noreferrer" className="btn btn-secondary btn-lg px-4">
+                View JSON Endpoint (/api/)
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="diagnostics" className="diagnostics-section">
-        <div className="section-header">
-          <h3>Real-Time Cluster Diagnostics</h3>
-          <p>Live metrics returned from <code className="inline-code">/api/health</code> via Nginx FastCGI.</p>
+      <section id="diagnostics" className="container py-5 mb-5">
+        <div className="text-center mb-5">
+          <h3 className="fw-bold">Real-Time Cluster Diagnostics</h3>
+          <p className="text-muted">Live metrics returned from
+            <code className="bg-success-subtle text-success px-2 py-2 rounded">/api/health</code> via Nginx FastCGI.</p>
         </div>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon speed-icon">⚡</div>
-            <div className="stat-info">
-              <span className="stat-label">PHP Latency</span>
-              <div className="stat-value">{metrics.speed} <small>ms</small></div>
-              <span className="stat-sub status-green">{metrics.speedStatus}</span>
+        <div className="row g-4 mb-5">
+          <div className="col-12 col-md-6 col-lg-3">
+            <div className="card h-100 shadow-sm border-0">
+              <div className="card-body d-flex align-items-center">
+                <div className="fs-1 me-3">⚡</div>
+                <div>
+                  <span className="text-muted small text-uppercase fw-bold d-block">PHP Latency</span>
+                  <div className="fs-4 fw-bold text-dark">{metrics.speed} <small className="text-muted fs-6">ms</small></div>
+                  <span className="text-success small">{metrics.speedStatus}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon ram-icon">🧠</div>
-            <div className="stat-info">
-              <span className="stat-label">RAM Cache (APCu)</span>
-              <div className="stat-value">{metrics.apcu}</div>
-              <span className="stat-sub status-green">{metrics.apcuStatus}</span>
+          <div className="col-12 col-md-6 col-lg-3">
+            <div className="card h-100 shadow-sm border-0">
+              <div className="card-body d-flex align-items-center">
+                <div className="fs-1 me-3">🧠</div>
+                <div>
+                  <span className="text-muted small text-uppercase fw-bold d-block">RAM Cache (APCu)</span>
+                  <div className="fs-4 fw-bold text-dark">{metrics.apcu}</div>
+                  <span className="text-success small">{metrics.apcuStatus}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon redis-icon">💎</div>
-            <div className="stat-info">
-              <span className="stat-label">Redis Cluster</span>
-              <div className="stat-value">{metrics.redis}</div>
-              <span className="stat-sub status-green">{metrics.redisStatus}</span>
+          <div className="col-12 col-md-6 col-lg-3">
+            <div className="card h-100 shadow-sm border-0">
+              <div className="card-body d-flex align-items-center">
+                <div className="fs-1 me-3">💎</div>
+                <div>
+                  <span className="text-muted small text-uppercase fw-bold d-block">Redis Cluster</span>
+                  <div className="fs-4 fw-bold text-dark">{metrics.redis}</div>
+                  <span className="text-success small">{metrics.redisStatus}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon db-icon">🗄️</div>
-            <div className="stat-info">
-              <span className="stat-label">MySQL Pool</span>
-              <div className="stat-value">{metrics.mysql}</div>
-              <span className="stat-sub status-green">{metrics.mysqlStatus}</span>
+          <div className="col-12 col-md-6 col-lg-3">
+            <div className="card h-100 shadow-sm border-0">
+              <div className="card-body d-flex align-items-center">
+                <div className="fs-1 me-3">🗄️</div>
+                <div>
+                  <span className="text-muted small text-uppercase fw-bold d-block">MySQL Pool</span>
+                  <div className="fs-4 fw-bold text-dark">{metrics.mysql}</div>
+                  <span className="text-success small">{metrics.mysqlStatus}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="terminal-box">
-          <div className="terminal-header">
-            <span>API Response (RAW JSON)</span>
-            <span className="badge-live">LIVE</span>
+        <div className="card text-dark text-dark border-0 shadow-lg">
+          <div className="card-header text-dark border-secondary d-flex justify-content-between align-items-center py-3">
+            <span className="fw-semibold">API Response (RAW JSON)</span>
+            <span className="badge bg-danger rounded-pill px-3 py-2">LIVE</span>
           </div>
-          <pre className="terminal-body">{metrics.rawJson}</pre>
+          <div className="card-body p-0">
+            <pre className="m-0 p-4 overflow-auto" style={{ maxHeight: '400px' }}>
+              <code className="text-success">{metrics.rawJson}</code>
+            </pre>
+          </div>
         </div>
       </section>
     </>

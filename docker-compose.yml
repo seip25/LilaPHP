@@ -41,7 +41,7 @@ services:
       - lila-network
 
   node:
-    image: node:20-alpine
+    image: node:24-alpine
     container_name: ${APP_NAME:-lilaphp}-node
     restart: unless-stopped
     working_dir: /app
@@ -70,7 +70,7 @@ services:
       - mysql-data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-secret}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-secret}" ]
       interval: 10s
       timeout: 5s
       retries: 5

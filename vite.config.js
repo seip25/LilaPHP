@@ -28,6 +28,9 @@ export default defineConfig({
     hmr: {
       host: 'localhost',
     },
+    watch: {
+      usePolling: true,
+    },
   },
   resolve: {
     alias: {

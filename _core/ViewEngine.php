@@ -46,7 +46,8 @@ class ViewEngine
     {
         $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
         $appEnv = Config::$APP_ENV ?? (getenv('APP_ENV') ?: 'development');
-        $isDev = in_array(strtolower($appEnv), ['dev', 'development', 'local'], true);
+        $isDebug = Config::$DEBUG ?? filter_var(getenv('APP_DEBUG') ?: 'true', FILTER_VALIDATE_BOOLEAN);
+        $isDev = in_array(strtolower($appEnv), ['dev', 'development', 'local'], true) && $isDebug;
 
         if (!empty($seoRoutes[$uri]['protected'])) {
             $hasCallback = !empty($seoRoutes[$uri]['callback']) && is_callable($seoRoutes[$uri]['callback']);
@@ -72,7 +73,7 @@ class ViewEngine
         $useCache = !$isDev && ($options['cache'] ?? true);
         if ($useCache) {
             $routeSeo = $seoRoutes[$uri] ?? [];
-            unset($routeSeo['callback']); // Don't serialize closures
+            unset($routeSeo['callback']);
             $cacheKey = 'lila_view_' . md5($uri . serialize($routeSeo));
             $ttl = (int)($options['cacheTtl'] ?? 0);
 
@@ -154,7 +155,7 @@ class ViewEngine
         }
 
         $html = '<!DOCTYPE html>' . "\n"
-            . '<html lang="' . htmlspecialchars($lang) . '">' . "\n"
+            . '<html lang="' . htmlspecialchars($lang) . '" data-bs-theme="light" data-theme="light">' . "\n"
             . '<head>' . "\n"
             . '<meta charset="UTF-8">' . "\n"
             . '<meta name="viewport" content="width=device-width, initial-scale=1.0">' . "\n"
