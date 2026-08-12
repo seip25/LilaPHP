@@ -42,7 +42,7 @@ class Dispatcher
             }
         }
 
-        if (str_starts_with($uri, '404')) {
+        if (str_starts_with($uri, 'debug/') || str_starts_with($uri, '404')) {
             $coreFile = Config::$DIR_CORE . "/routes/{$uri}.php";
             if (file_exists($coreFile)) {
                 require $coreFile;

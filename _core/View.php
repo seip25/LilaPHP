@@ -27,7 +27,7 @@ class View
         $isDev = in_array(strtolower($appEnv), ['dev', 'development', 'local'], true) && $isDebug;
 
         $useCache = !$isDev && ($options['cache'] ?? false);
-        
+
         if ($useCache) {
             $cacheKey = 'lila_view_' . md5($viewName . serialize($data));
             $ttl = (int)($options['cacheTtl'] ?? 0);
@@ -68,5 +68,40 @@ class View
         ob_start();
         require $viewPath;
         return ob_get_clean();
+    }
+
+    /**
+     * Renders an HTML string directly (e.g. from Heredoc) with caching support.
+     * Useful for single-file components where you don't want separate template files.
+     * 
+     * @param string|callable $htmlOrCallable The HTML string, or a callback that returns the HTML string.
+     * @param array $options Configuration options (cache, cacheTtl, cacheKey).
+     * @return void
+     */
+    public static function html($htmlOrCallable, array $options = []): void
+    {
+        $appEnv = Config::$APP_ENV ?? (getenv('APP_ENV') ?: 'development');
+        $isDebug = Config::$DEBUG ?? filter_var(getenv('APP_DEBUG') ?: 'true', FILTER_VALIDATE_BOOLEAN);
+        $isDev = in_array(strtolower($appEnv), ['dev', 'development', 'local'], true) && $isDebug;
+
+        $useCache = !$isDev && ($options['cache'] ?? false);
+
+        if ($useCache) {
+            $cacheKey = $options['cacheKey'] ?? 'lila_html_' . md5(json_encode(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0]));
+            $ttl = (int)($options['cacheTtl'] ?? 0);
+
+            $html = Cache::api($cacheKey, function () use ($htmlOrCallable) {
+                return is_callable($htmlOrCallable) ? $htmlOrCallable() : $htmlOrCallable;
+            }, $ttl);
+
+            header('Content-Type: text/html; charset=utf-8');
+            header('X-Lila-View-Cache: HIT');
+            echo $html;
+            return;
+        }
+
+        header('Content-Type: text/html; charset=utf-8');
+        header('X-Lila-View-Cache: MISS');
+        echo is_callable($htmlOrCallable) ? $htmlOrCallable() : $htmlOrCallable;
     }
 }

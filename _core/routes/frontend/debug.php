@@ -3,8 +3,8 @@
 use Core\Config;
 use Core\Response;
 
-$isDebug = filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN);
-$isLoggingEnabled = filter_var(getenv('DEBUG_LOGGING_ENABLED') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+$isDebug = Config::$DEBUG;
+$isLoggingEnabled = Config::$DEBUG_LOGGING_ENABLED;
 
 if (!$isDebug || !$isLoggingEnabled) {
     Response::error('Not Found', 404);
