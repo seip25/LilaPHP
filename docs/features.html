@@ -383,9 +383,10 @@ if ($postResult['status'] === 200) {
                 </div>
 
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                    LilaPHP features a zero-overhead interactive <strong>Debug & Monitoring Dashboard</strong> located
-                    at <code>/debug</code> or <code>/debug.html</code>. It records live API request streams into Redis,
-                    monitors system health (Redis, MySQL, PHP-FPM, CPU/RAM/Disk), and provides an in-browser stress
+                    LilaPHP features a zero-overhead interactive <strong>Debug CLI</strong> located
+                    at <code>php cli.php benchmark --url=/api/health --concurrency=1000 --duration=15</code>. It records live API request streams into Redis,
+                    monitors system health (Redis, MySQL, PHP-FPM, CPU/RAM/Disk), and provides an 
+                    stress
                     testing tool for concurrencies up to 4,000 requests.
                 </p>
 

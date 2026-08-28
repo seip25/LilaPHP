@@ -215,4 +215,61 @@ class Config
             return false;
         }
     }
+
+    /**
+     * Compiles and caches environment configurations into _core/cache/env.php.
+     *
+     * @param string|null $envFile Custom .env path (optional)
+     * @return bool True on success, false on failure
+     */
+    public static function cache(?string $envFile = null): bool
+    {
+        if (self::$DIR_PROJECT === '') {
+            self::$DIR_PROJECT = dirname(__DIR__);
+            self::$DIR_CORE = self::$DIR_PROJECT . '/_core';
+            self::$DIR_BACKEND = self::$DIR_PROJECT . '/backend';
+            self::$DIR_FRONTEND = self::$DIR_PROJECT . '/frontend';
+        }
+
+        if ($envFile === null) {
+            $envFile = self::$DIR_BACKEND . '/.env';
+            if (!file_exists($envFile) && file_exists(self::$DIR_PROJECT . '/.env')) {
+                $envFile = self::$DIR_PROJECT . '/.env';
+            }
+        }
+
+        if (!file_exists($envFile)) {
+            return false;
+        }
+
+        $envVars = self::parseEnvFile($envFile);
+
+        $cacheDir = self::$DIR_CORE . '/cache';
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0777, true);
+        }
+
+        $cacheFile = $cacheDir . '/env.php';
+        return self::saveCache($cacheFile, $envVars);
+    }
+
+    /**
+     * Clears the compiled configuration cache file.
+     *
+     * @return bool
+     */
+    public static function clearCache(): bool
+    {
+        if (self::$DIR_CORE === '') {
+            self::$DIR_CORE = dirname(__DIR__) . '/_core';
+        }
+
+        $cacheFile = self::$DIR_CORE . '/cache/env.php';
+        if (file_exists($cacheFile)) {
+            return @unlink($cacheFile);
+        }
+
+        return true;
+    }
 }
+

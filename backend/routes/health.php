@@ -10,8 +10,11 @@ declare(strict_types=1);
  */
 
 use Core\Response;
+use Core\Request;
 use Core\Config;
 use Core\Database;
+
+Request::GET(['cache' => true, 'cache_ttl' => 10],function(){
 
 $dbConnected = false;
 $dbDriver = Config::$DB_TYPE;
@@ -70,3 +73,5 @@ Response::json([
     ],
     'uptime_sec' => defined('LILAPHP_START_TIME') ? round(microtime(true) - LILAPHP_START_TIME, 4) : 0,
 ]);
+
+});
