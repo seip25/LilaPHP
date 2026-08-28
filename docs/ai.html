@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Universal AI Engine — LilaPHP Documentation</title>
     <meta name="description"
-        content="Zero-dependency universal AI and LLM engine for LilaPHP supporting DeepSeek, Gemini 2.0, OpenAI, Anthropic Claude, and local Ollama." />
+        content="Zero-dependency universal AI and LLM engine for LilaPHP supporting DeepSeek, Gemini 3.7/3.6/3.5 Flash, Gemini 3.1 Pro, OpenAI, Anthropic Claude 3.7 Sonnet, and local Ollama." />
     <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,128 +19,243 @@
 </head>
 
 <body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+        <a href="index.html" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+            <span class="text-primary-600">Lila</span>PHP
+        </a>
+        <button id="menu-toggle"
+            class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+    </div>
+
     <div class="flex max-w-8xl mx-auto min-h-screen">
+        <!-- Sidebar Navigation -->
         <aside id="sidebar"
-            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto"
-            data-include="partials/aside.html">
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 min-w-0 px-4 sm:px-6 xl:px-8 py-10 max-w-5xl mx-auto">
             <header class="mb-10">
                 <p class="text-sm font-semibold text-primary-600 dark:text-primary-400 tracking-wide uppercase">
-                    Advanced Features
+                    Universal AI Engine
                 </p>
                 <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-2">
-                    Universal AI &amp; LLM Engine
+                    Universal AI &amp; LLM Engine (`Core\AI`)
                 </h1>
                 <p class="text-lg text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
-                    Zero-overhead, multi-provider AI client built into <code>_core/AI.php</code> supporting <strong>DeepSeek</strong> (with automated model fallback), <strong>Google Gemini</strong>, <strong>OpenAI</strong>, <strong>Anthropic Claude</strong>, and local <strong>Ollama</strong>.
+                    Zero-dependency, multi-provider AI client built into <code>_core/AI.php</code> supporting <strong>DeepSeek</strong> (with automated model fallback), <strong>Google Gemini</strong> (3.7 Flash, 3.6 Flash, 3.5 Flash, 3.1 Pro), <strong>OpenAI</strong> (GPT-4o, o3-mini), <strong>Anthropic Claude</strong> (3.7 Sonnet, 3.5 Sonnet), and local <strong>Ollama</strong>.
                 </p>
             </header>
 
-            <section class="mb-12">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Quick AI Prompt Example</h2>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-800">
-                    <pre><code class="language-php">&lt;?php
-
+            <!-- Quick Start Prompting -->
+            <section id="prompting" class="mb-12 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">1. Quick Text &amp; Structured JSON Generation</h2>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
 use Core\AI;
 
-// 1. Simple text generation using default provider
+// 1. Simple text generation using default provider configured in .env
 $answer = AI::text("Explain database indexing in simple terms.");
 
 // 2. Global helper shortcut
-$summary = ai("Summarize the following legal text: " . $contractText);
+$summary = ai("Summarize the following contract: " . $contractText);
 
-// 3. Structured JSON extraction with automatic decoding
+// 3. Structured JSON extraction with automatic decoding into PHP array
 $profile = AI::json("Generate a mock user profile with name, email, and occupation.");
-// Returns: ['name' => 'Alice Johnson', 'email' => 'alice@example.com', 'occupation' => 'Software Architect']
-</code></pre>
+// Returns: ['name' => 'Alice Johnson', 'email' => 'alice@example.com', 'occupation' => 'Architect']
+
+// 4. Passing system instructions and temperature
+$code = AI::text("Write a regex to match E.164 phone numbers", [
+    'system' => 'You are a senior PHP and regex specialist. Return only code.',
+    'temperature' => 0.2
+]);</code></pre>
                 </div>
             </section>
 
-            <section class="mb-12">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Supported AI Providers</h2>
+            <!-- Supported Providers -->
+            <section id="providers" class="mb-12 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">2. Supported AI Providers &amp; Modern Models</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">🚀 DeepSeek AI</h3>
+                    <!-- Google Gemini -->
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">✨</span>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">Google Gemini</h3>
+                        </div>
                         <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                            Direct integration with <code>api.deepseek.com</code>. Supports <code>deepseek-v4-flash</code>, <code>deepseek-chat</code>, and <code>deepseek-reasoner</code> with automatic fallback.
+                            Direct integration with Google Generative Language API. Supports <code>gemini-3.7-flash</code>, <code>gemini-3.6-flash</code>, <code>gemini-3.5-flash</code>, <code>gemini-3.1-pro</code>, and <code>gemini-2.0-flash</code>.
                         </p>
-                        <pre><code class="language-php">$res = AI::deepseek($prompt, [
-    'model' => 'deepseek-v4-flash',
-    'fallback_model' => 'deepseek-chat',
-    'system' => 'Eres un asistente contable en Uruguay.'
-]);</code></pre>
-                    </div>
-
-                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">✨ Google Gemini</h3>
-                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                            Supports Gemini 2.0 Flash, Gemini 2.0 Pro, Gemini 1.5 Flash/Pro with structured JSON output and system instructions.
-                        </p>
-                        <pre><code class="language-php">$res = AI::gemini($prompt, [
-    'model' => 'gemini-2.0-flash',
+                        <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner">
+                            <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto"><code class="language-php">$res = AI::gemini("Analyze quarterly sales trends", [
+    'model' => 'gemini-3.7-flash',
+    'fallback_model' => 'gemini-3.5-flash',
     'json_mode' => true
 ]);</code></pre>
+                        </div>
                     </div>
 
-                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">🧠 OpenAI</h3>
+                    <!-- DeepSeek -->
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">🚀</span>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">DeepSeek AI</h3>
+                        </div>
                         <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                            Supports GPT-4o, GPT-4o-mini, o1, and o3-mini.
+                            Direct integration with <code>api.deepseek.com</code>. Supports <code>deepseek-v4-flash</code>, <code>deepseek-chat</code>, and <code>deepseek-reasoner</code> with reasoning token metrics.
                         </p>
-                        <pre><code class="language-php">$res = AI::openai($prompt, [
-    'model' => 'gpt-4o-mini',
-    'temperature' => 0.5
+                        <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner">
+                            <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto"><code class="language-php">$res = AI::deepseek($prompt, [
+    'model' => 'deepseek-v4-flash',
+    'fallback_model' => 'deepseek-chat',
+    'system' => 'You are a financial advisor.'
 ]);</code></pre>
+                        </div>
                     </div>
 
-                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">🦙 Ollama (Local &amp; Private)</h3>
+                    <!-- Anthropic Claude -->
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">🎭</span>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">Anthropic Claude</h3>
+                        </div>
                         <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                            Zero API key required. Connects directly to local Ollama instance running Llama 3, Mistral, Qwen, or DeepSeek-R1.
+                            Supports <code>claude-3-7-sonnet-20250219</code>, <code>claude-3-5-sonnet-20241022</code>, and <code>claude-3-5-haiku-20241022</code> with direct system prompt mapping.
                         </p>
-                        <pre><code class="language-php">$res = AI::ollama($prompt, [
-    'model' => 'deepseek-r1',
+                        <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner">
+                            <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto"><code class="language-php">$res = AI::anthropic($prompt, [
+    'model' => 'claude-3-7-sonnet-20250219',
+    'max_tokens' => 4096
+]);</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- OpenAI -->
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">🧠</span>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">OpenAI</h3>
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Supports <code>gpt-4o</code>, <code>gpt-4o-mini</code>, <code>o1</code>, and <code>o3-mini</code> with standard response format schemas.
+                        </p>
+                        <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner">
+                            <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto"><code class="language-php">$res = AI::openai($prompt, [
+    'model' => 'gpt-4o-mini',
+    'temperature' => 0.4
+]);</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Ollama -->
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm md:col-span-2">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xl">🦙</span>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">Local Ollama &amp; Private Models</h3>
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Zero external API key required. Connects directly to local or self-hosted Ollama instances running <strong>DeepSeek-R1</strong>, <strong>Llama 3.3</strong>, <strong>Qwen 2.5</strong>, or <strong>Mistral</strong>.
+                        </p>
+                        <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner">
+                            <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto"><code class="language-php">$res = AI::ollama($prompt, [
+    'model' => 'deepseek-r1:8b',
     'base_url' => 'http://localhost:11434'
 ]);</code></pre>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section class="mb-12">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Built-in AI Rate Limiting</h2>
+            <!-- Rate Limiting -->
+            <section id="rate-limiting" class="mb-12 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">3. Built-in AI Rate Limiter &amp; Quota Guard</h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Protect your public AI chat endpoints against quota abuse with per-minute and per-day rate limits:
+                    Protect your public AI chat endpoints against quota exhaustion and DDoS abuse with dual per-minute and per-day rate limits powered by Redis:
                 </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-800">
-                    <pre><code class="language-php">&lt;?php
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
 // backend/routes/chat.php
 
 use Core\AI;
 use Core\Request;
 use Core\Response;
 
-$ip = Request::ip();
-$limit = AI::checkRateLimit($ip, limitPerMinute: 6, limitPerDay: 30);
+Request::POST(function() {
+    $ip = Request::ip();
 
-if (!$limit['allowed']) {
-    Response::json(['error' => $limit['error']], 429);
-    exit;
-}
+    // Enforce max 6 requests per minute and 50 requests per day per IP
+    $limit = AI::checkRateLimit($ip, limitPerMinute: 6, limitPerDay: 50);
 
-$message = input('message');
-$reply = AI::text($message, [
-    'provider' => 'deepseek',
-    'system' => 'Eres un asistente virtual formal y profesional.'
-]);
+    if (!$limit['allowed']) {
+        Response::json(['error' => $limit['error']], 429);
+        exit;
+    }
 
-Response::json(['reply' => $reply]);
-</code></pre>
+    $message = input('message', '');
+    $reply = AI::text($message, [
+        'provider' => 'gemini',
+        'model' => 'gemini-3.7-flash',
+        'system' => 'Eres un asistente virtual formal y resolutivo.'
+    ]);
+
+    Response::json([
+        'reply' => $reply,
+        'remaining_daily' => $limit['remaining_day'] ?? 0
+    ]);
+});</code></pre>
                 </div>
             </section>
+
+            <!-- Bottom Navigation -->
+            <div class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <a href="views.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium transition-all shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Previous: <strong>Frontend Views &amp; Lila.js SPA</strong></span>
+                </a>
+                <a href="features.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                    <span>Next: <strong>Advanced Engine &amp; Features</strong></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </div>
         </main>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
 </body>
 
 </html>

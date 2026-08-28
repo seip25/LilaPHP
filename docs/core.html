@@ -57,49 +57,62 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16" <!-- Config -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
+            <!-- Config -->
             <section id="config" class="scroll-mt-24 mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                    Configuration & Environment (`backend/.env`)
+                    Configuration &amp; Environment (`backend/.env`)
                 </h2>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
                         Settings in <code>backend/.env</code> control the framework's behavior globally. Under our
                         API-first architecture, no monolithic <code>App</code> instantiation is required—all
-                        configuration properties are read into static memory upon boot (`_core/bootstrap.php`). Internal
-                        framework routes (such as <code>/api/debug/*</code> and the JSON <code>404</code> handler) are
-                        cleanly isolated inside <code>_core/routes/</code> so that <code>backend/routes/</code> is
-                        strictly reserved for user application logic.
+                        configuration properties are parsed into static memory upon boot via <code>Core\Config</code> (`_core/Config.php`).
+                        In production, running <code>php cli.php optimize</code> pre-compiles these settings directly into an OPcache-ready PHP array (`_core/cache/env.php`) for zero runtime parsing overhead.
                     </p>
-                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-ini">APP_NAME="LilaPHP API Engine"
-APP_ENV="production"
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-ini"># Application Profile & Ports
+APP_NAME=LilaPHP
+APP_ENV=production
 APP_DEBUG=false
-APP_URL="http://localhost:8080"
-APP_KEY="base64:..." # Generated via: php cli.php key:generate
+APP_URL=http://localhost:8080
+HTTP_PORT=8080
+PROD_HTTP_PORT=80
 
-# Database
-DB_PROVIDER="mysql" # or sqlite
-DB_HOST="mysql"
+# Multi-Driver Database (Default: MySQL | Optional: SQLite / PostgreSQL)
+DB_TYPE=mysql
+DB_HOST=mysql
 DB_PORT=3306
-DB_NAME="lilaphp"
-DB_USER="root"
-DB_PASSWORD="secret"
+DB_NAME=lilaphp
+DB_USER=root
+DB_PASSWORD=secret
+# For SQLite:
+# DB_TYPE=sqlite
+# DB_FILE=backend/database/app.sqlite
 
-# High Performance Caching & Queues
-CACHE_DRIVER="apcu"      # RAM in-memory cache
-DB_CACHE_DRIVER="redis"  # Distributed cache & background workers
-REDIS_HOST="redis"
+# Dual-Tier Cache & Redis
+REDIS_HOST=redis
 REDIS_PORT=6379
+REDIS_PASSWORD=
+CACHE_DRIVER=apcu          # Fast in-memory RAM cache (APCu)
+DB_CACHE_DRIVER=file       # Fallback or Redis persistence
 
-# Security & Rate Limiting
-# RATE_LIMIT: Max requests per window. Set to false, 0, or none to disable (useful for benchmarks/load tests)
-RATE_LIMIT=200
-RATE_LIMIT_WINDOW=60
+# Universal AI Engine Configuration
+# Supported: 'deepseek', 'gemini', 'openai', 'anthropic', 'ollama', 'custom'
+AI_PROVIDER=deepseek
+API_IA_KEY=                # Generic key fallback
+OPENAI_API_KEY=            # Provider-specific key overrides
+GEMINI_API_KEY=
+DEEPSEEK_API_KEY=
+ANTHROPIC_API_KEY=
+OLLAMA_BASE_URL=http://localhost:11434
 
-# Logger & Debug Settings
-LOG_ENABLED=false        # Disabled by default for maximum concurrency
-DEBUG_LOGGING_ENABLED=true
-</code></pre>
+# Security & DDoS Protection
+APP_KEY="base64:..."       # Generated via: php cli.php key:generate
+CORS_ALLOWED_ORIGINS=*
+RATE_LIMIT=200             # Max requests per window (0 or false to disable)
+RATE_LIMIT_WINDOW=60       # Window size in seconds
+LOG_ENABLED=false          # Minimal I/O for max concurrency
+DEBUG_LOGGING_ENABLED=false</code></pre>
                 </div>
             </section>
 
@@ -224,9 +237,18 @@ if ($savedFile) {
                 </div>
             </section>
 
-            <div class="mt-10 px-4">
-                <a href="routing.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
-                    Routing
+            <div class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <a href="index.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium transition-all shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Previous: <strong>Getting Started</strong></span>
+                </a>
+                <a href="routing.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                    <span>Next: <strong>File-Based Routing</strong></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                 </a>
             </div>
         </main>

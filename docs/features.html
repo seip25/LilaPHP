@@ -59,12 +59,11 @@
         <!-- Main Content -->
         <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
 
-
             <!-- Core\Task Background Workers -->
-            <section id="queues" class="scroll-mt-24 mb-20">
+            <section id="tasks" class="scroll-mt-24 mb-20">
                 <div class="flex items-center gap-3 mb-6">
                     <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
-                        Background Workers (`Core\Task`)
+                        Background Workers &amp; Queues (`Core\Task`)
                     </h2>
                     <span
                         class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wide">Performance
@@ -91,9 +90,8 @@
                         <li><strong>Distributed Redis Mode (Default in Docker Prod):</strong> If Redis (`6379`) is
                             active in `backend/.env`, the task payload (`json`) is pushed into the `lilaphp:jobs` queue
                             (`Redis::lPush`). Background CLI workers consume it asynchronously.</li>
-                        <li><strong>Standalone Fallback Mode (`proc_open`):</strong> If Redis is disabled or
-                            unavailable, `Task::dispatch()` executes a detached OS background process via
-                            `proc_open("php /path/to/_core/cli.php task:run ... > /dev/null 2>&1 &")`, instantly
+                        <li><strong>Standalone Fallback Mode (`proc_open` / detached process):</strong> If Redis is disabled or
+                            unavailable, `Task::dispatch()` executes a detached OS background process, instantly
                             releasing your HTTP worker.</li>
                     </ul>
                 </div>
@@ -121,8 +119,7 @@ Response::json(['status' => 'order_placed', 'invoice_id' => 'INV-2026-8891']);</
                 </h3>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
                     When a job is processed, `Core\Task` automatically includes your PHP script from the `backend/jobs/`
-                    folder matching the job name (e.g., `backend/jobs/send_invoice_email.php` or
-                    `backend/jobs/testing.php`). Inside the script, `$jobName` and `$payload` are injected into scope:
+                    folder matching the job name (e.g., `backend/jobs/send_invoice_email.php`). Inside the script, `$jobName` and `$payload` are injected into scope:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
                     <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
@@ -150,77 +147,119 @@ return true;</code></pre>
                     entry point:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre
-                        class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start continuous Redis worker consuming lilaphp:jobs
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start continuous worker daemon consuming Redis job queue
 php cli.php task:work
 
-# Or run inside Docker FPM/CLI container
-docker exec -it lilaphp-fpm php cli.php task:work
-
-# To test a single job immediately without waiting for queue:
-php cli.php task:run testing 'eyJwYXlsb2FkIjp7ImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsImFjdGlvbiI6IndlbGNvbWUifX0='</code></pre>
+# Run worker inside Docker container
+php cli.php docker exec-php
+php cli.php task:work</code></pre>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                    4. Running Permanently in Background (`docker-compose.yml`)
-                </h3>
-                <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    To keep your background task workers and WebSocket server running continuously 24/7 in production
-                    without stopping when you close the terminal, add these permanent services inside your
-                    `docker-compose.yml`:
+            </section>
+
+            <!-- Anti-Malware File Upload Engine (`Core\Upload`) -->
+            <section id="upload" class="scroll-mt-24 mb-20">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        Anti-Malware File Upload (`Core\Upload`)
+                    </h2>
+                    <span
+                        class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold rounded-full uppercase tracking-wide">Security
+                        Shield</span>
+                </div>
+
+                <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                    Handling user file uploads securely is one of the most critical parts of any web API. <code>Core\Upload</code> provides automated multi-layer security checks to protect your application from malicious uploads, remote code execution (RCE), MIME spoofing, and double-extension exploits.
                 </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h4 class="font-bold text-slate-900 dark:text-white mb-2 text-sm">🔍 Binary MIME Inspection</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Uses PHP's <code>finfo_file(FILEINFO_MIME_TYPE)</code> to verify real file magic bytes, rejecting client-provided extension spoofing.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h4 class="font-bold text-slate-900 dark:text-white mb-2 text-sm">🛡️ Embedded Script Scanner</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Scans initial byte chunks for embedded <code>&lt;?php</code>, <code>&lt;?=</code>, and <code>&lt;script</code> payloads hiding inside images or PDFs.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h4 class="font-bold text-slate-900 dark:text-white mb-2 text-sm">🎲 Cryptographic Random Filenames</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Generates 32-character hexadecimal filenames via <code>bin2hex(random_bytes(16))</code> to prevent directory traversal or file overwrites.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h4 class="font-bold text-slate-900 dark:text-white mb-2 text-sm">📏 Strict File Size Enforcement</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Enforces custom byte boundaries per route (defaults to 10 MB) before processing or moving files.</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    Handling File Uploads in API Routes
+                </h3>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-yaml">services:
-  # ... (existing php, nginx, mysql, redis containers) ...
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Request;
+use Core\Response;
+use Core\Upload;
 
-  # Continuous background worker consuming Redis job queues (`lilaphp:jobs`)
-  worker:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile.prod
-    command: php cli.php task:work
-    restart: always
-    environment:
-      - APP_ENV=production
-    depends_on:
-      - redis
-      - mysql
+Request::POST(function() {
+    if (!isset($_FILES['avatar'])) {
+        Response::error('No avatar file provided in upload', 422);
+    }
 
-  # Real-time Workerman WebSocket server daemon
-  websocket:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile.prod
-    command: php cli.php ws:serve 8001
-    restart: always
-    environment:
-      - APP_ENV=production
-    depends_on:
-      - redis</code></pre>
+    // 1. Process and save with allowed MIME whitelist (images only)
+    $savedFilename = Upload::save($_FILES['avatar'], null, [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/webp' => 'webp'
+    ], maxSizeMax: 5 * 1024 * 1024); // 5 MB limit
+
+    if (!$savedFilename) {
+        Response::error('Invalid or malicious file detected', 400);
+    }
+
+    // 2. Return public URL or filename
+    Response::json([
+        'status' => 'success',
+        'filename' => $savedFilename,
+        'url' => '/uploads/' . $savedFilename
+    ], 201);
+});</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    Deleting Uploaded Files
+                </h3>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Upload;
+
+// Safely delete a file from backend/uploads/
+$deleted = Upload::delete('e9f8a1b2c3d4e5f678901234567890ab.webp');</code></pre>
                 </div>
             </section>
 
             <!-- Real-Time WebSockets Engine (`Core\Ws`) -->
-            <section id="websockets-engine" class="scroll-mt-24 mb-20">
+            <section id="ws" class="scroll-mt-24 mb-20">
                 <div class="flex items-center gap-3 mb-6">
                     <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
-                        Real-Time WebSockets & Redis Pub/Sub (`Core\Ws`)
+                        Real-Time WebSockets &amp; Redis Pub/Sub (`Core\Ws`)
                     </h2>
                     <span
-                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full uppercase tracking-wide">New
+                        class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full uppercase tracking-wide">Real-time
                         Engine</span>
                 </div>
 
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
                     LilaPHP includes a high-performance **Socket.IO style real-time engine** powered by **Workerman
                     (`workerman/workerman`)** and **Redis Pub/Sub**. Your PHP-FPM API routes (`POST /api/items`) can
-                    broadcast messages directly to connected frontend browsers in `< 1ms` without keeping heavy FPM
-                        worker connections open! </p>
+                    broadcast messages directly to connected frontend browsers in `&lt; 1ms` without keeping heavy FPM
+                    worker connections open!
+                </p>
 
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                            1. Broadcasting from PHP-FPM API Routes (`Core\Ws::publish`)
-                        </h3>
-                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                            <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Ws;
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    1. Broadcasting from PHP-FPM API Routes (`Core\Ws::publish`)
+                </h3>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Ws;
 use Core\Response;
 
 // Inside backend/routes/items.php (when a new item is created via POST):
@@ -231,22 +270,13 @@ Ws::publish('item_created', [
 ], 'products_room'); // Broadcast exclusively to sockets joined to 'products_room'
 
 Response::json(['status' => 'success', 'message' => 'Item created and broadcasted live']);</code></pre>
-                        </div>
+                </div>
 
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                            2. Frontend Client Wrapper (`frontend/js/ws.js`)
-                        </h3>
-                        <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            Include `
-                            <script src="/js/ws.js"></script>` in your HTML to use the `LilaWS` Socket.IO-style class.
-                            Packets sent while connecting are automatically queued (`sendQueue`) and flushed upon
-                            connection:
-                        </p>
-                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                            <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// Connects automatically to Nginx /ws endpoint (proxied to port 8001)
-const ws = new LilaWS('/ws');
-
-// Join a specific room with optional authentication payload
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    2. Frontend Client Wrapper (`frontend/js/ws.js`)
+                </h3>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// Join a room
 ws.join('products_room', { password: 'room_password_if_needed' });
 
 // Listen for live events broadcasted by Core\Ws::publish or clients
@@ -259,115 +289,94 @@ ws.emit('chat_message', { text: 'Hello others!' }, 'products_room');
 
 // Emit event to ALL clients in the room (including the sender socket)
 ws.broadcastAll('chat_message', { text: 'Hello everyone including me!' }, 'products_room');</code></pre>
-                        </div>
+                </div>
 
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                            3. Security & Room Authentication Interceptor (`backend/sockets/Handler.php`)
-                        </h3>
-                        <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            Intercept connections, verify room passwords/tokens before allowing join attempts, and
-                            handle custom incoming messages directly in `backend/sockets/Handler.php`:
-                        </p>
-                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                            <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">namespace Sockets;
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    3. Running the WebSocket Server (`php cli.php ws:serve`)
+                </h3>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start WebSocket server on port 8001
+php cli.php ws:serve 8001
 
-class Handler
-{
-    // Intercept client connections (assign unique socket IDs or check headers)
-    public static function onConnect(object $connection): void
-    {
-        $connection->socket_id = 'user_' . bin2hex(random_bytes(4));
-    }
-
-    // Intercept room join attempts (`ws.join('admin_room', { password: 'secret' })`)
-    public static function onJoin(object $connection, string $room, array $payload = []): bool
-    {
-        if ($room === 'admin_room') {
-            if (($payload['password'] ?? '') !== 'secret123') {
-                $connection->send(json_encode(['event' => 'error', 'message' => 'Unauthorized access']));
-                return false; // Reject join attempt
-            }
-        }
-        return true; // Allow join
-    }
-
-    // Intercept incoming events before Workerman retransmits to the room
-    public static function onMessage(object $connection, string $event, array $payload, ?string $room, object $wsWorker): bool
-    {
-        if ($event === 'chat_message') {
-            // Persist to MySQL or sanitize input
-        }
-        return true; // Allow automatic broadcast to room members
-    }
-
-    public static function onClose(object $connection): void {}
-}</code></pre>
-                        </div>
-
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                            4. Running the WebSocket Server (`php cli.php ws:serve`)
-                        </h3>
-                        <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            Run the WebSocket daemon on port `8001` (`/ws` proxy in Nginx) directly via `cli.php`:
-                        </p>
-                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                            <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
+# Start in background daemon mode (-d)
 php cli.php ws:serve 8001 -d
 
-# Stop the running background WebSocket daemon
+# Stop or restart daemon
 php cli.php ws:serve stop 8001
-# Or: php cli.php ws:serve 8001 stop
-
-# Gracefully reload/restart daemon without dropping active connections
-php cli.php ws:serve restart 8001 -d
-
-# Check live connections and worker metrics
-php cli.php ws:serve status 8001</code></pre>
-                        </div>
+php cli.php ws:serve restart 8001 -d</code></pre>
+                </div>
             </section>
 
-            <!-- Core\Http cURL Wrapper -->
-            <section id="http-helper" class="scroll-mt-24 mb-20">
+            <!-- Core\Http cURL & Multi-cURL Wrapper -->
+            <section id="http" class="scroll-mt-24 mb-20">
                 <div class="flex items-center gap-3 mb-6">
                     <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
-                        API Client & cURL Wrapper (`Core\Http`)
+                        API Client &amp; Multi-cURL Client (`Core\Http`)
                     </h2>
                     <span
-                        class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">New
-                        helper</span>
+                        class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full uppercase tracking-wide">HTTP
+                        Suite</span>
                 </div>
 
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                    Need to call external microservices, payment gateways (Stripe/PayPal), or webhooks? `Core\Http`
-                    provides an ultra-lightweight cURL wrapper optimized for JSON APIs without requiring Guzzle or heavy
-                    HTTP client libraries.
+                    Need to call external microservices, payment gateways (Stripe/PayPal), LLM APIs, or webhooks? <code>Core\Http</code>
+                    provides an ultra-lightweight cURL wrapper with connection pooling, automatic JSON encoding/decoding, and high-speed asynchronous batch execution via <code>curl_multi_*</code> without requiring Guzzle or heavy external dependencies.
                 </p>
 
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    1. Synchronous Requests (`Http::get` &amp; `Http::post`)
+                </h3>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
                     <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Http;
 use Core\Response;
 
 // 1. Send GET request with headers
 $response = Http::get('https://api.github.com/users/seip25', [
-    'User-Agent: LilaPHP-Engine/2.0',
+    'User-Agent: LilaPHP-Engine/3.0',
     'Accept: application/vnd.github.v3+json'
 ]);
 
 // 2. Send POST JSON request automatically
 $postResult = Http::post('https://api.stripe.com/v1/charges', [
     'amount' => 2000,
-    'currency' => 'usd',
-    'source' => 'tok_visa'
+    'currency' => 'usd'
 ], [
     'Authorization: Bearer sk_test_xxxxxx'
 ]);
 
 // Check status codes and parse JSON response directly
 if ($postResult['status'] === 200) {
-    Response::json(['payment' => 'success', 'data' => $postResult['body']]);
+    Response::json(['payment' => 'success', 'data' => $postResult['json']]);
 } else {
     Response::json(['error' => 'Gateway rejected transaction'], 502);
 }</code></pre>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">
+                    2. High-Speed Concurrent Batch Requests (`Http::multi`)
+                </h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Execute multiple HTTP requests simultaneously in parallel TCP sockets using asynchronous <code>curl_multi_*</code>:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">use Core\Http;
+use Core\Response;
+
+// Dispatch 3 external API calls in parallel:
+$results = Http::multi([
+    'weather'  => ['url' => 'https://api.weather.com/v1/current', 'method' => 'GET', 'timeout' => 5],
+    'rates'    => ['url' => 'https://api.exchange.com/rates', 'method' => 'GET', 'timeout' => 5],
+    'analytics'=> ['url' => 'https://analytics.internal/event', 'method' => 'POST', 'payload' => ['event' => 'page_view']]
+]);
+
+// Access each response directly by key
+$weatherData = $results['weather']['json'];
+$ratesData   = $results['rates']['json'];
+
+Response::json([
+    'weather' => $weatherData,
+    'rates' => $ratesData
+]);</code></pre>
                 </div>
             </section>
 
@@ -460,9 +469,18 @@ php cli.php docker stats </code></pre>
 
             </section>
 
-            <div class="mt-10 px-4">
-                <a href="production.html" class="px-4 py-2 rounded-lg bg-primary-100 text-primary-500 ">
-                    Production & Docker
+            <div class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <a href="ai.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium transition-all shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Previous: <strong>Universal AI Engine</strong></span>
+                </a>
+                <a href="cli.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                    <span>Next: <strong>CLI Engine &amp; Doctor Diagnostics</strong></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                 </a>
             </div>
 
