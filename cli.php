@@ -39,8 +39,9 @@ $commandMap = [
 ];
 
 if (isset($commandMap[$commandInput])) {
+    $nullDev = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
     if (!file_exists('/.dockerenv') && in_array($commandInput, ['migrate', 'seed', 'optimize', 'task:work', 'task:run', 'ws:serve', 'ws:start', 'benchmark'], true)) {
-        if (trim((string) @shell_exec('docker compose --env-file ./backend/.env ps -q php 2>/dev/null')) !== '') {
+        if (trim((string) @shell_exec("docker compose --env-file ./backend/.env ps -q php 2>{$nullDev}")) !== '') {
             echo "\033[36m⚡ [LilaPHP Engine] Auto-forwarding `{$commandInput}` command into Docker container...\033[0m" . PHP_EOL;
             $ttyFlag = (function_exists('posix_isatty') && posix_isatty(STDOUT)) ? '' : '-T ';
             $cmdArgs = !empty($args) ? ' ' . implode(' ', array_map('escapeshellarg', $args)) : '';

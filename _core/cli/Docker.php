@@ -385,7 +385,8 @@ class Docker extends Command
         $this->info("Dynamic Ports Assigned: HTTP=" . Config::$HTTP_PORT . " | MySQL=" . Config::$DB_PORT . " | Redis=" . Config::$REDIS_PORT);
 
         // Pre-Flight Port Conflict Verification
-        $runningContainers = trim((string) @shell_exec("docker compose --env-file {$this->envFile} ps -q 2>/dev/null"));
+        $nullDev = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+        $runningContainers = trim((string) @shell_exec("docker compose --env-file {$this->envFile} ps -q 2>{$nullDev}"));
         if ($runningContainers === '') {
             $ports = [
                 'HTTP Web' => Config::$HTTP_PORT,
@@ -441,7 +442,16 @@ class Docker extends Command
         $appName = strtolower(Config::$APP_NAME);
         $this->info("Streaming real-time Docker resource consumption filtered for `{$appName}` containers...");
         
-        $cmd = "docker stats \$(docker compose --env-file {$this->envFile} ps -q 2>/dev/null)";
+        $nullDev = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+        $containerIdsRaw = trim((string) @shell_exec("docker compose --env-file {$this->envFile} ps -q 2>{$nullDev}"));
+
+        if ($containerIdsRaw === '') {
+            $this->warning("No running containers found for LilaPHP. Start the cluster first with `php cli.php docker dev` or `php cli.php docker prod`.");
+            return 1;
+        }
+
+        $containerIds = array_filter(preg_split('/\s+/', $containerIdsRaw));
+        $cmd = 'docker stats ' . implode(' ', $containerIds);
         return $this->execShell($cmd);
     }
 
