@@ -3,6 +3,9 @@
  * @version 3.0.0
  * @license MIT
  * @see https://seip25.github.io/LilaPHP/
+ *
+ * Types & IntelliSense: frontend/js/lila.d.ts (loaded globally via jsconfig.json)
+ * Globals available: window.Lila, window.App, window.toast, window.snackbar
  */
 (function () {
     "use strict";

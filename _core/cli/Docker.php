@@ -384,6 +384,22 @@ class Docker extends Command
         $this->info("Starting cluster in `{$env}` mode using `docker/php/Dockerfile.{$shortEnv}`...");
         $this->info("Dynamic Ports Assigned: HTTP=" . Config::$HTTP_PORT . " | MySQL=" . Config::$DB_PORT . " | Redis=" . Config::$REDIS_PORT);
 
+        // Pre-Flight Port Conflict Verification
+        $runningContainers = trim((string) @shell_exec("docker compose --env-file {$this->envFile} ps -q 2>/dev/null"));
+        if ($runningContainers === '') {
+            $ports = [
+                'HTTP Web' => Config::$HTTP_PORT,
+                'MySQL Database' => Config::$DB_PORT,
+                'Redis Cache' => Config::$REDIS_PORT
+            ];
+            foreach ($ports as $label => $port) {
+                if (Doctor::isPortOccupied($port)) {
+                    $this->warning("⚠️  Pre-Flight Warning: Port {$port} ({$label}) is occupied on host!");
+                    $this->warning("   If this port is bound by a non-Docker service (e.g. Apache/local MySQL), container startup will fail.");
+                }
+            }
+        }
+
         putenv("APP_ENV={$shortEnv}");
         $cmd = "docker compose --env-file {$this->envFile} up -d --build";
         $status = $this->execShell($cmd);

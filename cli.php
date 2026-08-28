@@ -29,6 +29,7 @@ $commandMap = [
     'docker' => \Cli\Docker::class,
     'make' => \Cli\Make::class,
     'health' => \Cli\Health::class,
+    'doctor' => \Cli\Doctor::class,
     'task:work' => \Cli\TaskWork::class,
     'task:run' => \Cli\TaskWork::class,
     'ws:serve' => \Cli\WsServe::class,
@@ -77,6 +78,7 @@ if ($commandInput === 'help' || $commandInput === '--help' || $commandInput === 
     echo "  \033[36mmake model <Name>\033[0m  Generate boilerplate API Model inside backend/models/" . PHP_EOL;
     echo "  \033[36mmake route <path>\033[0m  Generate file-based API route inside backend/routes/" . PHP_EOL;
     echo "  \033[36mhealth\033[0m             Run system health diagnostics (MySQL, Redis, OPcache)" . PHP_EOL;
+    echo "  \033[36mdoctor\033[0m             Run pre-flight environment checks (ports, extensions, keys)" . PHP_EOL;
     echo PHP_EOL;
     exit(0);
 }

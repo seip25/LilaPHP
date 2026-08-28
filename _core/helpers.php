@@ -140,3 +140,19 @@ if (!function_exists('abort')) {
         json_response(['error' => true, 'code' => $code, 'message' => $msg], $code);
     }
 }
+
+if (!function_exists('ai')) {
+    /**
+     * Universal AI Prompt helper for generating text or structured JSON from LLMs.
+     * 
+     * @param string $prompt Prompt text
+     * @param array<string, mixed> $options Provider, model, temperature, json_mode, system
+     * @param string|null $apiKey Explicit API key override
+     * @return string Generated AI response text
+     * @example $answer = ai("Write a haiku about high-performance PHP APIs.");
+     */
+    function ai(string $prompt, array $options = [], ?string $apiKey = null): string
+    {
+        return \Core\AI::text($prompt, $options, $apiKey);
+    }
+}

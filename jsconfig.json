@@ -1,0 +1,24 @@
+﻿{
+  "compilerOptions": {
+    "checkJs": true,
+    "strict": false,
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "noEmit": true,
+    "typeRoots": ["./node_modules/@types"],
+    "types": []
+  },
+  "include": [
+    "frontend/**/*.js",
+    "frontend/**/*.ts",
+    "frontend/**/*.html"
+  ],
+  "exclude": [
+    "node_modules",
+    "vendor",
+    "_core/cache",
+    "_core/logs"
+  ]
+}

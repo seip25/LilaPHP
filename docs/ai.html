@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Universal AI Engine — LilaPHP Documentation</title>
+    <meta name="description"
+        content="Zero-dependency universal AI and LLM engine for LilaPHP supporting DeepSeek, Gemini 2.0, OpenAI, Anthropic Claude, and local Ollama." />
+    <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/partial.js"></script>
+</head>
+
+<body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
+    <div class="flex max-w-8xl mx-auto min-h-screen">
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto"
+            data-include="partials/aside.html">
+        </aside>
+
+        <main class="flex-1 min-w-0 px-4 sm:px-6 xl:px-8 py-10 max-w-5xl mx-auto">
+            <header class="mb-10">
+                <p class="text-sm font-semibold text-primary-600 dark:text-primary-400 tracking-wide uppercase">
+                    Advanced Features
+                </p>
+                <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-2">
+                    Universal AI &amp; LLM Engine
+                </h1>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
+                    Zero-overhead, multi-provider AI client built into <code>_core/AI.php</code> supporting <strong>DeepSeek</strong> (with automated model fallback), <strong>Google Gemini</strong>, <strong>OpenAI</strong>, <strong>Anthropic Claude</strong>, and local <strong>Ollama</strong>.
+                </p>
+            </header>
+
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Quick AI Prompt Example</h2>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-800">
+                    <pre><code class="language-php">&lt;?php
+
+use Core\AI;
+
+// 1. Simple text generation using default provider
+$answer = AI::text("Explain database indexing in simple terms.");
+
+// 2. Global helper shortcut
+$summary = ai("Summarize the following legal text: " . $contractText);
+
+// 3. Structured JSON extraction with automatic decoding
+$profile = AI::json("Generate a mock user profile with name, email, and occupation.");
+// Returns: ['name' => 'Alice Johnson', 'email' => 'alice@example.com', 'occupation' => 'Software Architect']
+</code></pre>
+                </div>
+            </section>
+
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Supported AI Providers</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">🚀 DeepSeek AI</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Direct integration with <code>api.deepseek.com</code>. Supports <code>deepseek-v4-flash</code>, <code>deepseek-chat</code>, and <code>deepseek-reasoner</code> with automatic fallback.
+                        </p>
+                        <pre><code class="language-php">$res = AI::deepseek($prompt, [
+    'model' => 'deepseek-v4-flash',
+    'fallback_model' => 'deepseek-chat',
+    'system' => 'Eres un asistente contable en Uruguay.'
+]);</code></pre>
+                    </div>
+
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">✨ Google Gemini</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Supports Gemini 2.0 Flash, Gemini 2.0 Pro, Gemini 1.5 Flash/Pro with structured JSON output and system instructions.
+                        </p>
+                        <pre><code class="language-php">$res = AI::gemini($prompt, [
+    'model' => 'gemini-2.0-flash',
+    'json_mode' => true
+]);</code></pre>
+                    </div>
+
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">🧠 OpenAI</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Supports GPT-4o, GPT-4o-mini, o1, and o3-mini.
+                        </p>
+                        <pre><code class="language-php">$res = AI::openai($prompt, [
+    'model' => 'gpt-4o-mini',
+    'temperature' => 0.5
+]);</code></pre>
+                    </div>
+
+                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">🦙 Ollama (Local &amp; Private)</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Zero API key required. Connects directly to local Ollama instance running Llama 3, Mistral, Qwen, or DeepSeek-R1.
+                        </p>
+                        <pre><code class="language-php">$res = AI::ollama($prompt, [
+    'model' => 'deepseek-r1',
+    'base_url' => 'http://localhost:11434'
+]);</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Built-in AI Rate Limiting</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Protect your public AI chat endpoints against quota abuse with per-minute and per-day rate limits:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-800">
+                    <pre><code class="language-php">&lt;?php
+// backend/routes/chat.php
+
+use Core\AI;
+use Core\Request;
+use Core\Response;
+
+$ip = Request::ip();
+$limit = AI::checkRateLimit($ip, limitPerMinute: 6, limitPerDay: 30);
+
+if (!$limit['allowed']) {
+    Response::json(['error' => $limit['error']], 429);
+    exit;
+}
+
+$message = input('message');
+$reply = AI::text($message, [
+    'provider' => 'deepseek',
+    'system' => 'Eres un asistente virtual formal y profesional.'
+]);
+
+Response::json(['reply' => $reply]);
+</code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

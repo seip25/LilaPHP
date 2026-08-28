@@ -240,6 +240,42 @@ DB::transaction(function($pdo) {
 });
 ```
 
+### 3. Universal AI Engine (`Core\AI` & `ai()`)
+
+```php
+use Core\AI;
+
+// 1. Quick text generation (DeepSeek, Gemini, OpenAI, Claude, Ollama)
+$reply = AI::text("Explain quantum computing in one sentence.");
+
+// 2. Global helper shortcut
+$haiku = ai("Write a haiku about high-performance PHP APIs.");
+
+// 3. DeepSeek with automated model fallback
+$deepseekRes = AI::deepseek("Explain Uruguayan tax deductions.", [
+    'model' => 'deepseek-v4-flash',
+    'fallback_model' => 'deepseek-chat',
+    'system' => 'Eres un consultor tributario experto.'
+]);
+
+// 4. Structured JSON extraction
+$profile = AI::json("Generate user data with name, email, and role.");
+// Output: ['name' => 'Ada Lovelace', 'email' => 'ada@computing.org', 'role' => 'Admin']
+
+// 5. Built-in Rate Limiter for AI endpoints
+$limit = AI::checkRateLimit(Request::ip(), limitPerMinute: 6, limitPerDay: 30);
+if (!$limit['allowed']) {
+    abort(429, $limit['error']);
+}
+```
+
+### 4. System Doctor & Pre-Flight Diagnostics
+
+```bash
+# Verify ports, extensions, APP_KEY, permissions, DB, and Redis
+php cli.php doctor
+```
+
 ---
 
 ## 🧪 Automated Testing Suite

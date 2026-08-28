@@ -37,3 +37,4 @@ node_modules/
 frontend/js/.vite/
 package-lock.json
 /tests
+frontend/js/test.js

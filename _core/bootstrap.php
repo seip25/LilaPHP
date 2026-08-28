@@ -70,6 +70,12 @@ if (!class_exists('DB', false)) {
     class_alias(\Core\Database::class, 'Core\DB');
 }
 
+if (!class_exists('AI', false)) {
+    class_alias(\Core\AI::class, 'AI');
+    class_alias(\Core\AI::class, 'Core\LLM');
+    class_alias(\Core\AI::class, 'LLM');
+}
+
 // Load Environment Configuration
 \Core\Config::load();
 

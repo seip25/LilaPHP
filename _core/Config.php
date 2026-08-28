@@ -49,6 +49,15 @@ class Config
     public static int $RATE_LIMIT = 200;
     public static int $RATE_LIMIT_WINDOW = 60;
 
+    // AI & LLM Engine Configuration
+    public static string $AI_PROVIDER = 'openai';
+    public static string $AI_KEY = '';
+    public static string $OPENAI_API_KEY = '';
+    public static string $GEMINI_API_KEY = '';
+    public static string $DEEPSEEK_API_KEY = '';
+    public static string $ANTHROPIC_API_KEY = '';
+    public static string $OLLAMA_BASE_URL = 'http://localhost:11434';
+
     private static bool $loaded = false;
 
     /**
@@ -134,6 +143,14 @@ class Config
         $rateLimitVal = strtolower(trim((string) ($_ENV['RATE_LIMIT'] ?? '200')));
         self::$RATE_LIMIT = in_array($rateLimitVal, ['false', '0', 'none', 'off', 'null'], true) ? 0 : (int) $rateLimitVal;
         self::$RATE_LIMIT_WINDOW = (int) ($_ENV['RATE_LIMIT_WINDOW'] ?? 60);
+
+        self::$AI_PROVIDER = (string) ($_ENV['AI_PROVIDER'] ?? 'openai');
+        self::$AI_KEY = (string) ($_ENV['API_IA_KEY'] ?? $_ENV['AI_KEY'] ?? '');
+        self::$OPENAI_API_KEY = (string) ($_ENV['OPENAI_API_KEY'] ?? self::$AI_KEY);
+        self::$GEMINI_API_KEY = (string) ($_ENV['GEMINI_API_KEY'] ?? self::$AI_KEY);
+        self::$DEEPSEEK_API_KEY = (string) ($_ENV['DEEPSEEK_API_KEY'] ?? self::$AI_KEY);
+        self::$ANTHROPIC_API_KEY = (string) ($_ENV['ANTHROPIC_API_KEY'] ?? self::$AI_KEY);
+        self::$OLLAMA_BASE_URL = (string) ($_ENV['OLLAMA_BASE_URL'] ?? 'http://localhost:11434');
 
         self::$loaded = true;
     }

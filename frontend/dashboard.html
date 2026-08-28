@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard SPA — LilaPHP</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/css/bluebird.css" />
+    <script src="/js/lila.js"></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="/" data-link class="brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <strong>LilaPHP Dashboard</strong>
+            </a>
+            <div class="nav-links">
+                <a href="/" data-link>Home</a>
+                <a href="/dashboard" data-link class="active">Dashboard</a>
+                <a href="/users" data-link>Users</a>
+                <a href="/settings" data-link>Settings</a>
+                <a href="/about" data-link>About</a>
+                <button type="button" class="btn btn-sm btn-outline" onclick="Lila.theme('toggle')">🌓 Theme</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+        <div id="app"></div>
+    </main>
+
+    <footer class="text-center text-muted p-4 border-top">
+        <p class="m-0">LilaPHP Dashboard SPA &copy; 2026.</p>
+    </footer>
+
+    <script>
+        const { html, route, start, beforeRoute, fetch: http } = Lila;
+
+        beforeRoute(async (path) => {
+            return true;
+        });
+
+        route('/dashboard', {
+            state: () => ({ health: null }),
+            template: (s) => html`
+                <div>
+                    <h2>📊 Dashboard Overview</h2>
+                    <div class="grid cols-3 gap-4 mt-3">
+                        <article>
+                            <header><h4>PHP Runtime</h4></header>
+                            <div class="display-6 font-bold">${s.health ? s.health.php.version : 'Loading...'}</div>
+                        </article>
+                        <article>
+                            <header><h4>Database</h4></header>
+                            <div class="display-6 font-bold text-success">${s.health ? s.health.database.driver.toUpperCase() : '...'}</div>
+                        </article>
+                        <article>
+                            <header><h4>Redis</h4></header>
+                            <div class="display-6 font-bold text-primary">${s.health && s.health.redis.connected ? 'Online' : 'Offline'}</div>
+                        </article>
+                    </div>
+                </div>
+            `,
+            onMount: async (state) => {
+                try {
+                    state.health = await http('/api/health');
+                } catch (e) {}
+            }
+        });
+
+        route('/', {
+            template: () => html`<script>location.replace('/dashboard');</` + 'script>'
+        });
+
+        start('#app');
+    </script>
+</body>
+
+</html>

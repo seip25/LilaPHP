@@ -1,24 +1,65 @@
 {
   "name": "seip25/lila-php",
-  "description": "Ultra-fast API-First PHP 8.4+ framework with Nginx File-Based Routing, OPcache Preload in RAM, Dual-Tier Cache (APCu + Redis), Background Workers, and Blue-bird style CLI.",
+  "description": "Ultra-fast, zero-dependency PHP 8.4+ micro-API framework with decoupled static frontend, Lila.js reactive SPA engine, Bluebird CSS, multi-driver DB, and universal AI engine (DeepSeek, Gemini, OpenAI, Claude, Ollama).",
   "type": "project",
-  "keywords": ["php", "api", "framework", "opcache", "apcu", "redis", "fastcgi", "high-performance"],
+  "keywords": [
+    "php",
+    "api",
+    "rest-api",
+    "micro-framework",
+    "ai",
+    "llm",
+    "deepseek",
+    "gemini",
+    "openai",
+    "anthropic",
+    "spa",
+    "lila-js",
+    "bluebird-css",
+    "opcache",
+    "apcu",
+    "redis",
+    "fastcgi",
+    "high-performance"
+  ],
+  "homepage": "https://seip25.github.io/LilaPHP/",
   "license": "MIT",
+  "authors": [
+    {
+      "name": "Seip",
+      "homepage": "https://github.com/seip25"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/seip25/LilaPHP/issues",
+    "source": "https://github.com/seip25/LilaPHP"
+  },
   "autoload": {
     "psr-4": {
       "Core\\": "_core/",
       "Models\\": "backend/models/",
       "Cli\\": "_core/cli/"
-    }
+    },
+    "files": [
+      "_core/helpers.php"
+    ]
   },
   "require": {
     "php": ">=8.4"
   },
   "suggest": {
     "ext-pdo_mysql": "Required for MySQL database connection pooling.",
+    "ext-pdo_sqlite": "Optional for portable SQLite database storage.",
     "ext-apcu": "Recommended for zero-latency shared RAM caching.",
     "ext-redis": "Recommended for distributed caching and background job queues.",
     "ext-opcache": "Required for permanent in-memory preloading in production.",
-    "ext-curl": "Required for Core\\Http client requests."
-  }
+    "ext-curl": "Required for Core\\Http client and Core\\AI LLM requests."
+  },
+  "scripts": {
+    "test": "php tests/Runner.php",
+    "doctor": "php cli.php doctor",
+    "health": "php cli.php health"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }

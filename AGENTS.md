@@ -48,10 +48,11 @@ LilaPHP/
 │   └── .env_example           # Environment template
 ├── _core/                     # Zero-dependency Core Framework Engine
 │   ├── bootstrap.php          # PSR-4 autoloader, exception handler & session manager
-│   ├── helpers.php            # Global helpers (json_response, sanitize, input, csrf_*, abort)
+│   ├── helpers.php            # Global helpers (json_response, sanitize, input, ai, abort)
 │   ├── Config.php             # Environment loader with OPcache array caching
 │   ├── Dispatcher.php         # REST Router & Dynamic Parameter Resolver
 │   ├── Database.php           # PDO multi-driver wrapper & schema indexer
+│   ├── AI.php                 # Universal AI/LLM Engine (DeepSeek, Gemini, OpenAI, Claude, Ollama)
 │   ├── Request.php            # HTTP method checks, headers & memoized JSON body
 │   ├── Response.php           # JSON response emitter with CORS headers
 │   ├── Security.php           # CSRF tokens, rate limiting, AES-256-GCM encryption & XSS filters
@@ -80,6 +81,12 @@ LilaPHP/
    - Route registration: `Lila.route('/path', { state: () => ({ ... }), template, onMount, actions });`
    - Route guards: `Lila.beforeRoute(async (path) => { return checkAuth(); });`
    - Start SPA: `Lila.start('#app');`
-4. **Testing:**
+4. **AI & LLM Integration:**
+   - Use `AI::text("Prompt")` or helper `ai("Prompt")` for quick completions.
+   - Use `AI::json("Prompt")` for automatic structured JSON extraction and array parsing.
+   - Use `AI::deepseek()`, `AI::gemini()`, `AI::openai()`, `AI::anthropic()`, `AI::ollama()` for provider-specific queries.
+   - Rate limit chat endpoints with `AI::checkRateLimit($ip, $limitPerMinute, $limitPerDay)`.
+5. **Testing & Diagnostics:**
    - Run unit tests: `php tests/Runner.php`
+   - Run system pre-flight doctor: `php cli.php doctor`
    - Run live server integration tests: `node tests/BrowserIntegrationTest.mjs`
