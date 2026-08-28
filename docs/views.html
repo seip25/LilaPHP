@@ -166,7 +166,7 @@ authStore.isLoggedIn = true;</code></pre>
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">4. Hash Routing, Dynamic Parameters &amp; Guards</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-2 font-mono text-sm">#/users/:id (Dynamic Routes)</h4>
+                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-2 font-mono text-sm">/users/:id (Dynamic Routes)</h4>
                         <p class="text-sm text-slate-600 dark:text-slate-400">Route paths support parameter tokens like <code>:id</code> or <code>:slug</code>, accessible via <code>ctx.params</code> in actions and <code>onMount</code>.</p>
                     </div>
 
@@ -198,7 +198,7 @@ Lila.route('/users/:id', {
             ${state.loading ? Lila.html`&lt;div class="lila-skeleton"&gt;&lt;/div&gt;` : Lila.html`
                 &lt;h1&gt;User Profile: ${Lila.escapeHtml(state.user.name)}&lt;/h1&gt;
                 &lt;p&gt;Email: ${state.user.email}&lt;/p&gt;
-                &lt;a href="#/users" data-link class="btn secondary"&gt;&larr; Back to Users&lt;/a&gt;
+                &lt;a href="/users" data-link class="btn secondary"&gt;&larr; Back to Users&lt;/a&gt;
             `}
         &lt;/div&gt;
     `,
@@ -354,7 +354,7 @@ Lila.setTheme('dark');</code></pre>
         &lt;div class="brand"&gt;&lt;strong&gt;⚡ LilaPHP App&lt;/strong&gt;&lt;/div&gt;
         &lt;nav&gt;
             &lt;a href="#/" data-link&gt;Home&lt;/a&gt;
-            &lt;a href="#/users" data-link&gt;Users&lt;/a&gt;
+            &lt;a href="/users" data-link&gt;Users&lt;/a&gt;
         &lt;/nav&gt;
         &lt;button onclick="Lila.toggleTheme()" class="btn sm"&gt;🌓 Theme&lt;/button&gt;
     &lt;/header&gt;
@@ -374,7 +374,7 @@ Lila.setTheme('dark');</code></pre>
                     &lt;p&gt;Ultra-lightweight reactive SPA with zero build overhead.&lt;/p&gt;
                     &lt;div class="mt-4 flex gap-2"&gt;
                         &lt;button data-action="clickMe" class="btn primary"&gt;Clicked: ${state.count}&lt;/button&gt;
-                        &lt;a href="#/users" data-link class="btn secondary"&gt;Manage Users &rarr;&lt;/a&gt;
+                        &lt;a href="/users" data-link class="btn secondary"&gt;Manage Users &rarr;&lt;/a&gt;
                     &lt;/div&gt;
                 &lt;/div&gt;
             `,
