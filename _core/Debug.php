@@ -220,11 +220,12 @@ class Debug
         $containers = [];
         $envFile = Config::$DIR_BACKEND . '/.env';
         if (file_exists($envFile)) {
-            $dockerPs = @shell_exec('docker compose --env-file ' . escapeshellarg($envFile) . ' ps -q 2>/dev/null');
+            $nullDev = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+            $dockerPs = @shell_exec('docker compose --env-file ' . escapeshellarg($envFile) . " ps -q 2>{$nullDev}");
             if (!empty($dockerPs)) {
                 $ids = array_filter(explode("\n", trim($dockerPs)));
                 if (!empty($ids)) {
-                    $statsCmd = 'docker stats --no-stream --format "{{.Name}}|{{.CPUPerc}}|{{.MemUsage}}" ' . implode(' ', array_map('escapeshellarg', $ids)) . ' 2>/dev/null';
+                    $statsCmd = 'docker stats --no-stream --format "{{.Name}}|{{.CPUPerc}}|{{.MemUsage}}" ' . implode(' ', array_map('escapeshellarg', $ids)) . " 2>{$nullDev}";
                     $rawStats = @shell_exec($statsCmd);
                     if (!empty($rawStats)) {
                         foreach (explode("\n", trim($rawStats)) as $line) {
@@ -415,16 +416,19 @@ class Debug
         $cliPath = Config::$DIR_PROJECT . '/cli.php';
         $envFile = Config::$DIR_BACKEND . '/.env';
 
+        $nullDev = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+        $nullRedir = PHP_OS_FAMILY === 'Windows' ? '> NUL 2>&1' : '> /dev/null 2>&1 &';
+
         if (file_exists('/.dockerenv')) {
-            $cmd = sprintf('php %s benchmark %s > /dev/null 2>&1 &', escapeshellarg($cliPath), $cmdArgs);
-        } elseif (file_exists($envFile) && trim((string) @shell_exec('docker compose --env-file ' . escapeshellarg($envFile) . ' ps -q php 2>/dev/null')) !== '') {
+            $cmd = sprintf('php %s benchmark %s ' . $nullRedir, escapeshellarg($cliPath), $cmdArgs);
+        } elseif (file_exists($envFile) && trim((string) @shell_exec('docker compose --env-file ' . escapeshellarg($envFile) . " ps -q php 2>{$nullDev}")) !== '') {
             $cmd = sprintf(
-                'docker compose --env-file %s exec -T php php cli.php benchmark %s > /dev/null 2>&1 &',
+                'docker compose --env-file %s exec -T php php cli.php benchmark %s ' . $nullRedir,
                 escapeshellarg($envFile),
                 $cmdArgs
             );
         } else {
-            $cmd = sprintf('php %s benchmark %s > /dev/null 2>&1 &', escapeshellarg($cliPath), $cmdArgs);
+            $cmd = sprintf('php %s benchmark %s ' . $nullRedir, escapeshellarg($cliPath), $cmdArgs);
         }
 
         exec($cmd);
