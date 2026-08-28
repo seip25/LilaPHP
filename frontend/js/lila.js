@@ -600,13 +600,32 @@
         else el.classList.toggle("open");
     }
 
+    function initTheme() {
+        try {
+            var saved = localStorage.getItem("theme");
+            if (saved) {
+                document.documentElement.setAttribute("data-theme", saved);
+            } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) {}
+    }
+
+    if (document.readyState !== "loading") {
+        initTheme();
+    } else {
+        document.addEventListener("DOMContentLoaded", initTheme);
+    }
+
     function theme(action, val) {
         action = action || "toggle";
         var current = document.documentElement.getAttribute("data-theme") || "dark";
         if (action === "get") return current;
         var next = val ? val : action === "toggle" ? (current === "dark" ? "light" : "dark") : current;
         document.documentElement.setAttribute("data-theme", next);
-        localStorage.setItem("theme", next);
+        try {
+            localStorage.setItem("theme", next);
+        } catch (e) {}
         return next;
     }
 
@@ -701,6 +720,15 @@
         drawer: drawer,
         tab: tab,
         theme: theme,
+        toggleTheme: function () {
+            return theme("toggle");
+        },
+        setTheme: function (val) {
+            return theme("set", val);
+        },
+        getTheme: function () {
+            return theme("get");
+        },
 
         // DOM Utilities
         $: function (sel, ctx) {

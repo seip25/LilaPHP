@@ -1,4 +1,4 @@
-﻿/**
+/**
  * # Lila.js — Ambient Type Declarations
  *
  * Ultra-Lightweight Reactive SPA Engine & Bluebird UI Suite for LilaPHP.
@@ -551,6 +551,12 @@ export interface LilaEngine {
    * Lila.theme('set', 'dark');            // forces dark mode
    */
   theme(action?: "get" | "set" | "toggle", val?: "light" | "dark" | "auto"): string;
+  /** Toggles between 'dark' and 'light' themes and persists to localStorage. */
+  toggleTheme(): string;
+  /** Sets the active theme ('light', 'dark', 'auto') and persists to localStorage. */
+  setTheme(val: "light" | "dark" | "auto"): string;
+  /** Returns the current active theme name. */
+  getTheme(): string;
 
   // ── DOM Helpers ───────────────────────────────────────────────────────────
 

@@ -92,6 +92,14 @@ class Health extends Command
             return 0;
         }
 
+        if (!file_exists('/.dockerenv') && (Config::$DB_HOST === 'mysql' || Config::$REDIS_HOST === 'redis')) {
+            $this->info("💡 Tip: You are running `php cli.php health` from the host machine.");
+            $this->info("   Container names (`mysql`, `redis`) resolve automatically inside the Docker network.");
+            $this->info("   - Run inside Docker container: docker compose exec php php cli.php health");
+            $this->info("   - Or for host CLI access: set DB_HOST=127.0.0.1 and REDIS_HOST=127.0.0.1 in backend/.env");
+            echo PHP_EOL;
+        }
+
         $this->error("Health Check finished with warnings (Checked in {$elapsed} ms)");
         return 1;
     }

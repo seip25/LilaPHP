@@ -378,6 +378,9 @@ export interface LilaEngine {
    * Lila.theme('set','dark');
    */
   theme(action?: "get" | "set" | "toggle", val?: "light" | "dark" | "auto"): string;
+  toggleTheme(): string;
+  setTheme(val: "light" | "dark" | "auto"): string;
+  getTheme(): string;
 
   /**
    * Typed querySelector alias.
