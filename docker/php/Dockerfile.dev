@@ -5,14 +5,16 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libfreetype6-dev \
     libzip-dev \
+    libsqlite3-dev \
     zip \
     unzip \
     git \
     curl \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql zip opcache pcntl posix
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql pdo_sqlite zip opcache pcntl posix
 
 RUN pecl install redis apcu \
     && docker-php-ext-enable redis apcu opcache

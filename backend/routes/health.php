@@ -1,60 +1,72 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * Health Diagnostics Endpoint (`/api/health`).
+ * Health Diagnostics Route (`GET /api/health`).
  * 
- * Verifies MySQL, APCu, Redis, and OPcache status in microsecond precision.
+ * Verifies PHP runtime, PDO database connectivity, Redis cache availability,
+ * and memory metrics with zero overhead.
  */
 
-use Core\Request;
 use Core\Response;
 use Core\Config;
 use Core\Database;
-use Core\Cache;
 
-Request::GET(['cache' => true, 'cache_ttl' => 10], function () {
-    $start = microtime(true);
+$dbConnected = false;
+$dbDriver = Config::$DB_TYPE;
+$dbError = null;
 
-    $mysqlStatus = 'disconnected';
+try {
     $pdo = Database::getInstance();
-    if ($pdo !== null) {
-        $stmt = $pdo->query('SELECT 1');
-        if ($stmt && $stmt->fetchColumn() == 1) {
-            $mysqlStatus = 'connected';
-        }
+    if ($pdo) {
+        $pdo->query('SELECT 1');
+        $dbConnected = true;
     }
-    $apcuTested = function_exists('apcu_enabled') && apcu_enabled();
+} catch (\Throwable $e) {
+    $dbError = $e->getMessage();
+}
 
-    $redisStatus = 'disconnected';
-    $redis = Cache::getRedis();
-    if ($redis !== null) {
-        try {
-            if ($redis->ping()) {
-                $redisStatus = 'connected';
-            }
-        } catch (\Throwable $e) {
-            $redisStatus = 'error: ' . $e->getMessage();
+$redisConnected = false;
+$redisError = null;
+
+if (class_exists('\Redis')) {
+    try {
+        $redis = new \Redis();
+        $connected = @$redis->connect(Config::$REDIS_HOST, Config::$REDIS_PORT, 0.5);
+        if ($connected) {
+            $redisConnected = true;
+            $redis->close();
         }
+    } catch (\Throwable $e) {
+        $redisError = $e->getMessage();
     }
+}
 
-    $elapsedMs = round((microtime(true) - $start) * 1000, 3);
+$opcacheEnabled = function_exists('opcache_get_status') && (opcache_get_status() !== false);
+$apcuEnabled = function_exists('apcu_enabled') && apcu_enabled();
 
-    Response::json([
-        'status' => $mysqlStatus === 'connected' ? 'ok' : 'degraded',
-        'engine' => 'LilaPHP API Engine',
-        'environment' => Config::$APP_ENV,
-        'latency_ms' => $elapsedMs,
-        'performance_ms' => $elapsedMs . ' ms',
-        'services' => [
-            'mysql' => $mysqlStatus,
-            'apcu_ram' => $apcuTested ? 'active' : 'disabled',
-            'redis' => $redisStatus
-        ],
-        'drivers' => [
-            'apcu_ram' => ['enabled' => $apcuTested],
-            'redis' => ['functional' => $redisStatus === 'connected', 'status' => $redisStatus],
-            'mysql' => ['functional' => $mysqlStatus === 'connected', 'status' => $mysqlStatus]
-        ],
-        'timestamp' => time()
-    ]);
-});
+$status = ($dbConnected || $dbDriver === 'sqlite') ? 'healthy' : 'degraded';
+
+Response::json([
+    'status'     => $status,
+    'timestamp'  => time(),
+    'php'        => [
+        'version'   => PHP_VERSION,
+        'sapi'      => PHP_SAPI,
+        'opcache'   => $opcacheEnabled,
+        'apcu'      => $apcuEnabled,
+        'memory_mb' => round(memory_get_usage(true) / 1024 / 1024, 2),
+    ],
+    'database'   => [
+        'driver'    => $dbDriver,
+        'connected' => $dbConnected,
+        'error'     => Config::$DEBUG ? $dbError : null,
+    ],
+    'redis'      => [
+        'host'      => Config::$REDIS_HOST,
+        'connected' => $redisConnected,
+        'error'     => Config::$DEBUG ? $redisError : null,
+    ],
+    'uptime_sec' => defined('LILAPHP_START_TIME') ? round(microtime(true) - LILAPHP_START_TIME, 4) : 0,
+]);

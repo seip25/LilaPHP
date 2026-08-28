@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
  * High-performance API Security & Sanitization suite.
  * 
- * Provides rate limiting backed by APCu/Redis RAM (`Core\Cache`), payload inspection,
- * recursive input sanitization, CSRF/Token verification, and security headers.
+ * Provides rate limiting backed by RAM/Cache, payload inspection,
+ * recursive input sanitization, CSRF verification, secure sessions,
+ * and standard defensive HTTP security headers.
  * 
  * @package Core
  */
@@ -16,7 +19,6 @@ class Security
      * Applies general defensive HTTP security headers.
      * 
      * @return void
-     * @example \Core\Security::applyGeneralSecurityHeaders();
      */
     public static function applyGeneralSecurityHeaders(): void
     {
@@ -33,11 +35,56 @@ class Security
     }
 
     /**
+     * Initializes a secure PHP session if not already active.
+     */
+    public static function ensureSecureSession(): void
+    {
+        if (session_status() === PHP_SESSION_NONE && PHP_SAPI !== 'cli') {
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 0) == 443;
+            session_start([
+                'cookie_httponly' => true,
+                'cookie_samesite' => 'Lax',
+                'cookie_secure'   => $isHttps,
+                'use_strict_mode' => true,
+            ]);
+        }
+    }
+
+    /**
+     * Returns or generates the active CSRF token for the session.
+     */
+    public static function getCsrfToken(): string
+    {
+        self::ensureSecureSession();
+        if (empty($_SESSION['_csrf_token'])) {
+            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['_csrf_token'];
+    }
+
+    /**
+     * Validates a CSRF token from header, payload, or argument against the active session.
+     */
+    public static function validateCsrfToken(?string $token = null): bool
+    {
+        self::ensureSecureSession();
+        $expected = $_SESSION['_csrf_token'] ?? '';
+        if ($expected === '') {
+            return false;
+        }
+
+        if ($token === null) {
+            $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_SERVER['HTTP_X_XSRF_TOKEN'] ?? ($_POST['_csrf_token'] ?? ($_POST['csrf'] ?? '')));
+        }
+
+        return hash_equals($expected, (string)$token);
+    }
+
+    /**
      * Recursively trims strings and strips null bytes from input arrays.
      * 
      * @param array &$data Target array to sanitize
      * @return void
-     * @example \Core\Security::sanitize($_POST);
      */
     public static function sanitize(array &$data): void
     {
@@ -53,7 +100,6 @@ class Security
      * 
      * @param array $data Input dictionary
      * @return bool True if clean, false if malicious pattern found
-     * @example if (!\Core\Security::checkPayload($_POST)) { ... }
      */
     public static function checkPayload(array $data): bool
     {
@@ -76,12 +122,11 @@ class Security
     }
 
     /**
-     * Enforces API Rate Limiting using APCu RAM (or Redis).
+     * Enforces API Rate Limiting using APCu RAM (or Redis / fallback).
      * 
      * @param int $maxRequests Maximum allowed requests per window
      * @param int $windowSeconds Duration of the limit window in seconds
      * @return bool True if request allowed, false if rate limit exceeded
-     * @example if (!\Core\Security::rateLimit(100, 60)) { \Core\Response::error('Too Many Requests', 429); }
      */
     public static function rateLimit(int $maxRequests = 200, int $windowSeconds = 60): bool
     {
@@ -125,10 +170,6 @@ class Security
 
     /**
      * Validates API Key header (`X-API-Key`) against APP_KEY or custom token.
-     * 
-     * @param string|null $expectedKey Expected token string (defaults to APP_KEY)
-     * @return bool True if valid
-     * @example if (!\Core\Security::verifyApiKey()) { \Core\Response::error('Unauthorized', 401); }
      */
     public static function verifyApiKey(?string $expectedKey = null): bool
     {
@@ -143,10 +184,6 @@ class Security
 
     /**
      * Encrypts plaintext data using OpenSSL AES-256-GCM and APP_KEY.
-     * 
-     * @param string $plaintext String to encrypt
-     * @return string Base64 encoded IV + Tag + Ciphertext
-     * @example $cipher = \Core\Security::encrypt('Secret data');
      */
     public static function encrypt(string $plaintext): string
     {
@@ -159,10 +196,6 @@ class Security
 
     /**
      * Decrypts ciphertext produced by `encrypt()`.
-     * 
-     * @param string $encoded Base64 encoded IV + Tag + Ciphertext
-     * @return string|false Decrypted plaintext or false on verification failure
-     * @example $plaintext = \Core\Security::decrypt($cipher);
      */
     public static function decrypt(string $encoded): string|false
     {

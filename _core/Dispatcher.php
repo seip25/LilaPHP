@@ -1,64 +1,53 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
- * File-based API Route Dispatcher.
+ * Ultra-fast REST API Route Dispatcher (`Performance First`).
  * 
- * Maps `/api/*` requests directly to `backend/routes/*.php` files in dev/fallback mode
- * with zero-overhead routing inspection.
+ * Maps `/api/*` requests directly to `backend/routes/*.php` or controllers with
+ * zero-overhead file inspection, parameter extraction, and automatic preflight CORS.
  * 
  * @package Core
  */
 class Dispatcher
 {
     /**
-     * Resolves the request URI to a PHP script inside `backend/routes/`.
+     * Dispatches the incoming HTTP request.
      * 
      * @return void
-     * @example \Core\Dispatcher::dispatch();
      */
     public static function dispatch(): void
     {
+        // 1. Handle CORS Preflight immediately
         Response::handlePreflight();
         Security::applyGeneralSecurityHeaders();
 
+        // 2. Apply Rate Limiting
         if (Config::$RATE_LIMIT > 0 && !Security::rateLimit(Config::$RATE_LIMIT, Config::$RATE_LIMIT_WINDOW)) {
             Response::error('Rate limit exceeded', 429);
         }
 
-        $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
-        $uri = trim($uri, '/');
+        // 3. Normalize Request URI
+        $rawUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $uri = trim($rawUri, '/');
+
+        // Normalize /api prefix
+        if (str_starts_with($uri, 'api/')) {
+            $uri = substr($uri, 4);
+        } elseif ($uri === 'api') {
+            $uri = '';
+        }
 
         if ($uri === '' || $uri === 'index') {
             $uri = 'index';
         }
 
-        if ($uri === 'debug') {
-            $debugFile = Config::$DIR_CORE . '/routes/frontend/debug.php';
-            if (file_exists($debugFile)) {
-                require $debugFile;
-                exit;
-            }
-        }
+        $baseDir = Config::$DIR_BACKEND . '/routes';
 
-        if (str_starts_with($uri, 'debug/') || str_starts_with($uri, '404')) {
-            $coreFile = Config::$DIR_CORE . "/routes/{$uri}.php";
-            if (file_exists($coreFile)) {
-                require $coreFile;
-                exit;
-            }
-        }
-
-        $isApi = str_starts_with($uri, 'api/') || $uri === 'api';
-
-        if ($isApi) {
-            $uri = $uri === 'api' ? 'index' : substr($uri, 4);
-            $baseDir = Config::$DIR_BACKEND . '/routes';
-        } else {
-            $baseDir = Config::$DIR_BACKEND . '/views';
-        }
-
+        // 4. Exact File or Directory Match
         $targetFile = "{$baseDir}/{$uri}.php";
         $targetIndex = "{$baseDir}/{$uri}/index.php";
 
@@ -72,32 +61,36 @@ class Dispatcher
             exit;
         }
 
+        // 5. Dynamic Route Parameter Matching (e.g. /api/users/42 -> backend/routes/users.php with ID)
         $parts = explode('/', $uri);
         if (count($parts) >= 2) {
-            $baseController = $parts[0];
-            $baseFile = "{$baseDir}/{$baseController}.php";
-            $baseIndex = "{$baseDir}/{$baseController}/index.php";
+            $controller = $parts[0];
+            $paramValue = $parts[1];
 
-            if (file_exists($baseFile) || file_exists($baseIndex)) {
-                if (isset($parts[1]) && $parts[1] !== '') {
-                    $_GET['id'] = $_GET['id'] ?? $parts[1];
-                    $_SERVER['ROUTE_ID'] = $parts[1];
+            $controllerFile = "{$baseDir}/{$controller}.php";
+            $controllerIndex = "{$baseDir}/{$controller}/index.php";
+
+            if (file_exists($controllerFile) || file_exists($controllerIndex)) {
+                if ($paramValue !== '') {
+                    $_GET['id'] = $_GET['id'] ?? $paramValue;
+                    $_SERVER['ROUTE_ID'] = $paramValue;
+                    $_SERVER['ROUTE_PARAM'] = $paramValue;
                 }
-                if (file_exists($baseFile)) {
-                    require $baseFile;
+
+                if (count($parts) >= 3) {
+                    $_SERVER['ROUTE_SUB'] = $parts[2];
+                }
+
+                if (file_exists($controllerFile)) {
+                    require $controllerFile;
                 } else {
-                    require $baseIndex;
+                    require $controllerIndex;
                 }
                 exit;
             }
         }
 
-        $fallback404 = Config::$DIR_CORE . '/routes/404.php';
-        if (file_exists($fallback404)) {
-            require $fallback404;
-        } else {
-            Response::error('Endpoint not found', 404);
-        }
-        exit;
+        // 6. Fallback: Endpoint Not Found
+        Response::error("API endpoint `/{$uri}` not found", 404);
     }
 }

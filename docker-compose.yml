@@ -40,29 +40,32 @@ services:
     networks:
       - lila-network
 
-
-
   mysql:
     image: mysql:8.0
     container_name: ${APP_NAME:-lilaphp}-mysql
     restart: unless-stopped
     ports:
       - "${DB_PORT:-3306}:3306"
-    env_file:
-      - ./backend/.env
     environment:
       MYSQL_DATABASE: ${DB_NAME:-lilaphp}
-      MYSQL_USER: ${DB_USER:-lila}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
       - mysql-data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --performance-schema=OFF
+      --innodb-buffer-pool-size=64M
+      --innodb-log-buffer-size=8M
+      --max-connections=50
+      --table-open-cache=200
+      --skip-log-bin
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-secret}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - lila-network
 

@@ -5,12 +5,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg-dev \
     libfreetype6-dev \
     libzip-dev \
+    libsqlite3-dev \
     zip \
     unzip \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql zip opcache pcntl posix
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql pdo_sqlite zip opcache pcntl posix
 
 RUN pecl install redis apcu \
     && docker-php-ext-enable redis apcu opcache
@@ -35,7 +37,7 @@ RUN echo "auto_prepend_file = /var/www/html/_core/bootstrap.php" >> /usr/local/e
     echo "apc.enabled = 1" >> /usr/local/etc/php/conf.d/apcu.ini && \
     echo "apc.shm_size = 128M" >> /usr/local/etc/php/conf.d/apcu.ini
 
-# Multi-worker high performance FPM settings (static mode for maximum throughput)
+# Multi-worker high performance FPM settings
 RUN echo "[www]" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
     echo "pm = static" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
     echo "pm.max_children = 100" >> /usr/local/etc/php-fpm.d/zz-docker.conf && \
@@ -45,8 +47,8 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN mkdir -p /var/www/html/_core/logs /var/www/html/_core/cache \
-    && chown -R www-data:www-data /var/www/html/_core/logs /var/www/html/_core/cache
+RUN mkdir -p /var/www/html/_core/logs /var/www/html/_core/cache /var/www/html/backend/database \
+    && chown -R www-data:www-data /var/www/html/_core/logs /var/www/html/_core/cache /var/www/html/backend/database
 
 EXPOSE 9000
 CMD ["php-fpm"]

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle">LilaPHP — High-Performance Decoupled Micro-API Framework</title>
+    <meta name="description"
+        content="Ultra-fast KISS architecture pairing pure static frontend with a zero-dependency PHP 8.x REST API." />
+
+    <!-- Bluebird CSS Framework -->
+    <link rel="stylesheet" href="/css/bluebird.css" />
+
+    <!-- Lila.js Reactive SPA Engine -->
+    <script src="/js/lila.js"></script>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <header>
+        <nav>
+            <a href="/" data-link class="brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <strong id="brandTitle">LilaPHP</strong>
+            </a>
+            <div class="nav-links">
+                <a href="/" data-link>Home</a>
+                <a href="/dashboard" data-link>Dashboard</a>
+                <a href="/users" data-link>Users</a>
+                <a href="/settings" data-link>Settings</a>
+                <a href="/about" data-link>About</a>
+                <a href="https://seip25.github.io/LilaPHP/" target="_blank">Docs</a>
+                <button type="button" class="btn btn-sm btn-outline" id="theme-toggle" onclick="Lila.theme('toggle')">
+                    🌓 Theme
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Dynamic SPA Outlet -->
+    <main class="container" style="min-height: 80vh; padding-top: 1.5rem; padding-bottom: 3rem;">
+        <div id="app">
+            <!-- Home Section (Pre-rendered for zero-latency SEO & instant display) -->
+            <div id="home-view">
+                <!-- Hero Section -->
+                <section class="hero text-center" style="padding: 2.5rem 1rem 2rem;">
+                    <div class="api-badge-pulse mb-3" id="api-health-badge">
+                        <span class="pulse-dot"></span>
+                        <span id="api-status-text">Checking API Health...</span>
+                    </div>
+                    <h1 class="display-5 font-bold mb-2">⚡ Ultra-Fast Decoupled Micro-API</h1>
+                    <p class="lead text-muted mx-auto" style="max-width: 680px;">
+                        Zero heavy dependencies. Pure static frontend styled with <strong>Bluebird CSS</strong>, powered by <strong>Lila.js</strong> reactive SPA engine, and backed by a lightweight PHP 8.x REST API with multi-driver database support.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a href="#interactive-demo" class="btn btn-primary">⚡ Test Live API</a>
+                        <a href="/dashboard" data-link class="btn btn-outline">🚀 Open SPA Dashboard</a>
+                    </div>
+                </section>
+
+                <!-- Feature Cards Grid -->
+                <section class="mb-5">
+                    <div class="grid cols-3 gap-4">
+                        <article class="hover-glow">
+                            <header><h3>🌐 Static Frontend</h3></header>
+                            <p>Static HTML, CSS, JS served directly by Nginx at C-speed. Zero SSR rendering latency.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>⚡ Lila.js Reactive SPA</h3></header>
+                            <p>Lightweight reactive state engine, tagged templates (<code>html&grave;...&grave;</code>), client hash routing, and route guards.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🚀 PHP 8.x REST API</h3></header>
+                            <p>Ultra-fast file-based REST router, CORS preflight handling, and dynamic parameters (<code>/api/users/{id}</code>).</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🗄️ Multi-Driver DB</h3></header>
+                            <p>Plug &amp; play support for MySQL (default), PostgreSQL, and portable SQLite with static <code>DB::*</code> helpers.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🔒 Defensive Security</h3></header>
+                            <p>RAM rate limiting, AES-256-GCM authenticated encryption, CSRF tokens, and automated payload sanitization.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🐳 Production Docker</h3></header>
+                            <p>Lightweight containers for Nginx, PHP 8.4-FPM with OPcache/APCu, low-RAM MySQL 8.0, and Redis 7.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- Interactive API Playground & Reactive State Demo -->
+                <section id="interactive-demo" class="mb-5">
+                    <div class="grid cols-2 gap-4">
+                        <!-- API Console Box -->
+                        <article>
+                            <header><h3>📡 Live API Console</h3></header>
+                            <p>Test REST endpoints directly from this browser page:</p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <button class="btn btn-sm btn-primary" onclick="executeApiCall('GET', '/api')">GET /api</button>
+                                <button class="btn btn-sm btn-secondary" onclick="executeApiCall('GET', '/api/health')">GET /api/health</button>
+                                <button class="btn btn-sm btn-secondary" onclick="executeApiCall('GET', '/api/users')">GET /api/users</button>
+                                <button class="btn btn-sm btn-outline" onclick="createUserPrompt()">POST /api/users</button>
+                            </div>
+                            <pre class="console-output" id="api-output">// Click an API button above to inspect live JSON response...</pre>
+                        </article>
+
+                        <!-- Lila.js State & UI Components -->
+                        <article>
+                            <header><h3>✨ Lila.js Reactive State &amp; UI</h3></header>
+                            <p>Reactive signals and Bluebird component suite:</p>
+                            
+                            <div class="p-3 bg-surface rounded mb-3 text-center border">
+                                <span class="text-muted d-block mb-1">Reactive Signal Counter</span>
+                                <div class="display-6 font-bold mb-2" id="counter-val">0</div>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-sm btn-secondary" onclick="counterState.set(c => c - 1)">- Decrement</button>
+                                    <button class="btn btn-sm btn-primary" onclick="counterState.set(c => c + 1)">+ Increment</button>
+                                    <button class="btn btn-sm btn-outline" onclick="counterState.set(0)">Reset</button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-outline" onclick="Lila.toast({ title: 'Lila Notification', description: 'Action completed!', type: 'success' })">
+                                    Trigger Toast
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="Lila.modal('demo-modal', 'open')">
+                                    Open Modal
+                                </button>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- User Management Modal Dialog -->
+    <dialog id="userModal" class="modal-dialog">
+        <article class="p-4" style="max-width: 500px;">
+            <header class="d-flex justify-content-between align-items-center mb-3">
+                <h3 id="modalTitle" class="m-0">User Details</h3>
+                <button class="btn btn-sm btn-outline" onclick="Lila.modal('userModal', 'close')">&times;</button>
+            </header>
+            <form id="formUserModal" onsubmit="handleUserSubmit(event)">
+                <input type="hidden" id="modalUserId" />
+                <div class="form-group mb-3">
+                    <label for="modalUserName">Full Name</label>
+                    <input type="text" id="modalUserName" class="form-control" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="modalUserEmail">Email Address</label>
+                    <input type="email" id="modalUserEmail" class="form-control" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="modalUserRole">Role</label>
+                    <select id="modalUserRole" class="form-control">
+                        <option value="Admin">Admin</option>
+                        <option value="Developer">Developer</option>
+                        <option value="Designer">Designer</option>
+                    </select>
+                </div>
+                <footer class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline" onclick="Lila.modal('userModal', 'close')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </footer>
+            </form>
+        </article>
+    </dialog>
+
+    <!-- Interactive Demo Modal -->
+    <dialog id="demo-modal" class="modal-dialog">
+        <article class="p-4" style="max-width: 480px;">
+            <header class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="m-0">Lila.js Accessible Dialog</h3>
+                <button class="btn btn-sm btn-outline" onclick="Lila.modal('demo-modal', 'close')">&times;</button>
+            </header>
+            <p>This modal is rendered using native HTML5 <code>&lt;dialog&gt;</code> elements and managed via <code>Lila.modal('id', 'open'|'close')</code>.</p>
+            <footer class="text-right mt-4">
+                <button class="btn btn-primary" onclick="Lila.modal('demo-modal', 'close')">Got It</button>
+            </footer>
+        </article>
+    </dialog>
+
+    <!-- Footer -->
+    <footer class="text-center text-muted p-4 border-top">
+        <p class="m-0">LilaPHP &copy; 2026. Built with KISS Philosophy, Bluebird CSS &amp; Lila.js.</p>
+    </footer>
+
+    <!-- Lila.js Full SPA Application Engine -->
+    <script>
+        const { html, route, start, beforeRoute, fetch: http, escapeHtml } = Lila;
+
+        // Shared Reactive Counter State
+        const counterState = Lila.state(0);
+        counterState.subscribe(val => {
+            const el = document.getElementById('counter-val');
+            if (el) el.textContent = val;
+        });
+
+        // Global Health Check Loader
+        async function loadHealthStatus() {
+            try {
+                const health = await Lila.api.get('/health');
+                const badgeText = document.getElementById('api-status-text');
+                if (badgeText) {
+                    badgeText.textContent = `API Online (${health.php.version})`;
+                }
+            } catch (err) {
+                const badgeText = document.getElementById('api-status-text');
+                if (badgeText) badgeText.textContent = 'API Offline';
+            }
+        }
+        loadHealthStatus();
+
+        // ---------------------------------------------------------------------
+        // Route 1: Home View (/)
+        // ---------------------------------------------------------------------
+        const homeTemplate = (s) => html`
+            <div id="home-view">
+                <section class="hero text-center" style="padding: 2.5rem 1rem 2rem;">
+                    <div class="api-badge-pulse mb-3" id="api-health-badge">
+                        <span class="pulse-dot"></span>
+                        <span id="api-status-text">API Online (8.4.25)</span>
+                    </div>
+                    <h1 class="display-5 font-bold mb-2">⚡ Ultra-Fast Decoupled Micro-API</h1>
+                    <p class="lead text-muted mx-auto" style="max-width: 680px;">
+                        Zero heavy dependencies. Pure static frontend styled with <strong>Bluebird CSS</strong>, powered by <strong>Lila.js</strong> reactive SPA engine, and backed by a lightweight PHP 8.x REST API with multi-driver database support.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a href="#interactive-demo" class="btn btn-primary">⚡ Test Live API</a>
+                        <a href="/dashboard" data-link class="btn btn-outline">🚀 Open SPA Dashboard</a>
+                    </div>
+                </section>
+
+                <section class="mb-5">
+                    <div class="grid cols-3 gap-4">
+                        <article class="hover-glow">
+                            <header><h3>🌐 Static Frontend</h3></header>
+                            <p>Static HTML, CSS, JS served directly by Nginx at C-speed. Zero SSR rendering latency.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>⚡ Lila.js Reactive SPA</h3></header>
+                            <p>Lightweight reactive state engine, tagged templates (<code>html&grave;...&grave;</code>), client hash routing, and route guards.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🚀 PHP 8.x REST API</h3></header>
+                            <p>Ultra-fast file-based REST router, CORS preflight handling, and dynamic parameters (<code>/api/users/{id}</code>).</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🗄️ Multi-Driver DB</h3></header>
+                            <p>Plug &amp; play support for MySQL (default), PostgreSQL, and portable SQLite with static <code>DB::*</code> helpers.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🔒 Defensive Security</h3></header>
+                            <p>RAM rate limiting, AES-256-GCM authenticated encryption, CSRF tokens, and automated payload sanitization.</p>
+                        </article>
+                        <article class="hover-glow">
+                            <header><h3>🐳 Production Docker</h3></header>
+                            <p>Lightweight containers for Nginx, PHP 8.4-FPM with OPcache/APCu, low-RAM MySQL 8.0, and Redis 7.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="interactive-demo" class="mb-5">
+                    <div class="grid cols-2 gap-4">
+                        <article>
+                            <header><h3>📡 Live API Console</h3></header>
+                            <p>Test REST endpoints directly from this browser page:</p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <button class="btn btn-sm btn-primary" onclick="executeApiCall('GET', '/api')">GET /api</button>
+                                <button class="btn btn-sm btn-secondary" onclick="executeApiCall('GET', '/api/health')">GET /api/health</button>
+                                <button class="btn btn-sm btn-secondary" onclick="executeApiCall('GET', '/api/users')">GET /api/users</button>
+                                <button class="btn btn-sm btn-outline" onclick="createUserPrompt()">POST /api/users</button>
+                            </div>
+                            <pre class="console-output" id="api-output">// Click an API button above to inspect live JSON response...</pre>
+                        </article>
+
+                        <article>
+                            <header><h3>✨ Lila.js Reactive State &amp; UI</h3></header>
+                            <p>Reactive signals and Bluebird component suite:</p>
+                            
+                            <div class="p-3 bg-surface rounded mb-3 text-center border">
+                                <span class="text-muted d-block mb-1">Reactive Signal Counter</span>
+                                <div class="display-6 font-bold mb-2" id="counter-val">${counterState.get()}</div>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-sm btn-secondary" onclick="counterState.set(c => c - 1)">- Decrement</button>
+                                    <button class="btn btn-sm btn-primary" onclick="counterState.set(c => c + 1)">+ Increment</button>
+                                    <button class="btn btn-sm btn-outline" onclick="counterState.set(0)">Reset</button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-outline" onclick="Lila.toast({ title: 'Lila Notification', description: 'Action completed!', type: 'success' })">
+                                    Trigger Toast
+                                </button>
+                                <button class="btn btn-sm btn-outline" onclick="Lila.modal('demo-modal', 'open')">
+                                    Open Modal
+                                </button>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </div>
+        `;
+
+        route('/', {
+            state: () => ({}),
+            template: homeTemplate,
+            onMount: async () => {
+                loadHealthStatus();
+            }
+        });
+
+        // ---------------------------------------------------------------------
+        // Route 2: Dashboard (/dashboard)
+        // ---------------------------------------------------------------------
+        route('/dashboard', {
+            state: () => ({ health: null }),
+            template: (s) => html`
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>📊 Dashboard Overview</h2>
+                        <button class="btn btn-sm btn-primary" data-action="refreshHealth">🔄 Refresh Health</button>
+                    </div>
+
+                    <div class="grid cols-3 gap-4 mb-4">
+                        <article class="hover-glow">
+                            <header><h4>PHP Engine</h4></header>
+                            <div class="display-6 font-bold">${s.health ? s.health.php.version : 'Loading...'}</div>
+                            <small class="text-muted">SAPI: ${s.health ? s.health.php.sapi : '...'}</small>
+                        </article>
+
+                        <article class="hover-glow">
+                            <header><h4>Database Status</h4></header>
+                            <div class="display-6 font-bold text-success">${s.health ? s.health.database.driver.toUpperCase() : '...'}</div>
+                            <small class="text-muted">Connected: ${s.health && s.health.database.connected ? 'Active (Ready)' : 'No'}</small>
+                        </article>
+
+                        <article class="hover-glow">
+                            <header><h4>Redis Status</h4></header>
+                            <div class="display-6 font-bold text-primary">${s.health && s.health.redis.connected ? 'Online' : 'Offline'}</div>
+                            <small class="text-muted">Host: ${s.health ? s.health.redis.host : '...'}</small>
+                        </article>
+                    </div>
+
+                    <article>
+                        <header><h3>System Diagnostics</h3></header>
+                        <pre class="console-output">${s.health ? JSON.stringify(s.health, null, 2) : 'Fetching diagnostic data from /api/health...'}</pre>
+                    </article>
+                </div>
+            `,
+            onMount: async (state) => {
+                try {
+                    state.health = await http('/api/health');
+                } catch (e) {
+                    Lila.toast({ title: 'Error', message: 'Failed to fetch health info', type: 'error' });
+                }
+            },
+            actions: {
+                refreshHealth: async (ctx) => {
+                    ctx.state.health = await http('/api/health');
+                    Lila.toast({ title: 'Success', message: 'Diagnostics updated', type: 'success' });
+                }
+            }
+        });
+
+        // ---------------------------------------------------------------------
+        // Route 3: Users (/users)
+        // ---------------------------------------------------------------------
+        route('/users', {
+            state: () => ({ users: [], loading: true }),
+            template: (s) => html`
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>👥 User Management</h2>
+                        <button class="btn btn-primary" data-action="openNewUserModal">+ Add New User</button>
+                    </div>
+
+                    ${s.loading ? html`<p class="text-muted">Loading users...</p>` : html`
+                        <article>
+                            <div class="scrollable-div">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid var(--border, #333);">
+                                            <th style="padding: 0.75rem; text-align: left;">ID</th>
+                                            <th style="padding: 0.75rem; text-align: left;">Name</th>
+                                            <th style="padding: 0.75rem; text-align: left;">Email</th>
+                                            <th style="padding: 0.75rem; text-align: left;">Role</th>
+                                            <th style="padding: 0.75rem; text-align: right;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${s.users.map(u => html`
+                                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                                <td style="padding: 0.75rem;">#${u.id}</td>
+                                                <td style="padding: 0.75rem; font-weight: bold;">${escapeHtml(u.name)}</td>
+                                                <td style="padding: 0.75rem;">${escapeHtml(u.email)}</td>
+                                                <td style="padding: 0.75rem;"><span class="badge">${escapeHtml(u.role || 'User')}</span></td>
+                                                <td style="padding: 0.75rem; text-align: right;">
+                                                    <button class="btn btn-sm btn-outline" data-action="deleteUser" data-id="${u.id}" data-name="${escapeHtml(u.name)}">Delete</button>
+                                                </td>
+                                            </tr>
+                                        `)}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+                    `}
+                </div>
+            `,
+            onMount: async (state) => {
+                await loadUsers(state);
+            },
+            actions: {
+                openNewUserModal: () => {
+                    document.getElementById('modalUserId').value = '';
+                    document.getElementById('modalUserName').value = '';
+                    document.getElementById('modalUserEmail').value = '';
+                    document.getElementById('modalTitle').textContent = 'Add New User';
+                    Lila.modal('userModal', 'open');
+                },
+                deleteUser: async (ctx) => {
+                    const id = ctx.id;
+                    const name = ctx.name;
+                    if (!confirm("Delete " + name + "?")) return;
+                    try {
+                        await http("/api/users/" + id, { method: 'DELETE' });
+                        Lila.toast({ title: 'Deleted', description: "User " + name + " removed", type: 'success' });
+                        await loadUsers(ctx.state);
+                    } catch (e) {
+                        Lila.toast({ title: 'Error', message: e.message, type: 'error' });
+                    }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------------------
+        // Route 4: Settings (/settings)
+        // ---------------------------------------------------------------------
+        route('/settings', {
+            state: () => ({ appName: 'LilaPHP Application' }),
+            template: (s) => html`
+                <article>
+                    <header><h3>⚙️ Application Settings</h3></header>
+                    <p class="text-muted">Configuration settings managed directly on the frontend SPA.</p>
+                    <div class="form-group mb-3">
+                        <label>Application Title</label>
+                        <input type="text" class="form-control" value="${escapeHtml(s.appName)}" oninput="document.getElementById('brandTitle').textContent = this.value" />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Theme Preference</label>
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-outline" onclick="Lila.theme('set', 'dark')">🌙 Force Dark</button>
+                            <button class="btn btn-outline" onclick="Lila.theme('set', 'light')">☀️ Force Light</button>
+                        </div>
+                    </div>
+                </article>
+            `
+        });
+
+        // ---------------------------------------------------------------------
+        // Route 5: About (/about)
+        // ---------------------------------------------------------------------
+        route('/about', {
+            state: () => ({}),
+            template: () => html`
+                <div>
+                    <section class="hero text-center mb-4">
+                        <h1 class="font-bold mb-2">ℹ️ About LilaPHP</h1>
+                        <p class="lead text-muted mx-auto" style="max-width: 680px;">
+                            A lightweight, modular, zero-overhead PHP 8.x micro-API framework with pure decoupled static frontend.
+                        </p>
+                    </section>
+
+                    <article>
+                        <h3>The KISS Philosophy</h3>
+                        <p>
+                            <strong>Keep It Simple, Stupid (KISS)</strong> means prioritizing readable, transparent, native PHP 8.x and vanilla web standards over unnecessary abstraction layers.
+                        </p>
+                        <ul>
+                            <li><strong>Decoupled Architecture:</strong> Nginx serves pure static HTML/CSS/JS without touching PHP. Dynamic operations run strictly under <code>/api/*</code>.</li>
+                            <li><strong>Plug &amp; Play Database:</strong> Use MySQL by default or switch to portable SQLite (WAL mode) with one line in <code>.env</code>.</li>
+                            <li><strong>Lila.js Reactive SPA:</strong> Zero build steps, reactive signals, client hash routing (<code>data-link</code>), and native component helpers.</li>
+                        </ul>
+                    </article>
+                </div>
+            `
+        });
+
+        // Helper Functions for Users Management
+        async function loadUsers(state) {
+            state.loading = true;
+            try {
+                const res = await http('/api/users');
+                state.users = res.data || [];
+            } catch (e) {
+                Lila.toast({ title: 'Error', message: 'Failed to load users', type: 'error' });
+            } finally {
+                state.loading = false;
+            }
+        }
+
+        async function handleUserSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('modalUserName').value.trim();
+            const email = document.getElementById('modalUserEmail').value.trim();
+            const role = document.getElementById('modalUserRole').value;
+
+            try {
+                await http('/api/users', {
+                    method: 'POST',
+                    body: { name, email, role }
+                });
+                Lila.modal('userModal', 'close');
+                Lila.toast({ title: 'User Saved', description: "Created user " + name, type: 'success' });
+                Lila.navigate('/users');
+            } catch (err) {
+                Lila.toast({ title: 'Error', message: err.message, type: 'error' });
+            }
+        }
+
+        // Global Interactive API Console Executor
+        async function executeApiCall(method, url, body = null) {
+            const output = document.getElementById('api-output');
+            if (output) output.textContent = "Fetching " + method + " " + url + "...";
+            try {
+                const res = method === 'GET' 
+                    ? await Lila.api.get(url) 
+                    : await Lila.api.post(url, body);
+                if (output) output.textContent = JSON.stringify(res, null, 2);
+            } catch (err) {
+                if (output) output.textContent = "Error: " + err.message + "\n" + JSON.stringify(err.data || {}, null, 2);
+            }
+        }
+
+        async function createUserPrompt() {
+            const name = prompt('Enter user name:', 'Grace Hopper');
+            if (!name) return;
+            const email = prompt('Enter email:', 'grace@navy.mil');
+            if (!email) return;
+            await executeApiCall('POST', '/api/users', { name, email, role: 'Computer Scientist' });
+            Lila.toast({ title: 'User Created', description: "Added " + name, type: 'success' });
+        }
+
+        // Initialize Router if Hash is present or when ready
+        if (location.hash && location.hash !== '#/' && location.hash !== '#') {
+            start('#app');
+        } else {
+            window.addEventListener('hashchange', () => start('#app'), { once: true });
+        }
+    </script>
+</body>
+
+</html>

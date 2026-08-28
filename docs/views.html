@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>React 19 & Vite Engine | LilaPHP Documentation</title>
+    <title>Lila.js Reactive SPA Engine &amp; Bluebird CSS | LilaPHP Documentation</title>
     <meta name="description"
-        content="Comprehensive guide for React 19, Vite HMR, PHP pre-rendering, route middleware guards, and ViewEngine in LilaPHP." />
+        content="Complete guide for building decoupled, ultra-fast SPAs with Lila.js and Bluebird CSS in LilaPHP." />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -53,41 +53,99 @@
                     class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 text-xs font-semibold uppercase tracking-wider mb-4">
                     Frontend Architecture
                 </div>
-                <h1 class="text-4xl font-extrabold tracking-tight mb-4">Native PHP Server-Side Rendering</h1>
+                <h1 class="text-4xl font-extrabold tracking-tight mb-4">Lila.js Reactive SPA Engine &amp; Bluebird CSS</h1>
                 <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-                    LilaPHP provides a lightning-fast native PHP view engine. It leverages PHP's built-in output buffering to deliver secure, server-rendered HTML while taking full advantage of OPcache and APCu for caching.
+                    LilaPHP eliminates the complexity and overhead of heavy frontend frameworks. By default, LilaPHP provides <strong>Lila.js</strong> — a zero-build, ultra-fast reactive SPA micro-library with tagged template literals (<code>html`...`</code>), hash-based client routing, route guards, and integrated Bluebird UI components.
                 </p>
             </div>
 
+            <!-- Freedom of Choice -->
             <section class="space-y-6 mb-12">
-                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">View Architecture & APCu Caching</h2>
+                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">1. Freedom of Frontend Frameworks</h2>
                 <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                    LilaPHP renders HTML using the <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">\Core\View</code> class. It evaluates pure PHP templates located in the <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">backend/views/</code> directory.
+                    Because LilaPHP uses a 100% decoupled architecture where Nginx directly serves static assets from <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">frontend/</code> and proxies <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">/api/*</code> to PHP-FPM, you can use <strong>Astro, React, Vue, Svelte, or Next.js static exports</strong> if you choose.
                 </p>
-                <ul class="list-disc pl-6 space-y-3 text-slate-600 dark:text-slate-400">
-                    <li><strong class="text-slate-900 dark:text-white">Native PHP Templates:</strong> No need to learn a new templating language. Use standard PHP and HTML for maximum performance and full language capabilities.</li>
-                    <li><strong class="text-slate-900 dark:text-white">APCu Output Caching:</strong> You can optionally cache the final rendered HTML in APCu by passing <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">['cache' => true]</code>. This skips view evaluation entirely on subsequent requests.</li>
-                    <li><strong class="text-slate-900 dark:text-white">Seamless Integration:</strong> Views are processed by the same dispatcher as API routes, meaning you can use the same Rate Limiters, CSRF protection, and Middlewares natively on your frontend routes.</li>
-                    <li><strong class="text-slate-900 dark:text-white">Clean Variable Extraction:</strong> Data passed to the view is automatically extracted into the local scope for clean usage (e.g., <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">&lt;?= $title ?&gt;</code>).</li>
-                </ul>
+                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    However, for most projects, <strong>Lila.js</strong> gives you complete reactive power, client-side routing, modals, toasts, and API consumption with <strong>zero build steps and zero npm dependencies</strong>.
+                </p>
             </section>
 
+            <!-- Lila.js Core Features -->
             <section class="space-y-6 mb-12">
-                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">Usage Example</h2>
-                <div class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-sm overflow-x-auto">
-                    <pre>
-// In your route file (e.g., backend/views/home.php)
-&lt;?php
-use Core\View;
+                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">2. Lila.js Core API</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-1"><code>Lila.route(path, config)</code></h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Registers a client-side route with initial state, reactive HTML template, <code>onMount</code> lifecycle, and event actions.</p>
+                    </div>
 
-$data = [
-    'title' => 'Welcome to LilaPHP',
-    'users' => [/* ... */]
-];
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-1"><code>Lila.beforeRoute(guardFn)</code></h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Asynchronous route guard hook to verify authentication, sessions, or permissions before rendering.</p>
+                    </div>
 
-// Rendering a view template from backend/views/
-View::render('home_template', $data, ['cache' => true, 'cacheTtl' => 60]);
-?&gt;</pre>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-1"><code>Lila.html`...`</code></h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Tagged template literal supporting interpolated values, arrays, nested templates, and sub-components.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-1"><code>Lila.fetch / Lila.api</code></h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">High-performance HTTP client with automatic CSRF token injection and JSON error parsing.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Complete Real-World Example -->
+            <section class="space-y-6 mb-12">
+                <h2 class="text-2xl font-bold border-b border-slate-200 dark:border-slate-800 pb-2">3. Real-World Interactive SPA Example</h2>
+                <div class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-xs overflow-x-auto">
+<pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en" data-theme="dark"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Admin Dashboard — LilaPHP&lt;/title&gt;
+    &lt;link rel="stylesheet" href="/css/bluebird.css"&gt;
+    &lt;script src="/js/lila.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;nav&gt;
+        &lt;a href="#/" data-link&gt;Dashboard&lt;/a&gt;
+        &lt;a href="#/users" data-link&gt;Users&lt;/a&gt;
+    &lt;/nav&gt;
+
+    &lt;div id="app"&gt;&lt;/div&gt;
+
+    &lt;script&gt;
+        const { html, route, start, beforeRoute, fetch: http, escapeHtml } = Lila;
+
+        // Session & Auth Route Guard
+        beforeRoute(async (path) => {
+            const auth = await http('/api/auth');
+            if (auth.status === 'success' &amp;&amp; auth.authenticated) return true;
+            window.location.href = '/login';
+            return false;
+        });
+
+        // Dashboard Route
+        route('/', {
+            state: () => ({ stats: {}, loading: true }),
+            template: (s) => html`
+                &lt;div class="container"&gt;
+                    &lt;h2&gt;Overview&lt;/h2&gt;
+                    &lt;p&gt;Active Users: ${s.stats.total || 0}&lt;/p&gt;
+                &lt;/div&gt;
+            `,
+            onMount: async (state) => {
+                const res = await http('/api/dashboard');
+                state.stats = res.data;
+            }
+        });
+
+        start('#app');
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
                 </div>
             </section>
         </main>

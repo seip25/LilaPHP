@@ -1,26 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * API Root Index Route (`/api/` or `/api/index`).
- * 
- * Returns framework engine status and environment metadata.
+ * API Root Route (`GET /api` or `GET /api/`).
  */
 
 use Core\Response;
 use Core\Request;
 use Core\Config;
 
-Request::any(['cache' => true, 'cache_ttl' => 10], function () {
-
-    $method = Request::getMethod();
-
+Request::any([], function () {
     Response::json([
-        'method' => $method,
-        'status' => 'ok',
-        'engine' => 'LilaPHP High-Performance API Framework',
-        'version' => '1.0.0',
+        'status'      => 'ok',
+        'engine'      => 'LilaPHP Micro-API Engine',
+        'version'     => '2.0.0',
         'environment' => Config::$APP_ENV,
-        'timestamp' => time(),
-        'message' => 'API is running and ready for requests.'
+        'debug'       => Config::$DEBUG,
+        'database'    => Config::$DB_TYPE,
+        'timestamp'   => time(),
+        'endpoints'   => [
+            'GET  /api'        => 'API overview and metadata',
+            'GET  /api/health' => 'System diagnostics, database & redis status',
+            'GET  /api/users'  => 'Users resource demo (REST CRUD)',
+        ],
+        'message'     => 'LilaPHP REST API is running and ready.'
     ]);
 });

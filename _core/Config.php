@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
  * High-performance configuration and environment variable loader.
  * 
- * Automatically caches parsed `.env` files to PHP arrays for zero-overhead
- * OPcache memory loading in production environments.
+ * Automatically loads .env configurations and caches parsed arrays for
+ * zero-overhead OPcache memory loading in production environments.
  * 
  * @package Core
  */
@@ -23,19 +25,23 @@ class Config
     public static int $HTTP_PORT = 8080;
     public static int $PROD_HTTP_PORT = 80;
 
+    // Database Configuration (Default: MySQL | Optional: SQLite / PostgreSQL)
     public static string $DB_TYPE = 'mysql';
     public static string $DB_HOST = 'mysql';
     public static int $DB_PORT = 3306;
     public static string $DB_NAME = 'lilaphp';
     public static string $DB_USER = 'root';
-    public static string $DB_PASSWORD = 'root';
+    public static string $DB_PASSWORD = 'secret';
+    public static string $DB_FILE = '';
 
+    // Cache & Redis
     public static string $REDIS_HOST = 'redis';
     public static int $REDIS_PORT = 6379;
     public static string $REDIS_PASSWORD = '';
+    public static string $CACHE_DRIVER = 'file';
+    public static string $DB_CACHE_DRIVER = 'file';
 
-    public static string $CACHE_DRIVER = 'apcu';
-    public static string $DB_CACHE_DRIVER = 'redis';
+    // Security & Limits
     public static string $APP_KEY = '';
     public static string $CORS_ALLOWED_ORIGINS = '*';
     public static bool $LOG_ENABLED = false;
@@ -46,10 +52,9 @@ class Config
     private static bool $loaded = false;
 
     /**
-     * Loads environment configurations from cache or backend/.env file.
+     * Loads environment configurations from cache or .env file.
      * 
      * @return void
-     * @example \Core\Config::load();
      */
     public static function load(): void
     {
@@ -86,7 +91,11 @@ class Config
             if (!is_dir(self::$DIR_CORE . '/cache')) {
                 @mkdir(self::$DIR_CORE . '/cache', 0777, true);
             }
-            if (!($envVars['APP_DEBUG'] ?? 'true') || ($envVars['APP_ENV'] ?? 'development') === 'production') {
+            
+            // Clean robust caching condition: only in production or when debug is explicitly false
+            $isDebug = filter_var($envVars['APP_DEBUG'] ?? true, FILTER_VALIDATE_BOOLEAN);
+            $isProduction = ($envVars['APP_ENV'] ?? 'development') === 'production';
+            if (!$isDebug || $isProduction) {
                 self::saveCache($cacheFile, $envVars);
             }
         }
@@ -103,19 +112,20 @@ class Config
         self::$HTTP_PORT = (int) ($_ENV['HTTP_PORT'] ?? 8080);
         self::$PROD_HTTP_PORT = (int) ($_ENV['PROD_HTTP_PORT'] ?? 80);
 
-        self::$DB_TYPE = (string) ($_ENV['DB_TYPE'] ?? 'mysql');
-        self::$DB_HOST = (string) ($_ENV['DB_HOST'] ?? 'localhost');
+        self::$DB_TYPE = strtolower((string) ($_ENV['DB_TYPE'] ?? 'mysql'));
+        self::$DB_HOST = (string) ($_ENV['DB_HOST'] ?? 'mysql');
         self::$DB_PORT = (file_exists('/.dockerenv') && self::$DB_HOST === 'mysql') ? 3306 : (int) ($_ENV['DB_PORT'] ?? 3306);
         self::$DB_NAME = (string) ($_ENV['DB_NAME'] ?? 'lilaphp');
         self::$DB_USER = (string) ($_ENV['DB_USER'] ?? 'root');
-        self::$DB_PASSWORD = (string) ($_ENV['DB_PASSWORD'] ?? 'root');
+        self::$DB_PASSWORD = (string) ($_ENV['DB_PASSWORD'] ?? 'secret');
+        self::$DB_FILE = (string) ($_ENV['DB_FILE'] ?? (self::$DIR_BACKEND . '/database/app.sqlite'));
 
         self::$REDIS_HOST = (string) ($_ENV['REDIS_HOST'] ?? 'redis');
         self::$REDIS_PORT = (int) ($_ENV['REDIS_PORT'] ?? 6379);
         self::$REDIS_PASSWORD = (string) ($_ENV['REDIS_PASSWORD'] ?? '');
 
-        self::$CACHE_DRIVER = (string) ($_ENV['CACHE_DRIVER'] ?? 'apcu');
-        self::$DB_CACHE_DRIVER = (string) ($_ENV['DB_CACHE_DRIVER'] ?? 'redis');
+        self::$CACHE_DRIVER = (string) ($_ENV['CACHE_DRIVER'] ?? (function_exists('apcu_fetch') ? 'apcu' : 'file'));
+        self::$DB_CACHE_DRIVER = (string) ($_ENV['DB_CACHE_DRIVER'] ?? 'file');
         self::$APP_KEY = (string) ($_ENV['APP_KEY'] ?? '');
         self::$CORS_ALLOWED_ORIGINS = (string) ($_ENV['CORS_ALLOWED_ORIGINS'] ?? '*');
         self::$LOG_ENABLED = filter_var($_ENV['LOG_ENABLED'] ?? false, FILTER_VALIDATE_BOOLEAN);
@@ -132,8 +142,7 @@ class Config
      * Parses a .env file into an associative array without external library overhead.
      * 
      * @param string $path Absolute path to the .env file
-     * @return array<string, string|bool|int>
-     * @example $vars = \Core\Config::parseEnvFile('/path/to/.env');
+     * @return array<string, string|bool|int|float>
      */
     private static function parseEnvFile(string $path): array
     {
@@ -178,11 +187,6 @@ class Config
 
     /**
      * Saves parsed environment array into a PHP file for OPcache direct loading.
-     * 
-     * @param string $path Destination cache file path
-     * @param array $data Associative array of environment variables
-     * @return bool True on success, false on failure
-     * @example \Core\Config::saveCache('/path/to/env.php', ['APP_DEBUG' => false]);
      */
     public static function saveCache(string $path, array $data): bool
     {
@@ -193,73 +197,5 @@ class Config
         } catch (\Throwable $e) {
             return false;
         }
-    }
-
-    /**
-     * Re-parses `.env` file and writes static array cache directly to `_core/cache/env.php`.
-     * 
-     * @return bool True on success
-     * @example \Core\Config::cache();
-     */
-    public static function cache(): bool
-    {
-        $envPath = dirname(__DIR__) . '/backend/.env';
-        $cacheFile = self::$DIR_CORE !== '' ? self::$DIR_CORE . '/cache/env.php' : dirname(__DIR__) . '/_core/cache/env.php';
-
-        $cacheDir = dirname($cacheFile);
-        if (!is_dir($cacheDir)) {
-            @mkdir($cacheDir, 0777, true);
-        }
-
-        $parsed = file_exists($envPath) ? self::parseEnvFile($envPath) : [];
-        $saved = self::saveCache($cacheFile, $parsed);
-        if ($saved) {
-            self::load();
-        }
-        return $saved;
-    }
-
-    /**
-     * Clears cached environment file.
-     * 
-     * @return void
-     * @example \Core\Config::clearCache();
-     */
-    public static function clearCache(): void
-    {
-        $cacheFile = self::$DIR_CORE . '/cache/env.php';
-        if (file_exists($cacheFile)) {
-            @unlink($cacheFile);
-        }
-    }
-
-    /**
-     * Retrieves an environment variable by key with an optional default value.
-     * 
-     * @param string $key Variable name
-     * @param mixed $default Default value if variable is not found
-     * @return mixed
-     * @example $port = \Core\Config::get('HTTP_PORT', 8080);
-     */
-    public static function get(string $key, mixed $default = null): mixed
-    {
-        if (!self::$loaded) {
-            self::load();
-        }
-        return $_ENV[$key] ?? $_SERVER[$key] ?? $default;
-    }
-
-    /**
-     * Checks whether the application is running in production mode.
-     * 
-     * @return bool
-     * @example if (\Core\Config::isProduction()) { ... }
-     */
-    public static function isProduction(): bool
-    {
-        if (!self::$loaded) {
-            self::load();
-        }
-        return self::$APP_ENV === 'production';
     }
 }

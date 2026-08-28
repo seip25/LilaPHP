@@ -1,648 +1,262 @@
 <p align="center">
-  <h1 align="center">⚡ LilaPHP — Ultra-Fast API-First PHP 8.4+ Framework</h1>
+  <h1 align="center">⚡ LilaPHP — High-Performance Decoupled Micro-API Framework</h1>
   <p align="center">
-    <strong>Performance First Architecture with Nginx File-Based Routing, OPcache Preload in RAM, Dual-Tier APCu + Redis Cache, Background Workers, and Blue-bird style CLI.</strong>
+    <strong>KISS Architecture (Zero Heavy Dependencies) with Pure Static Frontend (Lila.js SPA &amp; Bluebird CSS) &amp; Ultra-Fast PHP 8.x REST Backend.</strong>
   </p>
+</p>
+
+<p align="center">
+  <a href="https://seip25.github.io/LilaPHP/"><img src="https://img.shields.io/badge/docs-online-blue.svg" alt="Documentation"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
+  <a href="#"><img src="https://img.shields.io/badge/PHP-8.4+-777bb4.svg" alt="PHP 8.4+"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Frontend-Lila.js_%26_Bluebird_CSS-38bdf8.svg" alt="Lila.js"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Database-MySQL_%7C_SQLite_%7C_PostgreSQL-f59e0b.svg" alt="Database"></a>
 </p>
 
 ---
 
-# 📜 LilaPHP Documentation
+## 📖 Live Documentation & Interactive Demo
+- **Live Documentation:** [https://seip25.github.io/LilaPHP/](https://seip25.github.io/LilaPHP/)
+- **Repository:** [https://github.com/seip25/LilaPHP](https://github.com/seip25/LilaPHP)
 
-[https://seip25.github.io/LilaPHP/](https://seip25.github.io/LilaPHP/)
+---
 
-## 🏗️ Re-Architected from the Ground Up (`Performance First`)
+## 🏗️ 100% Decoupled Architecture (KISS Principle)
 
-LilaPHP has been completely re-engineered as an **API-First, ultra-low latency engine**. We stripped out all heavy, slow dependencies (no Twig templating engine, no file-based session overhead, no expensive PHP regex routing loops). Instead, Nginx handles direct physical file routing (`backend/routes/*.php`) and returns high-speed JSON `404` & `429` errors directly at the C/reverse-proxy level!
+LilaPHP strictly separates the **Frontend User Interface** and the **Backend REST API**:
 
-```
+1. **Frontend (`frontend/`):**
+   - Pure static assets (`.html`, `.css`, `.js`, `.ts`, images, fonts) served directly by **Nginx** at maximum raw speed.
+   - Styled with the **Bluebird CSS** micro-framework (semantic HTML tags, native CSS variables, auto/manual dark/light mode).
+   - Powered by **Lila.js** (Vanilla reactive SPA engine with `html` tagged templates, client routing, route guards, and signals) with complete **TypeScript** definitions (`lila.ts` & `lila.d.ts`) for flawless IDE IntelliSense.
+   - **Framework Freedom:** Use Astro, React, Vue, Svelte, or static HTML as you like; `Lila.js` is the default zero-dependency solution.
+2. **Backend API (`backend/` under `/api/`):**
+   - Every request under `/api/*` is dispatched to the lightweight PHP 8.x REST engine via FastCGI.
+   - REST endpoints with dynamic parameter mapping (e.g. `/api/users/{id}`), zero-dependency PSR-4 autoloader, and global helpers.
+3. **Plug & Play Multi-Database:**
+   - Out-of-the-box support for **MySQL** (default), portable **SQLite (WAL mode)**, and **PostgreSQL** via unified `Core\Database` and `DB::*` static helpers with automated schema indexing.
+
+```text
 LilaPHP/
-├── _core/                     # ⚡ Ultra-fast Engine Core
-│   ├── Config.php             # .env parser and static OPcache array exporter (`_core/cache/env.php`)
-│   ├── Database.php           # PDO MySQL connection pool and prepared query execution
-│   ├── Request.php            # Static O(1) HTTP method checks, memoized JSON parsing, headers & input
-│   ├── Response.php           # JSON/CORS emitter with caching headers
-│   ├── Cache.php              # Dual-Tier Cache (APCu shared RAM + Redis cluster persistence)
-│   ├── Validate.php           # High-speed i18n validator reading $_REQUEST['lang'] (no sessions/Twig)
-│   ├── Security.php           # RAM rate limiting, AES-256 encryption, and anti-XSS/SQLi sanitization
-│   ├── Logger.php             # Async JSON logging (disabled by default via LOG_ENABLED=false)
-│   ├── Dispatcher.php         # Express.js / Next.js style file-based router
-│   ├── Upload.php             # Secure anti-malware MIME file upload engine (`finfo` checked)
-│   ├── Task.php               # Background job dispatcher for Redis (`lilaphp:jobs`) & OS workers
-│   ├── Http.php               # High-performance cURL client with concurrent `curl_multi_*` pooling
-│   ├── bootstrap.php          # Auto-prepend compatible autoloader (`auto_prepend_file`)
-│   ├── routes/                # Core System Endpoints (`404.php`, `debug/health.php`, `debug/metrics.php`)
-│   ├── locales/               # Validation dictionary translations (`es`, `en`, `pt-br`)
-│   └── cli/                   # CLI engine classes (Migrate, Seed, Optimize, KeyGen, Docker, Make, TaskWork)
-├── backend/                   # 🖥️ Application Backend (PHP API)
-│   ├── models/                # Lightweight JSON-serializable ORM (`User.php`, `Product.php`)
-│   ├── routes/                # User API route scripts (`index.php`, `test.php`, `users.php`)
-│   ├── preload.php            # Production OPcache RAM preload script compiling all core classes
-│   ├── .env                   # Dynamic environment variables (`HTTP_PORT`, `DB_PORT`, `APP_KEY`)
+├── nginx.conf                 # ⚡ Nginx Decoupled Configuration (Frontend root + /api/ pass)
+├── index.php                  # 🎯 Unified Front Controller & Development Server Router
+├── cli.php                    # 🛠️ Master CLI Dispatcher (Migrate, Seed, Optimize, Make, KeyGen)
+├── docker-compose.yml         # 🐳 Docker Compose (Nginx, PHP 8.4-FPM, low-RAM MySQL 8.0, Redis 7)
+├── frontend/                  # 🌐 Pure Static Frontend
+│   ├── index.html             # Application home & interactive API playground
+│   ├── dashboard.html         # Interactive SPA dashboard with Lila.js
+│   ├── about.html             # Static sub-page example
+│   ├── css/
+│   │   └── bluebird.css       # Semantic CSS micro-framework with native dark/light mode
+│   └── js/
+│       ├── lila.js            # Reactive SPA engine, HTTP client & Bluebird UI suite
+│       ├── lila.ts            # Strict TypeScript source & interfaces
+│       └── lila.d.ts          # TypeScript declarations for VS Code & PhpStorm
+├── backend/                   # 🖥️ Lightweight PHP 8.x REST API
+│   ├── index.php              # FastCGI API entry point
+│   ├── routes/                # File-based REST endpoints (/api/health, /api/users, etc.)
+│   ├── models/                # Micro-models & ORM entities (User.php, Product.php)
+│   ├── database/              # SQLite database storage (app.sqlite)
+│   ├── .env                   # Environment configuration (DB_TYPE=mysql, APP_KEY, etc.)
 │   └── .env_example           # Configuration template
-├── frontend/                  # 🌐 Public Static Assets (CSS, JS, Images)
-│   ├── css/style.css          # Curated dark theme tokens, neon gradients, and micro-animations
-│   └── images/                # Static images served directly by Nginx
-├── docker/                    # 🐳 Infrastructure & Container Profiles
-│   ├── php/Dockerfile.dev     # PHP 8.4 FPM/CLI for development (pdo_mysql, gd, redis, apcu)
-│   ├── php/Dockerfile.prod    # PHP 8.4 FPM/CLI with permanent OPcache RAM Preload and dynamic workers
-│   └── nginx/nginx.conf       # SPA routing via PHP ViewEngine, API try_files, native C 404 & 429
-├── docs/                      # 📚 Comprehensive documentation (`export-ignore` on release)
-├── cli.php                    # 🛠️ Master Unified CLI Dispatcher (`Blue-bird` style)
-├── index.php                  # 🎯 Front Controller (API dispatch + Native SSR rendering)
-└── docker-compose.yml         # 🚀 Multi-container orchestration (Nginx, PHP 8.4, MySQL 8.0, Redis 7)
+├── _core/                     # ⚡ Zero-Dependency Core Engine
+│   ├── bootstrap.php          # PSR-4 Autoloader, Exception Handler & Session Manager
+│   ├── helpers.php            # Global helpers (json_response, sanitize, input, csrf_*, abort)
+│   ├── Config.php             # .env parser with OPcache array caching
+│   ├── Dispatcher.php         # REST Router & Dynamic Parameter Resolver
+│   ├── Database.php           # PDO Multi-Driver DB Wrapper & Schema Indexer
+│   ├── Request.php            # Static O(1) HTTP method checks, headers & memoized JSON body
+│   ├── Response.php           # JSON response emitter with CORS & status handling
+│   ├── Security.php           # CSRF tokens, rate limiting, AES-256-GCM encryption & XSS filters
+│   ├── Cache.php              # Dual-tier cache (APCu RAM + Redis cluster)
+│   └── Validate.php           # Multi-language validation engine (i18n)
+├── docs/                      # 📚 Complete HTML Documentation (GitHub Pages)
+└── tests/                     # 🧪 Automated Test Suites (PHP Runner, Live HTTP, Chrome CDP)
 ```
 
 ---
 
-## ⚡ Key Innovations & Performance Features
+## 🚀 Quick Start in 30 Seconds
 
-### 1. Nginx Native Rate Limiter & JSON 404/429
+### Option A: Local Development (PHP Built-in Server)
 
-- **C-Level Rate Limiting**: Nginx applies `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;` with `burst=30 nodelay;`. If an IP exceeds limits, Nginx returns `{"error":"Too Many Requests","code":429}` instantly in C without starting a PHP worker!
-- **Zero PHP 404 Overhead**: Requests to non-existent route files return `{"error":"Endpoint not found","code":404}` directly from Nginx via `error_page 404 = @json_404;`.
-- **Native PHP Views (SSR)**: All non-`/api/` web requests are rendered natively using `\Core\View` with APCu-cached HTML templates, server-side route guards, and direct PHP logic integration.
-- **Native PHP Route Caching**: Caching is handled inside LilaPHP via `Request::GET(['cache' => true, 'cache_ttl' => 0], ...)` after executing route middlewares, eliminating rigid Nginx FastCGI micro-caching.
-
-### 2. Static O(1) Request Routing & Handlers (`Core\Request`)
-
-In LilaPHP, physical files map directly to URIs (e.g. `backend/routes/users.php` -> `/api/users`). You can handle HTTP request methods (`Request::GET`, `Request::POST`, `Request::PUT`, `Request::DELETE`, `Request::PATCH`) directly inside route files with full middleware support and instant response caching:
-
-```php
-use Core\Request;
-use Core\Response;
-use Models\User;
-
-// GET /api/users with instant route caching (cache_ttl = 0 for infinite RAM caching after middlewares)
-Request::GET(['cache' => true, 'cache_ttl' => 0], function() {
-    $users = User::all("1=1 ORDER BY id DESC");
-    return ['status' => 'success', 'data' => $users];
-});
-
-// POST /api/users with Middlewares
-Request::POST([AuthMiddleware::class, RoleCheck::class], function() {
-    $user = new User(Request::json());
-    $user->assertValid(); // Emits 422 JSON response if validation fails
-    $user->save();
-
-    return ['status' => 'created', 'data' => $user];
-});
-
-// PUT /api/users with Session-Aware Route Caching
-Request::PUT(['cache' => true, 'cache_ttl' => 60, 'by_session' => true], AuthMiddleware::class, function() {
-    $id = Request::input('id');
-    $user = User::find($id);
-    if (!$user) {
-        Response::error('User not found', 404);
-    }
-    $user->fill(Request::json())->save();
-    return ['status' => 'updated', 'data' => $user];
-});
-
-// DELETE /api/users
-Request::DELETE(AuthMiddleware::class, function() {
-    $user = User::find(Request::input('id'));
-    $user?->delete();
-    return ['status' => 'deleted'];
-});
-```
-
-#### Zero-Allocation `Core\Request` & `Core\Response` Helpers:
-
-```php
-use Core\Request;
-use Core\Response;
-
-// --- Core\Request ---
-$json = Request::json();                          // Memoized O(1) RAM JSON parser
-$page = Request::input('page', 1);                 // Retrieve input from $_REQUEST or JSON with fallback
-$all = Request::all();                             // Merge $_REQUEST and JSON body
-$token = Request::bearerToken();                   // Extract Bearer token string from Authorization header
-$auth = Request::header('Authorization');          // Retrieve header case-insensitively
-$headers = Request::headers();                     // Retrieve all HTTP headers as associative array
-$clientIp = Request::ip();                         // Retrieve client IP (Nginx X-Forwarded-For supported)
-$method = Request::getMethod();                    // Returns uppercase method ('GET', 'POST', etc.)
-
-// --- Core\Response ---
-Response::json(['status' => 'ok'], 200);           // Emit JSON with CORS headers & exit
-Response::error('Invalid input', 400, $errors);    // Emit standardized error structure & exit
-Response::file('/path/to/invoice.pdf', 'Inv.pdf'); // Direct binary file delivery & exit
-Response::stream(fn() => echo "chunk", 200);       // Event-Stream / SSE real-time output & exit
-Response::redirect('/login', 302);                 // HTTP Location redirect & exit
-```
-
-### 3. Clean Package Distribution (`.gitattributes export-ignore`)
-
-When publishing releases or running `composer install --prefer-dist`, development documentation and test directories (`docs/`, `tests/`, `.github/`) are excluded automatically. Your deployment tarball cleanly includes your `_core/`, `backend/`, `docker/` cluster configurations, and entrypoints so you can launch containers instantly.
-
-### 4. Dual-Tier Caching (`APCu` + `Redis`)
-
-- **`Cache::api()`**: Caches data in shared worker RAM (`APCu`) with zero network round-trip latency.
-- **`Cache::db()`**: Caches across your cluster in `Redis` with automatic failover to `APCu` if Redis experiences a micro-interruption.
-
-### 5. Background Job Queues (`Task::dispatch` & `Task::work`)
-
-Execute slow operations (sending emails, processing images, webhooks) asynchronously in background processes:
-
-```php
-use Core\Task;
-
-// Dispatch job to Redis list (`lilaphp:jobs`) or detached OS process
-Task::dispatch('send_welcome_email', ['userId' => 42]);
-```
-
-Consuming jobs via background worker command:
+No Docker or Composer required!
 
 ```bash
-$ php cli.php task:work
+# 1. Clone the repository
+git clone https://github.com/seip25/LilaPHP.git
+cd LilaPHP
+
+# 2. Copy the environment file
+cp backend/.env_example backend/.env
+
+# 3. Start the built-in development server
+php -S localhost:8080 index.php
 ```
-
-### 6. Anti-Malware Secure Upload (`Upload::save`)
-
-Ensures uploaded files (`$_FILES`) are authentic via `finfo` MIME checking, scans content bytes for embedded `<?php` or script injections, and assigns cryptographically randomized filenames (`bin2hex(random_bytes(16))`).
-
-### 7. Concurrent Multi-cURL Client (`Http::multi`)
-
-Fetch external APIs sequentially (`Http::get()`, `Http::post()`) or run dozens of HTTP requests concurrently in parallel (`Http::multi([...])`).
-
-### 8. Lightweight ORM Models (`Models\BaseModel`)
-
-All API Models inherit from `Models\BaseModel`, providing automated CRUD operations, automatic JSON serialization, input validation via `Core\Validate`, and table schema definitions for migrations (`php cli.php migrate`).
-
-#### Defining a Model (`backend/models/Product.php`):
-```php
-namespace Models;
-
-class Product extends BaseModel
-{
-    protected string $table = 'products';
-    protected string $primaryKey = 'id';
-
-    public ?int $id = null;
-    public string $name = '';
-    public float $price = 0.0;
-    public int $stock = 0;
-    public string $sku = '';
-
-    // Validation rules (Core\Validate syntax)
-    protected array $rules = [
-        'name' => 'required|min_length:2|max_length:255',
-        'price' => 'required|numeric',
-        'stock' => 'numeric',
-        'sku' => 'max_length:50'
-    ];
-
-    // Schema definition for `php cli.php migrate`
-    public static function getSchema(): array
-    {
-        return [
-            'id' => ['type' => 'int', 'unsigned' => true, 'autoIncrement' => true, 'primaryKey' => true],
-            'name' => ['type' => 'string', 'length' => 255, 'nullable' => false],
-            'price' => ['type' => 'decimal', 'length' => '10,2', 'default' => '0.00'],
-            'stock' => ['type' => 'int', 'default' => 0],
-            'sku' => ['type' => 'string', 'length' => 50, 'nullable' => true]
-        ];
-    }
-}
-```
-
-#### CRUD & Validation Operations:
-```php
-use Models\Product;
-
-// 1. Find by ID (excludes soft-deleted records by default)
-$product = Product::find(1);
-
-// 2. Fetch all with optional SQL WHERE conditions
-$products = Product::all("stock > ? ORDER BY price DESC", [0]);
-
-// 3. Include or fetch only soft-deleted records
-$allProducts = Product::withTrashed();
-$trashedProducts = Product::onlyTrashed();
-
-// 4. Create or Populate instance attributes
-$product = new Product();
-$product->fill([
-    'name' => 'Wireless Keyboard',
-    'price' => 49.99,
-    'stock' => 100,
-    'sku' => 'KB-WL-01'
-]);
-$product->price = 45.00;
-
-// 5. Validate Model attributes
-$errors = $product->validate();
-
-// 6. Validate & Halt automatically (Emits HTTP 422 JSON error if invalid)
-$product->assertValid();
-
-// 7. Save (Inserts if new record, Updates if ID exists)
-$product->save();
-
-// 8. Soft delete (updates deleted_at timestamp)
-$product->delete();
-
-// 9. Restore soft-deleted record or permanently force delete
-$product->restore();
-$product->forceDelete(); // or $product->delete(true);
-
-// 10. Paginate with soft-delete filtering
-$paginated = Product::paginate(['stock' => 10], 60, false);
-```
-
-#### Database Transactions (`Core\Database`):
-```php
-use Core\Database;
-use Core\Response;
-
-// Automatic transaction block (auto commit / rollback on exception)
-Database::transaction(function () use ($senderId, $receiverId, $amount) {
-    Database::update('accounts', ['balance' => 'balance - ' . $amount], 'id = ?', [$senderId]);
-    Database::update('accounts', ['balance' => 'balance + ' . $amount], 'id = ?', [$receiverId]);
-});
-
-// Manual transaction control
-try {
-    Database::beginTransaction();
-    Database::update('accounts', ['balance' => 900], 'id = ?', [$senderId]);
-    Database::update('accounts', ['balance' => 1100], 'id = ?', [$receiverId]);
-    Database::commit();
-} catch (\Throwable $e) {
-    Database::rollBack();
-    Response::json(['error' => $e->getMessage()], 500);
-}
-```
-
-
-### 9. Encrypted Session Authentication (`Services\AuthService`)
-
-For web applications, dashboards, or session-based APIs, `Services\AuthService` provides secure session management with AES-256 encryption (`Core\Security::encrypt`), HTTP-only cookies, and automated brute-force attempt lockout throttling:
-
-```php
-use Core\Request;
-use Core\Response;
-use Services\AuthService;
-
-// GET /api/auth -> Check authentication state
-Request::GET(function () {
-    $user = AuthService::validateAuth(false);
-    return [
-        'status' => 'success',
-        'authenticated' => $user !== false,
-        'user' => $user ?: null
-    ];
-});
-
-// POST /api/auth -> Login / Logout handler
-Request::POST(function () {
-    $action = Request::input('action', 'login');
-
-    if ($action === 'logout') {
-        AuthService::logout();
-        return ['status' => 'success', 'message' => 'Logged out successfully'];
-    }
-
-    $username = trim((string) Request::input('username', ''));
-    $password = (string) Request::input('password', '');
-
-    if (empty($username) || empty($password)) {
-        Response::error('Username and password are required', 400);
-    }
-
-    $result = AuthService::login($username, $password);
-    if ($result['success']) {
-        return ['status' => 'success', 'user' => $result['user']];
-    }
-
-    Response::error($result['message'], 401, [
-        'locked' => $result['locked'] ?? false,
-        'remaining_seconds' => $result['remaining_seconds'] ?? 0
-    ]);
-});
-```
-
-### 10. Zero-Dependency JWT Engine (`Core\Jwt`)
-
-Generate and verify HMAC-SHA256 (HS256) JSON Web Tokens without external Composer packages:
-
-```php
-use Core\Jwt;
-
-// Encode claims into a signed JWT token (24-hour default TTL)
-$token = Jwt::encode(['user_id' => 42, 'role' => 'admin']);
-
-// Decode & verify signature / expiration
-$claims = Jwt::decode($token); // Returns array payload or false if expired/invalid
-```
-
-### 11. Event Emitter with Redis Pub/Sub (`Core\Event`)
-
-Listen and dispatch internal application events in memory, automatically broadcasting across Redis cluster workers if connected:
-
-```php
-use Core\Event;
-
-// Register event listener
-Event::listen('user.created', function($payload) {
-    // Process async tasks or notifications
-});
-
-// Dispatch event locally and broadcast via Redis Pub/Sub
-Event::dispatch('user.created', ['user_id' => 42, 'email' => 'user@example.com']);
-```
-
-### 12. Native PHP Server-Side Rendering
-
-LilaPHP includes a high-performance native PHP View engine that leverages PHP's built-in output buffering to deliver secure, server-rendered HTML while taking full advantage of OPcache and APCu for caching.
-
-- **Native PHP Templates**: Write views using standard PHP and HTML (`backend/views/*.php`).
-- **APCu Output Caching**: Optionally cache the final rendered HTML in APCu by passing `['cache' => true]`. This skips view evaluation entirely on subsequent requests.
-- **Seamless Integration**: Views are processed by the same dispatcher as API routes, meaning you can use the same Rate Limiters, CSRF protection, and Middlewares natively on your frontend routes.
-- **Clean Variable Extraction**: Data passed to the view is automatically extracted into the local scope for clean usage (`<?= $title ?>`).
-
-```php
-// backend/views/home.php
-<?php
-use Core\View;
-
-$data = [
-    'title' => 'Welcome to LilaPHP',
-    'users' => [/* ... */]
-];
-
-// Render template and cache output for 60 seconds
-View::render('home_template', $data, ['cache' => true, 'cacheTtl' => 60]);
-?>
-```
+Open [http://localhost:8080](http://localhost:8080) in your browser.
 
 ---
 
-## 🛠️ Built-in Debug & Performance Dashboard (`/debug`)
-
-LilaPHP includes an interactive, zero-overhead **Debug & Performance Monitoring Dashboard** accessible at `/debug` or `/debug.html`.
-
-- **Live Redis Request Stream**: Captures Method, URI, Query Params, Duration (ms), Memory Peak (MB), Status Code, and Client IP into Redis (`lilaphp:debug:requests`).
-- **System Health Profiler**: Real-time status checks for Redis, MySQL, PHP-FPM, CPU Load, RAM Usage, and Disk Free space.
-- **Interactive Concurrency Benchmark Tool**: Run browser-based client-side stress tests with concurrencies from **1 to 4,000** on any autodetected route.
-- **Filters & Search**: Filter logs by URI, Method (GET, POST, PUT, DELETE), Status (2xx, 3xx, 4xx, 5xx), or IP with client-side pagination.
-
-### ⚙️ Debug Environment Configuration (`backend/.env`)
-
-Controlled via `DEBUG_LOGGING_ENABLED` in `backend/.env`:
-
-```env
-# Enable/disable Redis request logging (default: false for zero overhead)
-DEBUG_LOGGING_ENABLED=false
-```
-
-When deploying to production via `php cli.php docker prod`, if `DEBUG_LOGGING_ENABLED` is `true`, the CLI will display an interactive warning asking for confirmation before proceeding.
-
-### 🚀 How to Run Unlimited Concurrency & Benchmark Tests (Disabling Rate Limits)
-
-To perform load testing or benchmark runs at maximum concurrencies (100, 1000, 2000, 3000, 4000) without hitting rate limiters, temporarily disable PHP and Nginx rate limits:
-
-1. **Disable PHP Rate Limiting in `backend/.env`**:
-   ```env
-   RATE_LIMIT=0
-   ```
-2. **Comment out Nginx C-Level Rate Limiting in `docker/nginx/nginx.conf`**:
-   ```nginx
-   # limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;
-
-   location ^~ /api/ {
-       # limit_req zone=api_limit burst=30 nodelay;
-       # limit_req_status 429;
-
-       include fastcgi_params;
-       fastcgi_pass php:9000;
-       ...
-   }
-   ```
-3. Restart containers or reload Nginx (`docker compose exec nginx nginx -s reload` or `php cli.php docker dev`).
-
----
-
-## 🛠️ Master CLI Commands (`cli.php`)
+### Option B: Docker Orchestration (Production Ready)
 
 ```bash
-php cli.php help                                # Display interactive help menu
-php cli.php health                              # Microsecond system health & service diagnostic check
-php cli.php benchmark --url=/api --concurrency=1000 --duration=30 # Real server-side OS-level load test (curl_multi)
-php cli.php optimize                            # Pre-cache .env settings to OPcache memory and flush APCu/Redis
-php cli.php key:generate                        # Generate secure 256-bit cryptographic APP_KEY in backend/.env
-php cli.php migrate                             # Synchronize all API Model table schemas with MySQL
-php cli.php migrate --refresh                   # Drop all database tables and re-run migrations from scratch
-php cli.php seed                                # Populate database tables with initial seed records
-php cli.php task:work                           # Start continuous background worker consuming Redis job queues
-php cli.php ws:serve 8001 -d                    # Start Workerman WebSocket server in background daemon mode (-d)
-php cli.php ws:serve stop 8001                  # Stop running background WebSocket daemon
-php cli.php ws:serve restart 8001 -d            # Gracefully restart background WebSocket daemon
-php cli.php make model <Name>                   # Generate boilerplate API Model inside backend/models/
-php cli.php make route <path>                   # Generate file-based API route inside backend/routes/
-php cli.php docker dev|prod|stop|ps|stats|logs|clean # Orchestrate Nginx, PHP, MySQL, Redis cluster & stream project stats
-php cli.php docker stats                        # Stream real-time CPU/RAM stats filtered for project containers
-php cli.php docker exec-php                     # Open interactive bash inside PHP container
-php cli.php docker exec-mysql [query]           # Open interactive MySQL CLI or execute raw SQL query
-php cli.php docker exec-redis [command]         # Open interactive Redis CLI or execute raw Redis command
-php cli.php docker mysql <shortcut>              # Smart MySQL queries without SQL (tables, find, count, where, last...)
-php cli.php docker redis <shortcut>              # Smart Redis commands (keys, get, set, logs, jobs, monitor, flush...)
+# 1. Build and start containers (Nginx + PHP 8.4-FPM + MySQL + Redis)
+docker compose --env-file ./backend/.env up -d --build
+
+# 2. Check container status
+docker compose ps
+
+# 3. Open application
+# Frontend: http://localhost:8080
+# SPA Dashboard: http://localhost:8080/dashboard.html
+# Health API: http://localhost:8080/api/health
 ```
 
 ---
 
-## ⚡ Server-Side Concurrency Benchmark Engine (`curl_multi`)
+## 🎨 Frontend: Lila.js SPA & Bluebird CSS
 
-LilaPHP includes an OS-level server-side load test runner built directly into the CLI and synchronized in real time with the web dashboard (`/debug.html`).
+### 1. Declarative SPA Routing & Tagged Templates
 
-Unlike client-side browser tests (which are restricted by JavaScript's single-threaded event loop and browser socket connection limits), LilaPHP's benchmark runner uses native asynchronous `curl_multi_exec` sockets.
+```html
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <link rel="stylesheet" href="/css/bluebird.css" />
+    <script src="/js/lila.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="#/" data-link>Overview</a>
+        <a href="#/users" data-link>Users</a>
+    </nav>
 
-### CLI Usage:
-```bash
-# Run 1,000 concurrent connection stress test for 30 seconds
-php cli.php benchmark --url=/api/init --concurrency=1000 --duration=30
-```
+    <div id="app"></div>
 
-### Key Metrics Recorded:
-- **Req/Sec (RPS)**: Exact throughput handled by the engine.
-- **Latency Percentiles**: Calculates exact **P50, P95, and P99** latency distributions.
-- **Real-Time Redis Sync**: The CLI worker writes snapshots into Redis every ~500ms (`lilaphp:benchmark:{id}`), allowing `/debug.html` to visualize live load test metrics without interrupting execution.
-- **Zero-Error Execution**: Measures 2xx successes vs 4xx/5xx errors under extreme socket concurrency.
+    <script>
+        const { html, route, start, beforeRoute, fetch: http, escapeHtml } = Lila;
 
----
+        // Session & Route Guard
+        beforeRoute(async (path) => {
+            const auth = await http('/api/auth');
+            if (auth.authenticated) return true;
+            window.location.href = '/login';
+            return false;
+        });
 
-## ⚡ Real-Time WebSockets (`Socket.IO Style with Workerman & Redis`)
-
-LilaPHP includes a real-time event broadcasting engine (`Core\Ws`) bridged with **Workerman** (`composer require workerman/workerman`) and **Redis Pub/Sub**.
-
-### 1. Backend Event Broadcasting (`Core\Ws`)
-Inside any `backend/routes/*.php` or background job (e.g. when an item is updated or created):
-```php
-\Core\Ws::publish('item_updated', ['id' => 104, 'status' => 'shipped'], 'orders_room');
-```
-
-### 2. Security & Room Authentication Interceptor (`backend/sockets/Handler.php`)
-You can intercept incoming connections, authenticate room join requests (verify passwords/JWT tokens), and handle custom incoming websocket messages before they are broadcasted by writing your logic in `backend/sockets/Handler.php`:
-
-```php
-namespace Sockets;
-
-class Handler
-{
-    // Intercept client connections (assign unique socket IDs or check headers)
-    public static function onConnect(object $connection): void
-    {
-        $connection->socket_id = 'user_' . bin2hex(random_bytes(4));
-    }
-
-    // Intercept room join attempts (`ws.join('admin_room', { password: 'secret' })`)
-    public static function onJoin(object $connection, string $room, array $payload = []): bool
-    {
-        if ($room === 'admin_room') {
-            if (($payload['password'] ?? '') !== 'secret123') {
-                $connection->send(json_encode(['event' => 'error', 'message' => 'Unauthorized access']));
-                return false; // Reject join
+        // Overview Route
+        route('/', {
+            state: () => ({ usersCount: 0 }),
+            template: (s) => html`
+                <article>
+                    <h2>Dashboard</h2>
+                    <p>Total Users: ${s.usersCount}</p>
+                </article>
+            `,
+            onMount: async (state) => {
+                const res = await http('/api/users');
+                state.usersCount = res.data.length;
             }
-        }
-        return true; // Allow join
-    }
+        });
 
-    // Intercept client emits/broadcasts before Workerman retransmits to the room
-    public static function onMessage(object $connection, string $event, array $payload, ?string $room, object $wsWorker): bool
-    {
-        if ($event === 'chat_message') {
-            // Save to database, sanitize text, or log event
-        }
-        return true; // Return true to allow automatic broadcast to room members
-    }
-
-    public static function onClose(object $connection): void {}
-}
+        start('#app');
+    </script>
+</body>
+</html>
 ```
 
-### 3. Frontend Client (`js/ws.js`)
-Include `/js/ws.js` on your frontend to connect via Nginx reverse proxy (`/ws` -> port `8001`). Packets sent while connecting are automatically buffered in memory (`sendQueue`) and flushed right after the handshake:
+### 2. UI Components & Reactive Signals
 
 ```javascript
-const ws = new LilaWS('/ws');
-ws.join('orders_room', { password: 'secret_if_required' });
+// 1. Reactive State Signals
+const counter = Lila.state(0);
+counter.subscribe(val => {
+    document.getElementById('counter-display').textContent = val;
+});
+counter.set(c => c + 1);
 
-// Listen for incoming live events
-ws.on('item_updated', (data, room) => console.log(`Update in [${room}]:`, data));
-
-// Emit to other clients in the room (excludes sender socket)
-ws.emit('chat_message', { text: 'Hello others!' }, 'orders_room');
-
-// Emit to ALL clients in the room (including the sender socket)
-ws.broadcastAll('chat_message', { text: 'Hello everyone including me!' }, 'orders_room');
-```
-
-### 4. Workerman WebSocket CLI Management
-You can control the Workerman WebSocket daemon directly using `cli.php`. Action commands can be passed before or after the port number:
-```bash
-# Start WebSocket server in background daemon mode (-d)
-php cli.php ws:serve 8001 -d
-
-# Stop the running WebSocket daemon
-php cli.php ws:serve stop 8001
-# Or: php cli.php ws:serve 8001 stop
-
-# Gracefully reload/restart daemon without dropping active connections
-php cli.php ws:serve restart 8001 -d
-
-# Check live connections and worker status
-php cli.php ws:serve status 8001
+// 2. UI Component Helpers
+Lila.toast({ title: 'Success', description: 'User saved!', type: 'success' });
+Lila.modal('my-modal', 'open');
+Lila.drawer('my-drawer', 'toggle');
+Lila.theme('toggle');
 ```
 
 ---
 
-## 🔄 Running Workers & WebSockets Permanently in Background (`docker-compose.yml`)
+## ⚙️ Backend: REST API Development
 
-To keep your background task workers and WebSocket server running continuously 24/7 in production without stopping when you close the terminal, add these permanent services inside your `docker-compose.yml`:
+### 1. Physical REST Routing (`backend/routes/*.php`)
 
-```yaml
-services:
-  # ... (existing php, nginx, mysql, redis containers) ...
+```php
+<?php
+use Core\Request;
+use Core\Response;
 
-  # Continuous background worker consuming Redis job queues (`lilaphp:jobs`)
-  worker:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile.prod
-    command: php cli.php task:work
-    restart: always
-    environment:
-      - APP_ENV=production
-    depends_on:
-      - redis
-      - mysql
+$method = Request::getMethod();
+$id = $_GET['id'] ?? null;
 
-  # Real-time Workerman WebSocket server daemon
-  websocket:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile.prod
-    command: php cli.php ws:serve 8001
-    restart: always
-    environment:
-      - APP_ENV=production
-    depends_on:
-      - redis
-```
+switch ($method) {
+    case 'GET':
+        if ($id) {
+            $user = DB::fetch("SELECT * FROM users WHERE id = :id", ['id' => $id]);
+            if (!$user) abort(404, 'User not found');
+            json_response(['data' => $user]);
+        }
+        json_response(['data' => DB::fetchAll("SELECT * FROM users ORDER BY id DESC")]);
+        break;
 
----
+    case 'POST':
+        $data = Request::json();
+        $newId = DB::insert('users', [
+            'name'  => sanitize($data['name'] ?? ''),
+            'email' => sanitize($data['email'] ?? ''),
+            'role'  => sanitize($data['role'] ?? 'user'),
+        ]);
+        json_response(['status' => 'success', 'id' => $newId], 201);
+        break;
 
-## 🚀 Quick Start with Docker Cluster
-
-1. Copy environment configurations:
-   ```bash
-   cp backend/.env_example backend/.env
-   ```
-2. Launch the cluster in Development mode:
-   ```bash
-   php cli.php docker dev
-   ```
-3. Check running endpoints and assigned dynamic ports (`HTTP_PORT=8080`, `DB_PORT=3306`, `REDIS_PORT=6379`):
-   ```bash
-   php cli.php docker ps
-   ```
-4. Optimize for Production (`Preload in RAM + Multi-worker FPM + APCu + Redis`):
-   ```bash
-   php cli.php docker prod && php cli.php optimize
-   ```
-
----
-
-## ⚡ Nginx Configuration & Rate Limiting (`Benchmarks vs Production`)
-
-LilaPHP uses native **C-level Nginx try_files** to serve extensionless HTML pages (`/login` -> `/login.html`) directly from kernel/RAM memory while forwarding `/api/*` routes to PHP-FPM at maximum FastCGI speed:
-
-```nginx
-# Frontend extensionless HTML & SPA routing
-location / {
-    try_files $uri $uri.html $uri/ $uri/index.html /index.html;
-    add_header Cache-Control "public, max-age=3600, no-transform";
-    add_header X-Powered-By "LilaPHP";
+    case 'DELETE':
+        DB::delete('users', 'id = :id', ['id' => $id]);
+        json_response(['status' => 'success', 'message' => 'Deleted']);
+        break;
 }
 ```
 
-### 💡 Benchmarking / Load Testing Note
-By default, both Nginx and PHP have defensive **Rate Limiting** active to prevent DDoS attacks in production (`HTTP 429 Too Many Requests`). When running high-concurrency stress tests (such as `k6` at 1,000+ VUs):
-1. **Nginx Level:** In [`docker/nginx/nginx.conf`](file:///home/seip/Documentos/GitHub/LilaPHP/docker/nginx/nginx.conf), comment out the rate limit directives inside `location ^~ /api/`:
-   ```nginx
-   # limit_req zone=api_limit burst=30 nodelay;
-   # limit_req_status 429;
-   ```
-2. **PHP Level:** In [`backend/.env`](file:///home/seip/Documentos/GitHub/LilaPHP/backend/.env), set `RATE_LIMIT=0` (or `false`) to disable application-level throttling:
-   ```ini
-   RATE_LIMIT=false
-   ```
+### 2. Multi-Driver Database Helpers (`DB::*`)
+
+```php
+// MySQL (default), SQLite, or PostgreSQL
+$userId = DB::insert('users', ['name' => 'John Doe', 'email' => 'john@example.com']);
+$user = DB::fetch("SELECT * FROM users WHERE id = :id", ['id' => $userId]);
+$allUsers = DB::fetchAll("SELECT * FROM users ORDER BY id DESC");
+DB::update('users', ['name' => 'Jane Doe'], 'id = :id', ['id' => $userId]);
+DB::delete('users', 'id = :id', ['id' => $userId]);
+
+// Atomic Transactions
+DB::transaction(function($pdo) {
+    DB::insert('accounts', ['balance' => 1000]);
+    DB::insert('logs', ['action' => 'account_created']);
+});
+```
 
 ---
 
-## 📖 Documentation
+## 🧪 Automated Testing Suite
 
-Detailed technical guides can be found in the [`docs/`](file:///home/seip/Documentos/GitHub/LilaPHP/docs/README.md) directory.
+```bash
+# 1. PHP Core Unit Tests
+php tests/Runner.php
+
+# 2. Live HTTP Server Integration Tests
+node tests/BrowserIntegrationTest.mjs
+
+# 3. Headless Chrome CDP & DOM Tests
+node tests/ComprehensiveSuite.mjs
+```
+
+---
 
 ## 📄 License
 
-LilaPHP is open-sourced software licensed under the [MIT license](file:///home/seip/Documentos/GitHub/LilaPHP/LICENSE).
+LilaPHP is open-sourced software licensed under the [MIT license](LICENSE).
