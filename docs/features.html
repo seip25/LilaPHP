@@ -371,23 +371,19 @@ if ($postResult['status'] === 200) {
                 </div>
             </section>
 
-            <!-- Debug & Performance Dashboard -->
-            <section id="debug-dashboard" class="scroll-mt-24 mb-20">
+            <!-- Debug & Performance CLI -->
+            <section id="debug-cli" class="scroll-mt-24 mb-20">
                 <div class="flex items-center gap-3 mb-6">
                     <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
-                        Built-in Debug & Concurrency Dashboard
+                        Built-in Debug & Benchmark CLI Engine
                     </h2>
                     <span
-                        class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wide">Real-time
+                        class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full uppercase tracking-wide">CLI
                         Suite</span>
                 </div>
 
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                    LilaPHP features a zero-overhead interactive <strong>Debug CLI</strong> located
-                    at <code>php cli.php benchmark --url=/api/health --concurrency=1000 --duration=15</code>. It records live API request streams into Redis,
-                    monitors system health (Redis, MySQL, PHP-FPM, CPU/RAM/Disk), and provides an 
-                    stress
-                    testing tool for concurrencies up to 4,000 requests.
+                    LilaPHP features a zero-overhead interactive <strong>Debug & Benchmark CLI Engine</strong> built into <code>php cli.php</code>. It enables real-time system diagnostics, debug stream inspection, and OS-level asynchronous HTTP stress testing for high concurrencies directly from your terminal.
                 </p>
 
                 <div
@@ -397,7 +393,7 @@ if ($postResult['status'] === 200) {
                     </h3>
                     <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
                         Debug logging to Redis is disabled by default (<code>DEBUG_LOGGING_ENABLED=false</code>) to
-                        guarantee zero performance overhead. Enable it in development or staging to stream request logs:
+                        guarantee zero performance overhead. Enable it in development or staging to capture live request streams:
                     </p>
                     <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner mb-4">
                         <pre class="p-4 text-sm font-mono text-slate-300"><code class="language-env"># Enable/disable Redis request stream logging
@@ -416,16 +412,16 @@ DEBUG_LOGGING_ENABLED=false</code></pre>
                         Server-Side Load Test Runner (`curl_multi`)
                     </h3>
                     <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                        LilaPHP features a built-in OS-level benchmark engine powered by asynchronous <code>curl_multi_exec</code> sockets. Unlike browser-based tests, it executes real concurrent TCP connections and syncs live metrics to <code>/debug.html</code> via Redis.
+                        LilaPHP features a built-in OS-level benchmark engine powered by asynchronous <code>curl_multi_exec</code> sockets. It executes real concurrent TCP connections and outputs live performance metrics directly to your terminal.
                     </p>
                     <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner mb-4">
                         <pre class="p-4 text-sm font-mono text-slate-300"><code class="language-bash"># Run 1,000 concurrent connection stress test for 30 seconds
-php cli.php benchmark --url=/api/init --concurrency=1000 --duration=30</code></pre>
+php cli.php benchmark --url=/api/health --concurrency=1000 --duration=30</code></pre>
                     </div>
                     <ul class="list-disc pl-5 space-y-1 text-sm text-slate-600 dark:text-slate-400">
                         <li><strong>Req/Sec (RPS)</strong>: Exact throughput measurement.</li>
                         <li><strong>Latency Percentiles</strong>: Calculates P50, P95, and P99 distribution.</li>
-                        <li><strong>Real-Time Sync</strong>: Writes snapshots to Redis every ~500ms for web UI polling.</li>
+                        <li><strong>Terminal Metrics</strong>: Live progress reporting and comprehensive summary stats.</li>
                     </ul>
                 </div>
 
