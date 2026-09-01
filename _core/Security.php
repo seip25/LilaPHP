@@ -27,7 +27,6 @@ class Security
         header('X-XSS-Protection: 0');
         header('Referrer-Policy: strict-origin-when-cross-origin');
         header('Cross-Origin-Opener-Policy: same-origin');
-        header('X-Powered-By: LilaPHP');
 
         if (!Config::$DEBUG && (($_SERVER['HTTPS'] ?? 'off') !== 'off' || ($_SERVER['SERVER_PORT'] ?? 0) == 443)) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
@@ -134,7 +133,7 @@ class Security
             return true;
         }
 
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $ip = Request::ip();
         $key = "rate_limit:{$ip}";
 
         $rateData = Cache::api($key, fn() => [
@@ -178,7 +177,7 @@ class Security
             return true;
         }
 
-        $provided = $_SERVER['HTTP_X_API_KEY'] ?? ($_REQUEST['api_key'] ?? '');
+        $provided = $_SERVER['HTTP_X_API_KEY'] ?? '';
         return hash_equals($expected, (string) $provided);
     }
 

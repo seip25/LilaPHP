@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
@@ -19,7 +21,6 @@ class Validate
      * 
      * @param string|null $lang Requested language code (e.g., 'es', 'en', 'pt-br')
      * @return array<string, string>
-     * @example $messages = \Core\Validate::getMessages('es');
      */
     public static function getMessages(?string $lang = null): array
     {
@@ -48,7 +49,6 @@ class Validate
      * @param array<string, string|array> $rules Map of field names to validation rules
      * @param string|null $lang Language code override
      * @return array<string, array<int, string>> Map of errors per field (empty if valid)
-     * @example $errors = \Core\Validate::check($_POST, ['email' => 'required|email', 'age' => 'number|min:18']);
      */
     public static function check(array $data, array $rules, ?string $lang = null): array
     {
@@ -68,7 +68,7 @@ class Validate
                 }
 
                 $ruleName = trim($ruleName);
-                $errorMsg = self::validateField($field, $value, $ruleName, $parameter, $messages);
+                $errorMsg = self::validateField($field, $value, $ruleName, $parameter, $messages, $data);
 
                 if ($errorMsg !== null) {
                     $errors[$field][] = $errorMsg;
@@ -87,7 +87,6 @@ class Validate
      * @param array<string, string|array> $rules Map of validation rules
      * @param string|null $lang Language code override
      * @return array Sanitized input data containing only the validated fields
-     * @example $clean = \Core\Validate::assert($_POST, ['email' => 'required|email']);
      */
     public static function assert(array $data, array $rules, ?string $lang = null): array
     {
@@ -108,10 +107,10 @@ class Validate
      * @param string $rule Validation rule name
      * @param string|null $parameter Rule parameter (if applicable)
      * @param array $messages Translation dictionary
+     * @param array $data Full dataset context
      * @return string|null Error message or null if valid
-     * @example $err = self::validateField('age', 15, 'min', '18', $messages);
      */
-    private static function validateField(string $field, mixed $value, string $rule, ?string $parameter, array $messages): ?string
+    private static function validateField(string $field, mixed $value, string $rule, ?string $parameter, array $messages, array $data = []): ?string
     {
         if ($rule === 'required') {
             if ($value === null || $value === '' || (is_array($value) && empty($value))) {
@@ -141,8 +140,13 @@ class Validate
             'max' => (is_numeric($value) ? (float)$value : mb_strlen((string)$value)) > (float)$parameter ? self::formatMessage($messages['max'] ?? "Maximum value :max", $field, ['max' => $parameter]) : null,
             'in' => !in_array((string)$value, explode(',', (string)$parameter), true) ? self::formatMessage("Field ':field' must be one of: {$parameter}", $field) : null,
             'regex' => preg_match((string)$parameter, (string)$value) !== 1 ? self::formatMessage($messages['regex'] ?? "Invalid format", $field) : null,
-            'json' => !is_string($value) || json_validate($value) !== true ? self::formatMessage($messages['json'] ?? "Invalid JSON", $field) : null,
+            'json' => !is_string($value) || (function_exists('json_validate') ? !json_validate($value) : (json_decode($value) === null && json_last_error() !== JSON_ERROR_NONE)) ? self::formatMessage($messages['json'] ?? "Invalid JSON", $field) : null,
             'uuid' => preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', (string)$value) !== 1 ? self::formatMessage($messages['uuid'] ?? "Invalid UUID", $field) : null,
+            'confirmed' => (function() use ($field, $value, $parameter, $data, $messages) {
+                $confirmField = $parameter ?? "{$field}_confirmation";
+                $confirmValue = $data[$confirmField] ?? null;
+                return $value !== $confirmValue ? self::formatMessage($messages['confirmed'] ?? "Field ':field' confirmation does not match", $field) : null;
+            })(),
             default => null
         };
     }
@@ -154,7 +158,6 @@ class Validate
      * @param string $field Target field name
      * @param array<string, string> $params Replacement tokens map
      * @return string
-     * @example $msg = self::formatMessage("Min :min", 'age', ['min' => '18']);
      */
     private static function formatMessage(string $template, string $field, array $params = []): string
     {

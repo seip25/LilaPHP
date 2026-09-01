@@ -98,10 +98,9 @@ class Config
         if (!$cacheLoaded && file_exists($envFile)) {
             $envVars = self::parseEnvFile($envFile);
             if (!is_dir(self::$DIR_CORE . '/cache')) {
-                @mkdir(self::$DIR_CORE . '/cache', 0777, true);
+                @mkdir(self::$DIR_CORE . '/cache', 0755, true);
             }
             
-            // Clean robust caching condition: only in production or when debug is explicitly false
             $isDebug = filter_var($envVars['APP_DEBUG'] ?? true, FILTER_VALIDATE_BOOLEAN);
             $isProduction = ($envVars['APP_ENV'] ?? 'development') === 'production';
             if (!$isDebug || $isProduction) {
@@ -246,7 +245,7 @@ class Config
 
         $cacheDir = self::$DIR_CORE . '/cache';
         if (!is_dir($cacheDir)) {
-            @mkdir($cacheDir, 0777, true);
+            @mkdir($cacheDir, 0755, true);
         }
 
         $cacheFile = $cacheDir . '/env.php';

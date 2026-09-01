@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
@@ -19,7 +21,6 @@ class Jwt
      * @param int $ttlSeconds Token lifetime in seconds (default: 86400 = 24 hours)
      * @param string|null $secret Custom secret key (defaults to Config::$APP_KEY)
      * @return string Signed JWT token string (Header.Payload.Signature)
-     * @example $token = \Core\Jwt::encode(['user_id' => 42, 'role' => 'admin']);
      */
     public static function encode(array $payload, int $ttlSeconds = 86400, ?string $secret = null): string
     {
@@ -33,8 +34,15 @@ class Jwt
 
         $header = ['alg' => 'HS256', 'typ' => 'JWT'];
 
-        $base64Header = self::base64UrlEncode(json_encode($header));
-        $base64Payload = self::base64UrlEncode(json_encode($claims));
+        $headerJson = json_encode($header);
+        $payloadJson = json_encode($claims);
+
+        if ($headerJson === false || $payloadJson === false) {
+            throw new \RuntimeException('JWT encoding failed: invalid payload data.');
+        }
+
+        $base64Header = self::base64UrlEncode($headerJson);
+        $base64Payload = self::base64UrlEncode($payloadJson);
 
         $signature = hash_hmac('sha256', "{$base64Header}.{$base64Payload}", $key, true);
         $base64Signature = self::base64UrlEncode($signature);
@@ -48,7 +56,6 @@ class Jwt
      * @param string $token JWT token string
      * @param string|null $secret Custom secret key (defaults to Config::$APP_KEY)
      * @return array|false Returns payload array on success, false if expired or signature invalid
-     * @example $claims = \Core\Jwt::decode($token);
      */
     public static function decode(string $token, ?string $secret = null): array|false
     {
@@ -77,14 +84,15 @@ class Jwt
             return false;
         }
 
+        if (isset($payload['nbf']) && time() < (int) $payload['nbf']) {
+            return false;
+        }
+
         return $payload;
     }
 
     /**
      * Base64URL encoding helper.
-     * 
-     * @param string $data
-     * @return string
      */
     private static function base64UrlEncode(string $data): string
     {
@@ -93,9 +101,6 @@ class Jwt
 
     /**
      * Base64URL decoding helper.
-     * 
-     * @param string $data
-     * @return string
      */
     private static function base64UrlDecode(string $data): string
     {

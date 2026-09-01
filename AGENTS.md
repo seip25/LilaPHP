@@ -16,7 +16,7 @@ This document provides a comprehensive operational guide for AI agents and human
 3. **Multi-Driver Database (`Core\Database` / `Core\DB`):**
    - Default driver: **MySQL** (`DB_TYPE=mysql`).
    - Alternative: **SQLite** (`DB_TYPE=sqlite`, `DB_FILE=backend/database/app.sqlite`) with WAL mode.
-   - Simplified static helpers: `DB::query()`, `DB::fetch()`, `DB::fetchAll()`, `DB::insert()`, `DB::update()`, `DB::delete()`, `DB::transaction()`.
+   - Simplified static helpers: `DB::query()`, `DB::fetch()`, `DB::fetchAll()`, `DB::count()`, `DB::exists()`, `DB::insert()`, `DB::upsert()`, `DB::update()`, `DB::delete()`, `DB::transaction()`.
    - Automatic indexing on unique columns, primary keys, and foreign keys/search columns (`idx_*`, `uniq_*`).
 
 ---

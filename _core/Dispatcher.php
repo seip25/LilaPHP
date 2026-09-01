@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Core;
 
 /**
- * Ultra-fast REST API Route Dispatcher (`Performance First`).
+ * Ultra-fast REST API Route Dispatcher.
  * 
  * Maps `/api/*` requests directly to `backend/routes/*.php` or controllers with
- * zero-overhead file inspection, parameter extraction, and automatic preflight CORS.
+ * zero-overhead file inspection, multi-level parameter extraction, and automatic preflight CORS.
  * 
  * @package Core
  */
@@ -16,25 +16,15 @@ class Dispatcher
 {
     /**
      * Dispatches the incoming HTTP request.
-     * 
-     * @return void
      */
     public static function dispatch(): void
     {
-        // 1. Handle CORS Preflight immediately
         Response::handlePreflight();
         Security::applyGeneralSecurityHeaders();
 
-        // 2. Apply Rate Limiting
-        if (Config::$RATE_LIMIT > 0 && !Security::rateLimit(Config::$RATE_LIMIT, Config::$RATE_LIMIT_WINDOW)) {
-            Response::error('Rate limit exceeded', 429);
-        }
-
-        // 3. Normalize Request URI
         $rawUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
         $uri = trim($rawUri, '/');
 
-        // Normalize /api prefix
         if (str_starts_with($uri, 'api/')) {
             $uri = substr($uri, 4);
         } elseif ($uri === 'api') {
@@ -47,38 +37,46 @@ class Dispatcher
 
         $baseDir = Config::$DIR_BACKEND . '/routes';
 
-        // 4. Exact File or Directory Match
         $targetFile = "{$baseDir}/{$uri}.php";
         $targetIndex = "{$baseDir}/{$uri}/index.php";
 
         if (file_exists($targetFile)) {
+            $_SERVER['ROUTE_PARTS'] = explode('/', $uri);
+            $_SERVER['ROUTE_PARAMS'] = [];
             require $targetFile;
             exit;
         }
 
         if (file_exists($targetIndex)) {
+            $_SERVER['ROUTE_PARTS'] = explode('/', $uri);
+            $_SERVER['ROUTE_PARAMS'] = [];
             require $targetIndex;
             exit;
         }
 
-        // 5. Dynamic Route Parameter Matching (e.g. /api/users/42 -> backend/routes/users.php with ID)
         $parts = explode('/', $uri);
-        if (count($parts) >= 2) {
-            $controller = $parts[0];
-            $paramValue = $parts[1];
+        $totalParts = count($parts);
 
-            $controllerFile = "{$baseDir}/{$controller}.php";
-            $controllerIndex = "{$baseDir}/{$controller}/index.php";
+        for ($i = $totalParts - 1; $i >= 1; $i--) {
+            $prefix = implode('/', array_slice($parts, 0, $i));
+            $controllerFile = "{$baseDir}/{$prefix}.php";
+            $controllerIndex = "{$baseDir}/{$prefix}/index.php";
 
             if (file_exists($controllerFile) || file_exists($controllerIndex)) {
-                if ($paramValue !== '') {
-                    $_GET['id'] = $_GET['id'] ?? $paramValue;
-                    $_SERVER['ROUTE_ID'] = $paramValue;
-                    $_SERVER['ROUTE_PARAM'] = $paramValue;
-                }
+                $params = array_slice($parts, $i);
+                $_SERVER['ROUTE_PARTS'] = $parts;
+                $_SERVER['ROUTE_PARAMS'] = $params;
 
-                if (count($parts) >= 3) {
-                    $_SERVER['ROUTE_SUB'] = $parts[2];
+                if (!empty($params)) {
+                    $paramValue = $params[0];
+                    if ($paramValue !== '') {
+                        $_GET['id'] = $paramValue;
+                        $_SERVER['ROUTE_ID'] = $paramValue;
+                        $_SERVER['ROUTE_PARAM'] = $paramValue;
+                    }
+                    if (isset($params[1])) {
+                        $_SERVER['ROUTE_SUB'] = $params[1];
+                    }
                 }
 
                 if (file_exists($controllerFile)) {
@@ -90,7 +88,6 @@ class Dispatcher
             }
         }
 
-        // 6. Fallback: Endpoint Not Found
-        Response::error("API endpoint `/{$uri}` not found", 404);
+        Response::error(Config::$DEBUG ? "API endpoint `/{$uri}` not found" : 'Endpoint not found', 404);
     }
 }

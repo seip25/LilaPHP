@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 use Redis;
@@ -27,7 +29,6 @@ class Cache
      * @param callable $callback Generator callback if cache miss occurs
      * @param int $ttl Time to live in seconds (default: 300)
      * @return mixed
-     * @example $users = \Core\Cache::api('all_users', fn() => \Core\Database::fetchAll('SELECT * FROM users'), 60);
      */
     public static function api(string $key, callable $callback, int $ttl = 300): mixed
     {
@@ -63,7 +64,6 @@ class Cache
      * @param callable $callback Generator callback if cache miss occurs
      * @param int $ttl Time to live in seconds (default: 300, 0 = forever)
      * @return mixed
-     * @example $stats = \Core\Cache::db('daily_stats', fn() => $model->computeStats(), 600);
      */
     public static function db(string $key, callable $callback, int $ttl = 300): mixed
     {
@@ -73,7 +73,10 @@ class Cache
                 $cached = $redis->get($key);
                 if ($cached !== false && $cached !== null) {
                     $decoded = json_decode($cached, true);
-                    return json_last_error() === JSON_ERROR_NONE ? $decoded : $cached;
+                    if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || $decoded === true || $decoded === false || ($decoded === null && $cached === 'null'))) {
+                        return $decoded;
+                    }
+                    return $cached;
                 }
 
                 $data = $callback();
@@ -100,7 +103,6 @@ class Cache
      * @param int $ttl Time to live in seconds (default: 300, 0 = forever)
      * @param string $driver Target driver ('apcu' or 'redis')
      * @return bool
-     * @example \Core\Cache::set('user_token_123', ['userId' => 5], 3600, 'redis');
      */
     public static function set(string $key, mixed $value, int $ttl = 300, string $driver = 'apcu'): bool
     {
@@ -137,7 +139,6 @@ class Cache
      * @param mixed $default Default return value if not found
      * @param string $driver Target driver ('apcu' or 'redis')
      * @return mixed
-     * @example $val = \Core\Cache::get('rate_limit_1.2.3.4', 0, 'apcu');
      */
     public static function get(string $key, mixed $default = null, string $driver = 'apcu'): mixed
     {
@@ -148,7 +149,10 @@ class Cache
                     $val = $redis->get($key);
                     if ($val !== false && $val !== null) {
                         $decoded = json_decode($val, true);
-                        return json_last_error() === JSON_ERROR_NONE ? $decoded : $val;
+                        if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || $decoded === true || $decoded === false || ($decoded === null && $val === 'null'))) {
+                            return $decoded;
+                        }
+                        return $val;
                     }
                     return $default;
                 } catch (RedisException $e) {
@@ -173,25 +177,29 @@ class Cache
     }
 
     /**
-     * Removes a key from both APCu and Redis cache tiers.
+     * Removes a key from APCu, memory fallback, or Redis cache tiers.
      * 
      * @param string $key Cache key identifier
+     * @param string $driver Target tier ('both', 'apcu', 'redis')
      * @return void
-     * @example \Core\Cache::delete('user_profile_12');
      */
-    public static function delete(string $key): void
+    public static function delete(string $key, string $driver = 'both'): void
     {
-        if (function_exists('apcu_enabled') && apcu_enabled()) {
-            apcu_delete($key);
+        if ($driver === 'both' || $driver === 'apcu') {
+            if (function_exists('apcu_enabled') && apcu_enabled()) {
+                apcu_delete($key);
+            }
+            unset(self::$memoryFallback[$key]);
         }
-        unset(self::$memoryFallback[$key]);
 
-        $redis = self::getRedis();
-        if ($redis !== null) {
-            try {
-                $redis->del($key);
-            } catch (RedisException $e) {
-                Logger::warning("Redis delete failure: " . $e->getMessage());
+        if ($driver === 'both' || $driver === 'redis') {
+            $redis = self::getRedis();
+            if ($redis !== null) {
+                try {
+                    $redis->del($key);
+                } catch (RedisException $e) {
+                    Logger::warning("Redis delete failure: " . $e->getMessage());
+                }
             }
         }
     }
@@ -200,7 +208,6 @@ class Cache
      * Flushes all cached data across APCu, memory fallback, and Redis DB.
      * 
      * @return void
-     * @example \Core\Cache::clear();
      */
     public static function clear(): void
     {
@@ -234,7 +241,6 @@ class Cache
      * Lazily connects and returns the Redis connection instance.
      * 
      * @return Redis|null
-     * @example $redis = \Core\Cache::getRedis();
      */
     public static function getRedis(): ?Redis
     {

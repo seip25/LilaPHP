@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
@@ -132,13 +134,13 @@ class Request
     }
 
     /**
-     * Returns all input parameters merged from `$_REQUEST` and JSON payload.
+     * Returns all input parameters merged from GET, POST, and JSON payload.
      * 
      * @return array<string, mixed>
      */
     public static function all(): array
     {
-        return array_merge($_REQUEST, self::json());
+        return array_merge($_GET, $_POST, self::json());
     }
 
     /**
@@ -189,7 +191,6 @@ class Request
      * Extracts the Bearer token from the `Authorization` header.
      * 
      * @return string|null
-     * @example $token = \Core\Request::bearerToken();
      */
     public static function bearerToken(): ?string
     {
@@ -209,7 +210,10 @@ class Request
     {
         if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            return trim($ips[0]);
+            $clientIp = trim(end($ips) ?: $ips[0]);
+            if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+                return $clientIp;
+            }
         }
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     }

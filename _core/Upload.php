@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
@@ -27,7 +29,6 @@ class Upload
      * @param array|null $allowedMimes Map of allowed MIME types => extension
      * @param int $maxSizeMax Max allowed bytes (default: 10MB)
      * @return string|false Saved filename or false on error/security failure
-     * @example $filename = \Core\Upload::save($_FILES['avatar'], '/var/www/html/backend/uploads');
      */
     public static function save(
         array $file,
@@ -51,7 +52,6 @@ class Upload
             return false;
         }
 
-        // 1. Verify exact real MIME type via FileInfo
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         if ($finfo === false) {
             return false;
@@ -67,7 +67,6 @@ class Upload
 
         $safeExtension = $allowed[$realMime];
 
-        // 2. Anti-Malware / PHP script injection screening inside binary content
         $chunk = file_get_contents($tmpPath, false, null, 0, 8192);
         if ($chunk !== false && (stripos($chunk, '<?php') !== false || stripos($chunk, '<?=') !== false || stripos($chunk, '<script') !== false)) {
             Logger::error('Upload security blocked: PHP or Script payload detected inside file bytes!');
@@ -77,10 +76,9 @@ class Upload
 
         $destDir = rtrim($destinationDir ?? (Config::$DIR_BACKEND . '/uploads'), '/');
         if (!is_dir($destDir)) {
-            @mkdir($destDir, 0777, true);
+            @mkdir($destDir, 0755, true);
         }
 
-        // 3. Cryptographically random filename
         $newFilename = bin2hex(random_bytes(16)) . '.' . $safeExtension;
         $finalPath = "{$destDir}/{$newFilename}";
 
@@ -97,7 +95,6 @@ class Upload
      * @param string $filename Filename to delete
      * @param string|null $directory Storage directory (defaults to `backend/uploads/`)
      * @return bool
-     * @example \Core\Upload::delete('a1b2c3...webp');
      */
     public static function delete(string $filename, ?string $directory = null): bool
     {

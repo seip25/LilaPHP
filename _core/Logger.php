@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
@@ -13,16 +15,15 @@ namespace Core;
 class Logger
 {
     private static string $logDir = '';
+    private static string $logDate = '';
 
     /**
      * Resolves and creates the date-namespaced log directory structure.
-     * 
-     * @return string
-     * @example $dir = self::ensureDir();
      */
     private static function ensureDir(): string
     {
-        if (self::$logDir === '') {
+        $today = date('Ymd');
+        if (self::$logDir === '' || self::$logDate !== $today) {
             $baseDir = Config::$DIR_CORE !== '' ? Config::$DIR_CORE . '/logs' : dirname(__DIR__) . '/_core/logs';
             $year = date('Y');
             $month = date('m');
@@ -30,10 +31,11 @@ class Logger
             $fullPath = "{$baseDir}/{$year}/{$month}/{$day}";
 
             if (!is_dir($fullPath)) {
-                @mkdir($fullPath, 0777, true);
+                @mkdir($fullPath, 0755, true);
             }
 
             self::$logDir = $fullPath;
+            self::$logDate = $today;
         }
 
         return self::$logDir;
@@ -46,7 +48,6 @@ class Logger
      * @param string $message Detailed message string
      * @param array $context Optional context metadata
      * @return void
-     * @example self::write('error', 'Database timeout', ['query' => $sql]);
      */
     private static function write(string $type, string $message, array $context = []): void
     {
@@ -77,11 +78,6 @@ class Logger
 
     /**
      * Logs an informational event.
-     * 
-     * @param string $message Informational description
-     * @param array $context Additional debugging data
-     * @return void
-     * @example \Core\Logger::info('User authenticated successfully', ['userId' => 10]);
      */
     public static function info(string $message, array $context = []): void
     {
@@ -90,11 +86,6 @@ class Logger
 
     /**
      * Logs a warning event.
-     * 
-     * @param string $message Warning description
-     * @param array $context Additional context metadata
-     * @return void
-     * @example \Core\Logger::warning('High memory consumption detected', ['usage' => $bytes]);
      */
     public static function warning(string $message, array $context = []): void
     {
@@ -103,11 +94,6 @@ class Logger
 
     /**
      * Logs an error event.
-     * 
-     * @param string $message Error description
-     * @param array $context Trace details or state variables
-     * @return void
-     * @example \Core\Logger::error('Failed to execute migration', ['error' => $e->getMessage()]);
      */
     public static function error(string $message, array $context = []): void
     {
@@ -116,11 +102,6 @@ class Logger
 
     /**
      * Logs a debugging event when APP_DEBUG is enabled.
-     * 
-     * @param string $message Debug note
-     * @param array $context Diagnostic variables
-     * @return void
-     * @example \Core\Logger::debug('Payload received', ['body' => $requestBody]);
      */
     public static function debug(string $message, array $context = []): void
     {

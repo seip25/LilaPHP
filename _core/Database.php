@@ -88,11 +88,10 @@ class Database
             if ($this->driver === 'sqlite') {
                 $dir = dirname($this->dbFile);
                 if (!is_dir($dir) && $this->dbFile !== ':memory:') {
-                    @mkdir($dir, 0777, true);
+                    @mkdir($dir, 0755, true);
                 }
 
                 $pdo = new PDO("sqlite:{$this->dbFile}", null, null, $options);
-                // Enable SQLite WAL mode and foreign keys for high concurrency & speed
                 $pdo->exec('PRAGMA journal_mode = WAL;');
                 $pdo->exec('PRAGMA foreign_keys = ON;');
                 return $pdo;
@@ -103,7 +102,6 @@ class Database
                 return new PDO($dsn, $this->dbUser, $this->dbPassword, $options);
             }
 
-            // Default: MySQL
             $dsn = empty($this->dbName)
                 ? "mysql:host={$this->host};port={$this->port};charset=utf8mb4"
                 : "mysql:host={$this->host};dbname={$this->dbName};port={$this->port};charset=utf8mb4";
@@ -127,7 +125,11 @@ class Database
             return true;
         }
         try {
-            $this->db->exec("CREATE DATABASE IF NOT EXISTS `{$name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            $safeName = preg_replace('/[^a-zA-Z0-9_]/', '', $name);
+            if ($safeName === '') {
+                return false;
+            }
+            $this->db->exec("CREATE DATABASE IF NOT EXISTS `{$safeName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             return true;
         } catch (\Throwable $e) {
             return false;
@@ -139,12 +141,17 @@ class Database
      */
     public function dropAllTables(): bool
     {
-        if (!$this->db) return false;
+        if (!$this->db) {
+            return false;
+        }
         try {
             if ($this->driver === 'sqlite') {
                 $tables = $this->db->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchAll(PDO::FETCH_COLUMN);
                 foreach ($tables as $t) {
-                    $this->db->exec("DROP TABLE IF EXISTS `{$t}`");
+                    $safeT = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$t);
+                    if ($safeT !== '') {
+                        $this->db->exec("DROP TABLE IF EXISTS `{$safeT}`");
+                    }
                 }
                 return true;
             }
@@ -152,7 +159,10 @@ class Database
             $this->db->exec("SET FOREIGN_KEY_CHECKS = 0;");
             $tables = $this->db->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
             foreach ($tables as $t) {
-                $this->db->exec("DROP TABLE IF EXISTS `{$t}`");
+                $safeT = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$t);
+                if ($safeT !== '') {
+                    $this->db->exec("DROP TABLE IF EXISTS `{$safeT}`");
+                }
             }
             $this->db->exec("SET FOREIGN_KEY_CHECKS = 1;");
             return true;
@@ -166,14 +176,26 @@ class Database
      */
     public function createTable(string $table, array $schema): bool
     {
-        if (!$this->db) return false;
+        if (!$this->db) {
+            return false;
+        }
 
         try {
+            $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+            if ($safeTable === '') {
+                return false;
+            }
+
             $cols = [];
             $indexes = [];
             $primaryKey = null;
 
             foreach ($schema as $name => $def) {
+                $safeCol = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$name);
+                if ($safeCol === '') {
+                    continue;
+                }
+
                 $type = strtolower($def['type'] ?? 'string');
                 $sqlType = match ($type) {
                     'int', 'integer' => $this->driver === 'sqlite' ? 'INTEGER' : 'INT',
@@ -195,23 +217,22 @@ class Database
                     if ($this->driver === 'sqlite') {
                         $sqlType = 'INTEGER';
                         $autoInc = 'PRIMARY KEY AUTOINCREMENT';
-                        $primaryKey = $name;
+                        $primaryKey = $safeCol;
                     } else {
                         $autoInc = 'AUTO_INCREMENT';
                     }
                 }
 
                 if (!empty($def['primaryKey']) && $this->driver !== 'sqlite') {
-                    $primaryKey = $name;
+                    $primaryKey = $safeCol;
                 }
 
-                $cols[] = trim("`{$name}` {$sqlType} {$nullPart} {$defaultPart} {$autoInc}");
+                $cols[] = trim("`{$safeCol}` {$sqlType} {$nullPart} {$defaultPart} {$autoInc}");
 
-                // Register indexes
                 if (!empty($def['unique'])) {
-                    $indexes[] = ['type' => 'UNIQUE', 'column' => $name, 'name' => "uniq_{$table}_{$name}"];
-                } elseif (!empty($def['index']) || in_array($name, ['email', 'role', 'status', 'created_at', 'deleted_at', 'user_id', 'product_id'], true)) {
-                    $indexes[] = ['type' => 'INDEX', 'column' => $name, 'name' => "idx_{$table}_{$name}"];
+                    $indexes[] = ['type' => 'UNIQUE', 'column' => $safeCol, 'name' => "uniq_{$safeTable}_{$safeCol}"];
+                } elseif (!empty($def['index']) || in_array($safeCol, ['email', 'role', 'status', 'created_at', 'deleted_at', 'user_id', 'product_id'], true)) {
+                    $indexes[] = ['type' => 'INDEX', 'column' => $safeCol, 'name' => "idx_{$safeTable}_{$safeCol}"];
                 }
             }
 
@@ -221,19 +242,18 @@ class Database
 
             $colsSql = implode(",\n  ", $cols);
             $engine = $this->driver === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
-            $createSql = "CREATE TABLE IF NOT EXISTS `{$table}` (\n  {$colsSql}\n){$engine};";
+            $createSql = "CREATE TABLE IF NOT EXISTS `{$safeTable}` (\n  {$colsSql}\n){$engine};";
             $this->db->exec($createSql);
 
-            // Create secondary and unique indexes
             foreach ($indexes as $idx) {
                 if ($this->driver === 'sqlite') {
                     $uniqueKw = $idx['type'] === 'UNIQUE' ? 'UNIQUE' : '';
-                    $this->db->exec("CREATE {$uniqueKw} INDEX IF NOT EXISTS `{$idx['name']}` ON `{$table}` (`{$idx['column']}`);");
+                    $this->db->exec("CREATE {$uniqueKw} INDEX IF NOT EXISTS `{$idx['name']}` ON `{$safeTable}` (`{$idx['column']}`);");
                 } else {
-                    $exists = $this->db->query("SHOW INDEX FROM `{$table}` WHERE Key_name = '{$idx['name']}'")->fetch();
+                    $exists = $this->db->query("SHOW INDEX FROM `{$safeTable}` WHERE Key_name = '{$idx['name']}'")->fetch();
                     if (!$exists) {
                         $typeKw = $idx['type'] === 'UNIQUE' ? 'UNIQUE INDEX' : 'INDEX';
-                        $this->db->exec("ALTER TABLE `{$table}` ADD {$typeKw} `{$idx['name']}` (`{$idx['column']}`);");
+                        $this->db->exec("ALTER TABLE `{$safeTable}` ADD {$typeKw} `{$idx['name']}` (`{$idx['column']}`);");
                     }
                 }
             }
@@ -293,6 +313,25 @@ class Database
     }
 
     /**
+     * Returns total matching rows count for a table.
+     */
+    public static function count(string $table, string $where = '', array $params = []): int
+    {
+        $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+        $whereSql = $where !== '' ? " WHERE {$where}" : '';
+        $sql = "SELECT COUNT(*) FROM `{$safeTable}`{$whereSql}";
+        return (int) self::fetchColumn($sql, $params);
+    }
+
+    /**
+     * Checks if at least one matching record exists.
+     */
+    public static function exists(string $table, string $where = '', array $params = []): bool
+    {
+        return self::count($table, $where, $params) > 0;
+    }
+
+    /**
      * Insert a record into a table and return the last inserted ID.
      */
     public static function insert(string $table, array $data): int|string
@@ -302,15 +341,48 @@ class Database
             throw new \RuntimeException('Database connection is not available.');
         }
 
+        $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
         $keys = array_keys($data);
         $fields = implode(', ', array_map(fn($k) => "`{$k}`", $keys));
         $placeholders = implode(', ', array_map(fn($k) => ":{$k}", $keys));
 
-        $sql = "INSERT INTO `{$table}` ({$fields}) VALUES ({$placeholders})";
+        $sql = "INSERT INTO `{$safeTable}` ({$fields}) VALUES ({$placeholders})";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
 
         return $pdo->lastInsertId();
+    }
+
+    /**
+     * Inserts a record or updates it on unique/primary key duplicate.
+     */
+    public static function upsert(string $table, array $data, array $updateFields = []): int|string
+    {
+        $pdo = self::getInstance();
+        if (!$pdo) {
+            throw new \RuntimeException('Database connection is not available.');
+        }
+
+        $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+        $keys = array_keys($data);
+        $fields = implode(', ', array_map(fn($k) => "`{$k}`", $keys));
+        $placeholders = implode(', ', array_map(fn($k) => ":{$k}", $keys));
+
+        $targetUpdates = !empty($updateFields) ? $updateFields : $keys;
+        $driver = Config::$DB_TYPE;
+
+        if ($driver === 'sqlite') {
+            $updates = implode(', ', array_map(fn($k) => "`{$k}` = excluded.`{$k}`", $targetUpdates));
+            $sql = "INSERT INTO `{$safeTable}` ({$fields}) VALUES ({$placeholders}) ON CONFLICT DO UPDATE SET {$updates}";
+        } else {
+            $updates = implode(', ', array_map(fn($k) => "`{$k}` = VALUES(`{$k}`)", $targetUpdates));
+            $sql = "INSERT INTO `{$safeTable}` ({$fields}) VALUES ({$placeholders}) ON DUPLICATE KEY UPDATE {$updates}";
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($data);
+
+        return $pdo->lastInsertId() ?: $stmt->rowCount();
     }
 
     /**
@@ -323,6 +395,7 @@ class Database
             throw new \RuntimeException('Database connection is not available.');
         }
 
+        $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
         $setParts = [];
         $params = [];
         foreach ($data as $key => $val) {
@@ -332,7 +405,7 @@ class Database
         }
 
         $setSql = implode(', ', $setParts);
-        $sql = "UPDATE `{$table}` SET {$setSql} WHERE {$where}";
+        $sql = "UPDATE `{$safeTable}` SET {$setSql} WHERE {$where}";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute(array_merge($params, $whereParams));
@@ -345,7 +418,8 @@ class Database
      */
     public static function delete(string $table, string $where, array $whereParams = []): int
     {
-        $sql = "DELETE FROM `{$table}` WHERE {$where}";
+        $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+        $sql = "DELETE FROM `{$safeTable}` WHERE {$where}";
         $stmt = self::query($sql, $whereParams);
         return $stmt->rowCount();
     }

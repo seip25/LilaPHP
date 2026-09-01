@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core;
 
 /**
- * High-Performance HTTP Client & cURL Wrapper (`Core\Http`).
+ * High-Performance HTTP Client & cURL Wrapper.
  * 
  * Provides connection pooling, automatic JSON serialization/deserialization,
- * configurable timeouts, and concurrent `curl_multi_*` asynchronous execution.
+ * configurable timeouts, configurable SSL verification, and concurrent `curl_multi_*` asynchronous execution.
  * 
  * @package Core
  */
@@ -18,12 +20,12 @@ class Http
      * @param string $url Target endpoint URL
      * @param array $headers Optional HTTP header strings
      * @param int $timeout Timeout in seconds (default: 10)
+     * @param bool $sslVerify Enable or disable SSL certificate verification (default: false)
      * @return array<string, mixed> Response map `['status' => int, 'body' => string, 'json' => array|null, 'time_ms' => float]`
-     * @example $res = \Core\Http::get('https://api.example.com/v1/users');
      */
-    public static function get(string $url, array $headers = [], int $timeout = 10): array
+    public static function get(string $url, array $headers = [], int $timeout = 10, bool $sslVerify = false): array
     {
-        return self::send('GET', $url, null, $headers, $timeout);
+        return self::send('GET', $url, null, $headers, $timeout, $sslVerify);
     }
 
     /**
@@ -33,12 +35,12 @@ class Http
      * @param mixed $payload Array dictionary (auto JSON encoded) or raw string payload
      * @param array $headers Optional HTTP header strings
      * @param int $timeout Timeout in seconds (default: 10)
+     * @param bool $sslVerify Enable or disable SSL certificate verification (default: false)
      * @return array<string, mixed>
-     * @example $res = \Core\Http::post('https://api.example.com/v1/login', ['email' => 'user@example.com']);
      */
-    public static function post(string $url, mixed $payload = [], array $headers = [], int $timeout = 10): array
+    public static function post(string $url, mixed $payload = [], array $headers = [], int $timeout = 10, bool $sslVerify = false): array
     {
-        return self::send('POST', $url, $payload, $headers, $timeout);
+        return self::send('POST', $url, $payload, $headers, $timeout, $sslVerify);
     }
 
     /**
@@ -49,9 +51,10 @@ class Http
      * @param mixed $payload Payload data
      * @param array $headers HTTP header strings
      * @param int $timeout Request timeout seconds
+     * @param bool $sslVerify Enable or disable SSL certificate verification (default: false)
      * @return array<string, mixed>
      */
-    public static function send(string $method, string $url, mixed $payload = null, array $headers = [], int $timeout = 10): array
+    public static function send(string $method, string $url, mixed $payload = null, array $headers = [], int $timeout = 10, bool $sslVerify = false): array
     {
         $ch = curl_init();
         $start = microtime(true);
@@ -62,6 +65,8 @@ class Http
         curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, min(5, $timeout));
         curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $sslVerify);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $sslVerify ? 2 : 0);
 
         $hasContentType = false;
         foreach ($headers as $header) {
@@ -122,10 +127,10 @@ class Http
      * Executes multiple concurrent cURL requests asynchronously.
      * 
      * @param array<string, array> $requests Map of request descriptors `['req1' => ['url' => '...', 'method' => 'GET']]`
+     * @param bool $sslVerify Enable or disable SSL certificate verification (default: false)
      * @return array<string, array> Map of results per request key
-     * @example $batch = \Core\Http::multi(['u1' => ['url' => 'https://...'], 'u2' => ['url' => 'https://...']]);
      */
-    public static function multi(array $requests): array
+    public static function multi(array $requests, bool $sslVerify = false): array
     {
         $mh = curl_multi_init();
         $handles = [];
@@ -136,11 +141,14 @@ class Http
             $url = $req['url'] ?? '';
             $method = strtoupper($req['method'] ?? 'GET');
             $timeout = $req['timeout'] ?? 10;
+            $verify = $req['ssl_verify'] ?? $sslVerify;
 
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify ? 2 : 0);
 
             if (isset($req['payload'])) {
                 $payload = is_array($req['payload']) ? json_encode($req['payload']) : $req['payload'];
