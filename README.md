@@ -252,10 +252,10 @@ $reply = AI::text("Explain quantum computing in one sentence.");
 $haiku = ai("Write a haiku about high-performance PHP APIs.");
 
 // 3. DeepSeek with automated model fallback
-$deepseekRes = AI::deepseek("Explain Uruguayan tax deductions.", [
+$deepseekRes = AI::deepseek("Explain Object Oriented PHP.", [
     'model' => 'deepseek-v4-flash',
     'fallback_model' => 'deepseek-chat',
-    'system' => 'Eres un consultor tributario experto.'
+    'system' => 'You are an expert PHP programmer.'
 ]);
 
 // 4. Structured JSON extraction
