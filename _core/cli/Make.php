@@ -141,18 +141,34 @@ use Core\Response;
 use Core\Request;
 use Core\Validate;
 
-// Enforce allowed HTTP Methods (`GET`, `POST`, `PUT`, `DELETE`)
-// Request::assertMethod('GET', 'POST');
+Request::GET(function () {
 
-// Sanitize & Validate Payload inputs
-// \$clean = Validate::assert(\$_REQUEST, ['example_field' => 'required']);
+    Response::json([
+        'status' => 'success',
+        'endpoint' => '/api/{$cleanPath}',
+        'method' => Request::getMethod(),
+        'timestamp' => time()
+    ]);
+});
+Request::POST(function () {
+    // Sanitize & Validate Payload inputs
+    // \$clean = Validate::assert(\$_REQUEST, ['example_field' => 'required']);
 
-Response::json([
-    'status' => 'success',
-    'endpoint' => '/api/{$cleanPath}',
-    'method' => Request::getMethod(),
-    'timestamp' => time()
-]);
+    Response::json([
+        'status' => 'success',
+        'endpoint' => '/api/{$cleanPath}',
+        'method' => Request::getMethod(),
+        'timestamp' => time()
+    ]);
+});
+Request::PUT(function () {
+        Response::json([],405);
+});
+Request::DELETE(function () {
+    Response::json([],405);
+});
+
+
 PHP;
 
         file_put_contents($file, $code);
