@@ -16,6 +16,8 @@ class Config
 {
     public static string $DIR_PROJECT = '';
     public static string $DIR_CORE = '';
+    public static string $DIR_APP = '';
+    public static string $DIR_PUBLIC = '';
     public static string $DIR_BACKEND = '';
     public static string $DIR_FRONTEND = '';
     public static string $APP_NAME = 'LilaPHP';
@@ -25,7 +27,6 @@ class Config
     public static int $HTTP_PORT = 8080;
     public static int $PROD_HTTP_PORT = 80;
 
-    // Database Configuration (Default: MySQL | Optional: SQLite / PostgreSQL)
     public static string $DB_TYPE = 'mysql';
     public static string $DB_HOST = 'mysql';
     public static int $DB_PORT = 3306;
@@ -34,14 +35,12 @@ class Config
     public static string $DB_PASSWORD = 'secret';
     public static string $DB_FILE = '';
 
-    // Cache & Redis
     public static string $REDIS_HOST = 'redis';
     public static int $REDIS_PORT = 6379;
     public static string $REDIS_PASSWORD = '';
     public static string $CACHE_DRIVER = 'file';
     public static string $DB_CACHE_DRIVER = 'file';
 
-    // Security & Limits
     public static string $APP_KEY = '';
     public static string $CORS_ALLOWED_ORIGINS = '*';
     public static bool $LOG_ENABLED = false;
@@ -49,7 +48,6 @@ class Config
     public static int $RATE_LIMIT = 200;
     public static int $RATE_LIMIT_WINDOW = 60;
 
-    // AI & LLM Engine Configuration
     public static string $AI_PROVIDER = 'openai';
     public static string $AI_KEY = '';
     public static string $OPENAI_API_KEY = '';
@@ -73,14 +71,16 @@ class Config
 
         self::$DIR_PROJECT = dirname(__DIR__);
         self::$DIR_CORE = self::$DIR_PROJECT . '/_core';
-        self::$DIR_BACKEND = self::$DIR_PROJECT . '/backend';
-        self::$DIR_FRONTEND = self::$DIR_PROJECT . '/frontend';
+        self::$DIR_APP = self::$DIR_PROJECT . '/app';
+        self::$DIR_PUBLIC = self::$DIR_PROJECT . '/public';
+        self::$DIR_BACKEND = self::$DIR_APP;
+        self::$DIR_FRONTEND = self::$DIR_PUBLIC;
 
         $cacheFile = self::$DIR_CORE . '/cache/env.php';
-        $envFile = self::$DIR_BACKEND . '/.env';
+        $envFile = self::$DIR_PROJECT . '/.env';
 
-        if (!file_exists($envFile) && file_exists(self::$DIR_PROJECT . '/.env')) {
-            $envFile = self::$DIR_PROJECT . '/.env';
+        if (!file_exists($envFile) && file_exists(self::$DIR_APP . '/.env')) {
+            $envFile = self::$DIR_APP . '/.env';
         }
 
         $envVars = [];
