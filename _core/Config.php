@@ -126,7 +126,7 @@ class Config
         self::$DB_NAME = (string) ($_ENV['DB_NAME'] ?? 'lilaphp');
         self::$DB_USER = (string) ($_ENV['DB_USER'] ?? 'root');
         self::$DB_PASSWORD = (string) ($_ENV['DB_PASSWORD'] ?? 'secret');
-        self::$DB_FILE = (string) ($_ENV['DB_FILE'] ?? (self::$DIR_BACKEND . '/database/app.sqlite'));
+        self::$DB_FILE = (string) ($_ENV['DB_FILE'] ?? (self::$DIR_APP . '/database/app.sqlite'));
 
         self::$REDIS_HOST = (string) ($_ENV['REDIS_HOST'] ?? 'redis');
         self::$REDIS_PORT = (int) ($_ENV['REDIS_PORT'] ?? 6379);
@@ -226,14 +226,16 @@ class Config
         if (self::$DIR_PROJECT === '') {
             self::$DIR_PROJECT = dirname(__DIR__);
             self::$DIR_CORE = self::$DIR_PROJECT . '/_core';
-            self::$DIR_BACKEND = self::$DIR_PROJECT . '/backend';
-            self::$DIR_FRONTEND = self::$DIR_PROJECT . '/frontend';
+            self::$DIR_APP = self::$DIR_PROJECT . '/app';
+            self::$DIR_PUBLIC = self::$DIR_PROJECT . '/public';
+            self::$DIR_BACKEND = self::$DIR_APP;
+            self::$DIR_FRONTEND = self::$DIR_PUBLIC;
         }
 
         if ($envFile === null) {
-            $envFile = self::$DIR_BACKEND . '/.env';
-            if (!file_exists($envFile) && file_exists(self::$DIR_PROJECT . '/.env')) {
-                $envFile = self::$DIR_PROJECT . '/.env';
+            $envFile = self::$DIR_PROJECT . '/.env';
+            if (!file_exists($envFile) && file_exists(self::$DIR_APP . '/.env')) {
+                $envFile = self::$DIR_APP . '/.env';
             }
         }
 
