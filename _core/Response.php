@@ -31,12 +31,14 @@ class Response
             Request::clearActiveRouteCache();
         }
 
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-        self::applyCorsHeaders();
+        if (!headers_sent()) {
+            http_response_code($status);
+            header('Content-Type: application/json; charset=utf-8');
+            self::applyCorsHeaders();
 
-        foreach ($headers as $key => $value) {
-            header("{$key}: {$value}");
+            foreach ($headers as $key => $value) {
+                header("{$key}: {$value}");
+            }
         }
 
         $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
@@ -87,6 +89,10 @@ class Response
      */
     public static function applyCorsHeaders(): void
     {
+        if (headers_sent()) {
+            return;
+        }
+
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
         $allowed = Config::$CORS_ALLOWED_ORIGINS;
 

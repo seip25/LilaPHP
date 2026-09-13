@@ -65,7 +65,7 @@
                     API Responses (`Core\Response`)
                 </h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    Under our API-First architecture, LilaPHP focuses exclusively on high-speed JSON payload delivery. All responses automatically include clean CORS headers, `Content-Type: application/json`, and precise HTTP status codes without HTML or template engine overhead.
+                    LilaPHP provides dedicated response handling: high-speed JSON payload delivery for `/api/*` endpoints with automated CORS and status headers, and server-rendered HTML views via `Core\View` for web routes.
                 </p>
 
                 <div class="space-y-6">
@@ -79,14 +79,13 @@
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Response;
 
-// Success Response (HTTP 200 OK)
 Response::json([
     'status' => 'success',
     'data' => ['id' => 1, 'name' => 'Keyboard']
 ]);
 
-// Created Resource (HTTP 201 Created)
-Response::json(['status' => 'created', 'id' => 42], 201);</code></pre>
+Response::json(['status' => 'created', 'id' => 42], 201);
+</code></pre>
 
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-6 mb-3">
                             2. `Response::error(string $message, int $status = 400, ?array $errors = null)`
@@ -94,14 +93,13 @@ Response::json(['status' => 'created', 'id' => 42], 201);</code></pre>
                         <p class="text-slate-600 dark:text-slate-400 mb-4">
                             Emits a standardized API error structure containing status code, error message, and optional detailed validation errors array.
                         </p>
-                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">// Standard 400 Bad Request
-Response::error('Invalid parameters provided', 400);
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">Response::error('Invalid parameters provided', 400);
 
-// HTTP 422 Unprocessable Entity with detailed field errors
 Response::error('Validation failed', 422, [
     'email' => ['The email field must be a valid email address.'],
     'password' => ['The password must be at least 8 characters.']
-]);</code></pre>
+]);
+</code></pre>
 
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-6 mb-3">
                             3. `Response::file(string $filePath, ?string $downloadName = null, bool $inline = false)`
@@ -109,11 +107,9 @@ Response::error('Validation failed', 422, [
                         <p class="text-slate-600 dark:text-slate-400 mb-4">
                             Streams a physical file directly to the browser with automated MIME checking, CORS headers, and inline/attachment disposition.
                         </p>
-                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">// Prompt file download prompt
-Response::file(storage_path('reports/invoice_102.pdf'), 'Invoice-102.pdf');
-
-// Display inline in browser
-Response::file(storage_path('images/avatar.png'), null, true);</code></pre>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">Response::file(storage_path('reports/invoice_102.pdf'), 'Invoice-102.pdf');
+Response::file(storage_path('images/avatar.png'), null, true);
+</code></pre>
 
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-6 mb-3">
                             4. `Response::stream(callable $callback, int $status = 200, string $contentType = '...')`
@@ -149,32 +145,19 @@ Response::file(storage_path('images/avatar.png'), null, true);</code></pre>
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">use Core\Request;
 
-// 🟢 Parse JSON body from php://input with O(1) RAM memoization
 $json = Request::json();
-
-// 🟢 Retrieve input from $_REQUEST or JSON body with fallback
 $page = Request::input('page', 1);
 $action = Request::input('action', 'login');
-
-// 🟢 Retrieve all inputs merged from $_REQUEST + JSON body
 $allInputs = Request::all();
-
-// 🟢 Extract Bearer Token from 'Authorization: Bearer <token>' header
-$token = Request::bearerToken(); // returns string or null
-
-// 🟢 Get HTTP header case-insensitively
+$token = Request::bearerToken();
 $apiKey = Request::header('X-API-Key');
 $authHeader = Request::header('Authorization');
-
-// 🟢 Get all HTTP request headers as associative array
 $headers = Request::headers();
-
-// 🟢 Get Client IP address (Supports Nginx X-Forwarded-For)
 $ip = Request::ip();
-
-// 🟢 Get HTTP method in uppercase ('GET', 'POST', 'PUT', etc.)
 $method = Request::getMethod();
-if (Request::isPost()) { ... }</code></pre>
+if (Request::isPost()) {
+}
+</code></pre>
                     </div>
 
                     <!-- Dual-Tier Memory Caching -->

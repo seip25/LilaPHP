@@ -23,9 +23,9 @@ class KeyGen extends Command
     {
         $this->banner("LilaPHP Key Generation");
 
-        $envPath = dirname(__DIR__, 2) . '/backend/.env';
+        $envPath = dirname(__DIR__, 2) . '/.env';
         if (!file_exists($envPath)) {
-            $this->error("Environment file `backend/.env` not found.");
+            $this->error("Environment file `.env` not found.");
             return 1;
         }
 

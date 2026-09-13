@@ -19,7 +19,39 @@ class Request
     private static ?string $activeRouteCacheKey = null;
     private static int $activeRouteCacheTtl = 0;
     private static string $activeRouteCacheDriver = 'apcu';
+    private static bool $routeHandled = false;
+    private static array $allowedMethods = [];
 
+    /**
+     * Checks if any route handler matched and executed.
+     * 
+     * @return bool
+     */
+    public static function wasHandled(): bool
+    {
+        return self::$routeHandled;
+    }
+
+    /**
+     * Returns the list of registered HTTP methods for the current route file.
+     * 
+     * @return array<string>
+     */
+    public static function getAllowedMethods(): array
+    {
+        return self::$allowedMethods;
+    }
+
+    /**
+     * Resets the route handling and method state.
+     * 
+     * @return void
+     */
+    public static function resetRouteState(): void
+    {
+        self::$routeHandled = false;
+        self::$allowedMethods = [];
+    }
 
     /**
      * Returns the current HTTP request method in uppercase (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `OPTIONS`).
@@ -271,7 +303,12 @@ class Request
      */
     public static function route(string $method, mixed ...$args): void
     {
-        if (strtoupper($method) !== self::getMethod()) {
+        $upper = strtoupper($method);
+        if (!in_array($upper, self::$allowedMethods, true)) {
+            self::$allowedMethods[] = $upper;
+        }
+
+        if ($upper !== self::getMethod()) {
             return;
         }
 
@@ -284,6 +321,8 @@ class Request
             }
         }
 
+        self::$routeHandled = true;
+
         $isCacheEnabled = !empty($options['cache']);
         $cacheKey = null;
         $cacheTtl = (int)($options['cache_ttl'] ?? $options['ttl'] ?? 0);
@@ -291,7 +330,7 @@ class Request
 
         if ($isCacheEnabled) {
             $uri = $_SERVER['REQUEST_URI'] ?? '/';
-            $keyBase = 'route_cache_' . strtoupper($method) . '_' . md5($uri);
+            $keyBase = 'route_cache_' . $upper . '_' . md5($uri);
             if (!empty($options['by_session']) || !empty($options['vary_session'])) {
                 $token = self::bearerToken() ?: ($_COOKIE[session_name()] ?? 'anon');
                 $keyBase .= '_' . md5($token);
@@ -307,6 +346,10 @@ class Request
                             header("{$hName}: {$hVal}");
                         }
                     }
+                    if (!empty($cached['is_html'])) {
+                        echo $cached['payload'];
+                        exit;
+                    }
                     Response::json($cached['payload'], $cached['status'] ?? 200);
                 } elseif (is_array($cached) || is_object($cached)) {
                     Response::json($cached);
@@ -321,11 +364,25 @@ class Request
             self::$activeRouteCacheDriver = $driver;
         }
 
+        ob_start();
         $result = call_user_func($callback);
+        $output = ob_get_clean();
 
-        if ($isCacheEnabled && $cacheKey !== null && $result !== null) {
-            Cache::set($cacheKey, ['payload' => $result, 'status' => 200], $cacheTtl, $driver);
+        if ($isCacheEnabled && $cacheKey !== null) {
+            $payloadToCache = ($output !== '' && $output !== false) ? $output : $result;
+            if ($payloadToCache !== null) {
+                Cache::set($cacheKey, [
+                    'payload' => $payloadToCache,
+                    'status'  => http_response_code() ?: 200,
+                    'is_html' => ($output !== '' && $output !== false)
+                ], $cacheTtl, $driver);
+            }
             self::clearActiveRouteCache();
+        }
+
+        if ($output !== '' && $output !== false) {
+            echo $output;
+            exit;
         }
 
         if (is_array($result) || is_object($result)) {
@@ -477,7 +534,6 @@ class Request
         ];
         $middlewares = [];
 
-        // Check single array wrapper format e.g. Request::GET([$options, $mw, $callback])
         if (count($args) === 1 && is_array($args[0])) {
             $args = $args[0];
         }
@@ -491,10 +547,8 @@ class Request
 
         foreach ($args as $arg) {
             if (is_array($arg)) {
-                // Determine if this array is a route options array or an array of middlewares
                 $isOptionsArray = isset($arg['cache']) || isset($arg['cache_ttl']) || isset($arg['ttl']) || isset($arg['by_session']) || isset($arg['driver']);
                 if (!$isOptionsArray) {
-                    // Check if non-sequential or string keys exist
                     $keys = array_keys($arg);
                     $isOptionsArray = array_keys($keys) !== $keys;
                 }

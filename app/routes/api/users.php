@@ -2,17 +2,10 @@
 
 declare(strict_types=1);
 
-/**
- * Users REST API Endpoint (`/api/users` and `/api/users/{id}`).
- * 
- * Supports GET (list or single), POST (create), PUT (update), DELETE (remove).
- */
-
 use Core\Request;
 use Core\Response;
 use Core\Validate;
 
-$method = Request::getMethod();
 $id = $_GET['id'] ?? ($_SERVER['ROUTE_ID'] ?? null);
 
 $sampleUsers = [
@@ -20,8 +13,6 @@ $sampleUsers = [
     ['id' => 2, 'name' => 'Bob Smith', 'email' => 'bob@example.com', 'role' => 'Developer'],
     ['id' => 3, 'name' => 'Carol Danvers', 'email' => 'carol@example.com', 'role' => 'Designer'],
 ];
-
-$id = $_GET['id'] ?? ($_SERVER['ROUTE_ID'] ?? null);
 
 Request::GET(function () use ($id, $sampleUsers) {
     if ($id !== null && $id !== '') {
@@ -68,9 +59,4 @@ Request::DELETE(function () use ($id) {
         'status'  => 'success',
         'message' => "User `{$id}` deleted successfully"
     ]);
-});
-
-
-Request::ANY(function () use ($method) {
-    Response::error("Method `{$method}` not allowed", 405);
 });

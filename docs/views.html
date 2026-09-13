@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lila.js Reactive SPA Engine &amp; Bluebird CSS — LilaPHP Documentation</title>
+    <title>Native View Engine &amp; Bluebird CSS — LilaPHP Documentation</title>
     <meta name="description"
-        content="Complete guide for building decoupled, zero-build, ultra-fast reactive SPAs with Lila.js and Bluebird CSS in LilaPHP." />
+        content="Complete guide for building server-rendered views with layouts, partials, heredocs, tiered caching, asset versioning, and Bluebird CSS in LilaPHP." />
     <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,7 +19,6 @@
 </head>
 
 <body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
-    <!-- Mobile Header -->
     <div
         class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
         <a href="index.html" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
@@ -35,458 +34,286 @@
     </div>
 
     <div class="flex max-w-8xl mx-auto min-h-screen">
-        <!-- Sidebar Navigation -->
         <aside id="sidebar"
             class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
             <header class="mb-10">
                 <p class="text-sm font-semibold text-primary-600 dark:text-primary-400 tracking-wide uppercase">
-                    Frontend Architecture
+                    Views &amp; Frontend
                 </p>
                 <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-2">
-                    Lila.js Reactive SPA Engine &amp; Bluebird CSS
+                    Native View Engine &amp; Bluebird CSS
                 </h1>
                 <p class="text-lg text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
-                    LilaPHP eliminates the overhead and complexity of heavy frontend toolchains. <strong>Lila.js</strong> is a zero-build, ultra-fast reactive SPA micro-engine (<strong>&lt; 8 KB</strong>) providing declarative templates (<code>html`...`</code>), reactive state proxies, hash client routing, route guards, event delegation, and built-in UI components (Toasts, Modals, Theme Switcher).
+                    LilaPHP includes a high-performance native PHP View Engine in <code>_core/View.php</code>. It eliminates template compiler latency, provides seamless layout inheritance, partial includes, heredoc execution, tiered multi-driver caching (APCu, Redis, File), automatic asset versioning, SEO metadata generation, PWA manifests, CSRF context, and live development hot reload.
                 </p>
             </header>
 
-            <!-- 1. Philosophy & Why Lila.js -->
             <section id="philosophy" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">1. Zero-Build Architecture (KISS Philosophy)</h2>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">1. Architectural Philosophy</h2>
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
                     <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                        In traditional modern web stacks, creating a reactive Single Page Application requires Node.js, Webpack/Vite, Babel, npm dependencies, and minutes of bundling. In LilaPHP, the frontend is <strong>100% decoupled static files</strong>:
+                        Instead of compiling third-party template languages into PHP at runtime, LilaPHP views are native PHP scripts located in <code>app/views/</code>. They execute at C-speed, are compiled directly by OPcache, and have zero external dependencies.
                     </p>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
-                        <li><strong>Zero Build Steps:</strong> Edit <code>frontend/index.html</code>, save, and refresh your browser. Everything runs natively via modern JavaScript ES6+ standards.</li>
-                        <li><strong>High-Speed Nginx Static Delivery:</strong> Nginx serves static HTML/CSS/JS with zero PHP-FPM overhead, freeing up your backend entirely for REST API computations.</li>
-                        <li><strong>Framework Freedom:</strong> You can choose React, Vue, Svelte, or Astro if desired; <code>Lila.js</code> is the default zero-dependency solution included out of the box in <code>frontend/js/lila.js</code>.</li>
+                        <li><strong>Zero Compiler Overhead:</strong> Native PHP template rendering with output buffering.</li>
+                        <li><strong>Layout Inheritance:</strong> Wrap templates in a common outer layout (<code>app/views/layout.php</code>) or specify custom layouts per route.</li>
+                        <li><strong>Embeddable Views:</strong> Render partials or embed views without outer layouts via <code>['layout' => false]</code>.</li>
+                        <li><strong>Tiered Caching:</strong> Fast multi-level view caching across APCu, Redis, and filesystem storage.</li>
+                        <li><strong>Built-in Security:</strong> Automatic injection of <code>$csrf_token</code> and <code>$csrf_input</code> in all template scopes.</li>
                     </ul>
                 </div>
             </section>
 
-            <!-- 2. Tagged Template Literals (html) -->
-            <section id="templates" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">2. Declarative Tagged Templates (`Lila.html`)</h2>
+            <section id="rendering" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">2. Rendering Views (`View::render`)</h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Templates in Lila.js use standard JavaScript tagged template literals. You can interpolate variables, conditional expressions, loops with <code>map()</code>, and nested templates seamlessly:
+                    Invoke <code>View::render()</code> or the global helper <code>view()</code> inside your web route files located in <code>app/routes/*.php</code>:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">const { html, escapeHtml } = Lila;
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+use Core\Request;
+use Core\View;
 
-// 1. Basic interpolation & conditionals
-const userCard = (state) => html`
-    &lt;div class="card p-4"&gt;
-        &lt;h3&gt;${escapeHtml(state.user.name)}&lt;/h3&gt;
-        &lt;p&gt;Status: ${state.user.active 
-            ? html`&lt;span class="badge success"&gt;Active&lt;/span&gt;` 
-            : html`&lt;span class="badge warning"&gt;Inactive&lt;/span&gt;`
-        }&lt;/p&gt;
-    &lt;/div&gt;
-`;
+Request::GET(function () {
+    $products = [
+        ['id' => 1, 'name' => 'Ultralight Laptop', 'price' => 999.00],
+        ['id' => 2, 'name' => 'Wireless Headphones', 'price' => 149.50],
+    ];
 
-// 2. Rendering dynamic lists with map()
-const productList = (state) => html`
-    &lt;div class="grid grid-cols-3 gap-4"&gt;
-        ${state.products.map(item => html`
-            &lt;div class="card"&gt;
-                &lt;h4&gt;${escapeHtml(item.title)}&lt;/h4&gt;
-                &lt;p class="price"&gt;$${item.price.toFixed(2)}&lt;/p&gt;
-                &lt;button data-action="addToCart" data-id="${item.id}" class="btn primary"&gt;
-                    Add to Cart
-                &lt;/button&gt;
-            &lt;/div&gt;
-        `)}
-    &lt;/div&gt;
-`;</code></pre>
-                </div>
-            </section>
-
-            <!-- 3. Reactive State Management -->
-            <section id="reactivity" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">3. Fine-Grained Reactive State</h2>
-                <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Lila.js state is wrapped in a native <code>Proxy</code>. Whenever you mutate a property or modify an array (via <code>push()</code>, <code>splice()</code>, <code>filter()</code>), Lila.js automatically re-renders only the necessary DOM subtrees without a virtual DOM overhead:
-                </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// Route State Declaration
-Lila.route('/counter', {
-    state: () => ({
-        count: 0,
-        history: []
-    }),
-    template: (state) => Lila.html`
-        &lt;div class="counter-box"&gt;
-            &lt;h2&gt;Current Count: ${state.count}&lt;/h2&gt;
-            &lt;button data-action="increment" class="btn primary"&gt;+1&lt;/button&gt;
-            &lt;button data-action="decrement" class="btn secondary"&gt;-1&lt;/button&gt;
-            &lt;ul&gt;
-                ${state.history.map(entry => Lila.html`&lt;li&gt;${entry}&lt;/li&gt;`)}
-            &lt;/ul&gt;
-        &lt;/div&gt;
-    `,
-    actions: {
-        increment: ({ state }) => {
-            state.count++;
-            state.history.push(`Incremented to ${state.count} at ${new Date().toLocaleTimeString()}`);
-        },
-        decrement: ({ state }) => {
-            state.count--;
-            state.history.push(`Decremented to ${state.count}`);
-        }
-    }
-});</code></pre>
-                </div>
-
-                <!-- Global Stores -->
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">🌐 Global Shared Stores (`Lila.store`)</h3>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                        Need state shared across multiple routes (e.g. shopping cart, logged-in user profile, notifications)? Use <code>Lila.store()</code>:
-                    </p>
-                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-xs font-mono"><code class="language-javascript">// 1. Create a persistent reactive store
-const authStore = Lila.store('auth', {
-    user: null,
-    token: localStorage.getItem('token') || null,
-    isLoggedIn: false
+    View::render('products', [
+        'products' => $products,
+        'category' => 'Electronics'
+    ], [
+        'title'       => 'Product Catalog — LilaPHP',
+        'description' => 'Browse our catalog of high-performance electronics.',
+        'keywords'    => 'electronics, laptops, gadgets',
+        'canonical'   => 'https://example.com/products',
+        'cache'       => 300
+    ]);
 });
-
-// 2. Mutate store anywhere; all listening components update automatically!
-authStore.user = { id: 1, name: 'Alice' };
-authStore.isLoggedIn = true;</code></pre>
+</code></pre>
                 </div>
-            </section>
-
-            <!-- 4. Client-Side Routing & Route Guards -->
-            <section id="routing" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">4. Hash Routing, Dynamic Parameters &amp; Guards</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-2 font-mono text-sm">/users/:id (Dynamic Routes)</h4>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Route paths support parameter tokens like <code>:id</code> or <code>:slug</code>, accessible via <code>ctx.params</code> in actions and <code>onMount</code>.</p>
-                    </div>
-
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-2 font-mono text-sm">Lila.beforeRoute (Auth Guard)</h4>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Intercept route transitions globally. Return <code>false</code> or redirect to <code>#/login</code> if the user lacks active session permissions.</p>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// 1. Global Route Guard: Protect private areas
-Lila.beforeRoute(async (toPath, fromPath) => {
-    const isPublic = ['/login', '/register', '/'].includes(toPath);
-    const token = localStorage.getItem('auth_token');
-
-    if (!isPublic && !token) {
-        Lila.toast({ title: 'Auth Required', description: 'Please log in to continue.', type: 'warning' });
-        Lila.navigate('/login');
-        return false; // Prevent route from rendering
-    }
-    return true; // Allow transition
-});
-
-// 2. Dynamic Route with onMount API Loading
-Lila.route('/users/:id', {
-    state: () => ({ user: null, loading: true }),
-    template: (state) => Lila.html`
-        &lt;div class="profile-container"&gt;
-            ${state.loading ? Lila.html`&lt;div class="lila-skeleton"&gt;&lt;/div&gt;` : Lila.html`
-                &lt;h1&gt;User Profile: ${Lila.escapeHtml(state.user.name)}&lt;/h1&gt;
-                &lt;p&gt;Email: ${state.user.email}&lt;/p&gt;
-                &lt;a href="/users" data-link class="btn secondary"&gt;&larr; Back to Users&lt;/a&gt;
-            `}
-        &lt;/div&gt;
-    `,
-    onMount: async (state, { params }) => {
-        // Fetch user from LilaPHP REST API: GET /api/users/{id}
-        const res = await Lila.api.get(`/users/${params.id}`);
-        state.user = res.data;
-        state.loading = false;
-    }
-});
-
-// 3. Start the SPA targeting your HTML outlet
-Lila.start('#app');</code></pre>
-                </div>
-            </section>
-
-            <!-- 5. Event Delegation (actions) -->
-            <section id="actions" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">5. Declarative Actions &amp; Event Delegation</h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Never write manual <code>addEventListener</code> loops. Add <code>data-action="methodName"</code> and any optional <code>data-*</code> attributes to your buttons or forms. Lila.js dispatches them directly to your route's <code>actions</code> map:
+                    The view template file is resolved from <code>app/views/products.php</code> or <code>app/views/products/index.php</code>. Variables passed in the data array are automatically extracted into local scope.
+                </p>
+            </section>
+
+            <section id="layouts" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">3. Layouts &amp; Slots</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    By default, <code>View::render()</code> wraps the view inside <code>app/views/layout.php</code>. The rendered view content is passed into the layout as <code>$content</code>.
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">Lila.route('/tasks', {
-    state: () => ({ tasks: [] }),
-    template: (state) => Lila.html`
-        &lt;form data-action="addTask"&gt;
-            &lt;input name="title" placeholder="New task..." required /&gt;
-            &lt;button type="submit" class="btn primary"&gt;Add Task&lt;/button&gt;
-        &lt;/form&gt;
-
-        &lt;ul&gt;
-            ${state.tasks.map(t => Lila.html`
-                &lt;li&gt;
-                    &lt;span&gt;${Lila.escapeHtml(t.title)}&lt;/span&gt;
-                    &lt;button data-action="deleteTask" data-id="${t.id}" class="btn danger sm"&gt;Delete&lt;/button&gt;
-                &lt;/li&gt;
-            `)}
-        &lt;/ul&gt;
-    `,
-    actions: {
-        addTask: async ({ event, state }) => {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const title = formData.get('title');
-
-            // Send POST /api/tasks to backend
-            const res = await Lila.api.post('/tasks', { title });
-            if (res.status === 'success') {
-                state.tasks.push(res.data);
-                event.target.reset();
-                Lila.toast({ title: 'Task Created!', type: 'success' });
-            }
-        },
-        deleteTask: async ({ id, state }) => {
-            // Confirm with built-in dialog
-            const confirmed = await Lila.confirm('Are you sure you want to delete this task?');
-            if (!confirmed) return;
-
-            await Lila.api.delete(`/tasks/${id}`);
-            state.tasks = state.tasks.filter(t => t.id != id);
-            Lila.toast({ title: 'Task Deleted', type: 'info' });
-        }
-    }
-});</code></pre>
-                </div>
-            </section>
-
-            <!-- 6. API Client & CSRF -->
-            <section id="api-client" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">6. Built-in API Client (`Lila.api` / `Lila.fetch`)</h2>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
-                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-3">
-                        <code>Lila.api</code> is pre-configured for LilaPHP's REST backend:
-                    </p>
-                    <ul class="list-disc pl-5 space-y-1 text-sm text-slate-600 dark:text-slate-400 mb-4">
-                        <li><strong>Auto-Prefix:</strong> Requests like <code>Lila.api.get('/users')</code> automatically target <code>/api/users</code>.</li>
-                        <li><strong>Automatic CSRF Injection:</strong> Automatically extracts CSRF tokens from cookies or meta tags and passes <code>X-CSRF-Token</code> in headers.</li>
-                        <li><strong>JSON Handling:</strong> Auto JSON-encodes payloads and automatically parses API responses.</li>
-                    </ul>
-                    <div class="bg-slate-900 rounded-lg overflow-hidden shadow-inner">
-                        <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">// GET /api/products?category=electronics
-const products = await Lila.api.get('/products', { category: 'electronics' });
-
-// POST /api/auth/login
-const session = await Lila.api.post('/auth/login', { email, password });
-
-// PUT /api/users/12
-const updated = await Lila.api.put('/users/12', { name: 'Alice Smith' });
-
-// DELETE /api/items/45
-const deleted = await Lila.api.delete('/items/45');</code></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 7. UI Components: Toasts, Modals, Theme -->
-            <section id="ui-components" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">7. Bluebird UI Component Suite</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <!-- Toasts -->
-                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-                        <h4 class="font-bold text-slate-900 dark:text-white mb-2 text-sm">🍞 Rich Toasts</h4>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Auto-dismissing notifications with title, description, and color variants.</p>
-                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg text-xs font-mono"><code class="language-javascript">Lila.toast({
-    title: 'Saved!',
-    description: 'Record updated.',
-    type: 'success'
-});</code></pre>
-                    </div>
-
-                    <!-- Modals & Confirm -->
-                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-                        <h4 class="font-bold text-slate-900 dark:text-white mb-2 text-sm">💬 Dialog &amp; Confirm</h4>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Promise-based async confirm dialogs with custom actions.</p>
-                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg text-xs font-mono"><code class="language-javascript">const ok = await Lila.confirm(
-    'Delete this account?'
-);
-if (ok) { /* proceed */ }</code></pre>
-                    </div>
-
-                    <!-- Theme Toggle -->
-                    <div class="p-5 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-                        <h4 class="font-bold text-slate-900 dark:text-white mb-2 text-sm">🌓 Theme Switcher</h4>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Instant dark/light toggle syncing with <code>[data-theme="dark"]</code>.</p>
-                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg text-xs font-mono"><code class="language-javascript">// Toggle dark/light mode
-Lila.toggleTheme();
-
-// Explicit setter
-Lila.setTheme('dark');</code></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 8. Complete Single-File SPA Starter -->
-            <section id="starter-app" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">8. Complete Production-Ready SPA Template</h2>
-                <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Copy and paste this complete boilerplate into <code>frontend/index.html</code> to have a fully functional reactive SPA with routing, state, dark mode, and toasts:
-                </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-html">&lt;!DOCTYPE html&gt;
-&lt;html lang="en" data-theme="dark"&gt;
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;!doctype html&gt;
+&lt;html lang="&lt;?= e($lang ?? 'en') ?&gt;" data-theme="light"&gt;
 &lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;LilaPHP Single Page App&lt;/title&gt;
-    &lt;link rel="stylesheet" href="/css/bluebird.css"&gt;
-    &lt;script src="/js/lila.js"&gt;&lt;/script&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+    &lt;?= $seo_meta ?? '' ?&gt;
+    &lt;?= $csrf_meta ?? '' ?&gt;
+    &lt;link rel="stylesheet" href="&lt;?= asset('/css/bluebird.css') ?&gt;"&gt;
 &lt;/head&gt;
 &lt;body&gt;
     &lt;header class="navbar"&gt;
-        &lt;div class="brand"&gt;&lt;strong&gt;⚡ LilaPHP App&lt;/strong&gt;&lt;/div&gt;
+        &lt;a href="/" class="brand"&gt;&lt;?= e($app_name ?? 'LilaPHP') ?&gt;&lt;/a&gt;
         &lt;nav&gt;
-            &lt;a href="#/" data-link&gt;Home&lt;/a&gt;
-            &lt;a href="/users" data-link&gt;Users&lt;/a&gt;
+            &lt;a href="/"&gt;Home&lt;/a&gt;
+            &lt;a href="/about"&gt;About&lt;/a&gt;
         &lt;/nav&gt;
-        &lt;button onclick="Lila.toggleTheme()" class="btn sm"&gt;🌓 Theme&lt;/button&gt;
     &lt;/header&gt;
 
-    &lt;!-- Main Application Mounting Outlet --&gt;
-    &lt;main id="app" class="container py-8"&gt;&lt;/main&gt;
+    &lt;main class="container"&gt;
+        &lt;?= $content ?&gt;
+    &lt;/main&gt;
 
-    &lt;script&gt;
-        const { html, route, start, api, toast } = Lila;
-
-        // Route: Home Dashboard
-        route('/', {
-            state: () => ({ count: 0 }),
-            template: (state) => html`
-                &lt;div class="card p-6"&gt;
-                    &lt;h1&gt;Welcome to Lila.js 🚀&lt;/h1&gt;
-                    &lt;p&gt;Ultra-lightweight reactive SPA with zero build overhead.&lt;/p&gt;
-                    &lt;div class="mt-4 flex gap-2"&gt;
-                        &lt;button data-action="clickMe" class="btn primary"&gt;Clicked: ${state.count}&lt;/button&gt;
-                        &lt;a href="/users" data-link class="btn secondary"&gt;Manage Users &rarr;&lt;/a&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
-            `,
-            actions: {
-                clickMe: ({ state }) => {
-                    state.count++;
-                    toast({ title: 'Clicked!', description: `Count is now ${state.count}`, type: 'success' });
-                }
-            }
-        });
-
-        // Route: Users CRUD
-        route('/users', {
-            state: () => ({ users: [], loading: true }),
-            template: (state) => html`
-                &lt;div class="card p-6"&gt;
-                    &lt;div class="flex justify-between items-center mb-4"&gt;
-                        &lt;h2&gt;Users Directory&lt;/h2&gt;
-                        &lt;button data-action="refresh" class="btn sm"&gt;🔄 Refresh&lt;/button&gt;
-                    &lt;/div&gt;
-                    ${state.loading ? html`&lt;div class="lila-skeleton"&gt;&lt;/div&gt;` : html`
-                        &lt;table class="table w-full"&gt;
-                            &lt;thead&gt;
-                                &lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Actions&lt;/th&gt;&lt;/tr&gt;
-                            &lt;/thead&gt;
-                            &lt;tbody&gt;
-                                ${state.users.map(u => html`
-                                    &lt;tr&gt;
-                                        &lt;td&gt;${u.id}&lt;/td&gt;
-                                        &lt;td&gt;${Lila.escapeHtml(u.name)}&lt;/td&gt;
-                                        &lt;td&gt;
-                                            &lt;button data-action="remove" data-id="${u.id}" class="btn danger sm"&gt;Delete&lt;/button&gt;
-                                        &lt;/td&gt;
-                                    &lt;/tr&gt;
-                                `)}
-                            &lt;/tbody&gt;
-                        &lt;/table&gt;
-                    `}
-                &lt;/div&gt;
-            `,
-            onMount: async (state) => {
-                const res = await api.get('/users');
-                state.users = res.data || [];
-                state.loading = false;
-            },
-            actions: {
-                refresh: async ({ state }) => {
-                    state.loading = true;
-                    const res = await api.get('/users');
-                    state.users = res.data || [];
-                    state.loading = false;
-                },
-                remove: async ({ id, state }) => {
-                    await api.delete(`/users/${id}`);
-                    state.users = state.users.filter(u => u.id != id);
-                    toast({ title: 'User Removed', type: 'info' });
-                }
-            }
-        });
-
-        // Initialize SPA
-        start('#app');
-    &lt;/script&gt;
+    &lt;footer class="footer"&gt;
+        &lt;p&gt;&amp;copy; &lt;?= date('Y') ?&gt; &lt;?= e($app_name ?? 'LilaPHP') ?&gt;&lt;/p&gt;
+    &lt;/footer&gt;
+    &lt;?= $hot_reload ?? '' ?&gt;
 &lt;/body&gt;
-&lt;/html&gt;</code></pre>
+&lt;/html&gt;
+</code></pre>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Custom Layouts and Embed Mode</h3>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    You can specify a different layout via the options array or disable layouts completely:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">View::render('dashboard', $data, ['layout' => 'admin']);
+
+View::render('components/table', $data, ['layout' => false]);
+</code></pre>
                 </div>
             </section>
 
-            <!-- Bottom Navigation -->
-            <div class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <a href="security.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium transition-all shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span>Previous: <strong>Security &amp; Rate Limiting</strong></span>
-                </a>
-                <a href="ai.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                    <span>Next: <strong>Universal AI &amp; LLM Engine</strong></span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
+            <section id="heredocs" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">4. Heredoc View Execution (`View::html`)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Inside template files (such as <code>app/views/about.php</code>), you can render standard PHP templates or use <code>View::html()</code> with closures or heredoc syntax for structured string templates:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+use Core\View;
+
+echo View::html(function ($data) {
+    $version = e($data['version'] ?? '1.0.0');
+    $name = e($data['app_name'] ?? 'LilaPHP');
+
+    return &lt;&lt;&lt;HTML
+&lt;section class="card"&gt;
+    &lt;h1&gt;About {$name}&lt;/h1&gt;
+    &lt;p&gt;Running framework version &lt;strong&gt;{$version}&lt;/strong&gt;.&lt;/p&gt;
+&lt;/section&gt;
+HTML;
+}, get_defined_vars());
+</code></pre>
+                </div>
+            </section>
+
+            <section id="partials" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">5. Component Partials (`View::partial`)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Break complex pages into reusable components using <code>View::partial()</code>. Partials are loaded from <code>app/views/partials/{name}.php</code> or <code>app/views/{name}.php</code>:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;div class="catalog"&gt;
+    &lt;?php foreach ($products as $item): ?&gt;
+        &lt;?= View::partial('product_card', ['item' => $item]) ?&gt;
+    &lt;?php endforeach; ?&gt;
+&lt;/div&gt;
+</code></pre>
+                </div>
+            </section>
+
+            <section id="assets" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">6. Asset Fingerprinting &amp; Versioning (`View::asset`)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Prevent stale browser caching using <code>View::asset()</code> or the global helper <code>asset()</code>. LilaPHP automatically appends a timestamp hash of the physical file in <code>public/</code>:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;link rel="stylesheet" href="&lt;?= asset('/css/bluebird.css') ?&gt;"&gt;
+&lt;script src="&lt;?= asset('/js/app.js') ?&gt;" defer&gt;&lt;/script&gt;
+</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Generated output in production:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-html">&lt;link rel="stylesheet" href="/css/bluebird.css?v=68f2ba1c"&gt;
+&lt;script src="/js/app.js?v=9a0d8e21" defer&gt;&lt;/script&gt;
+</code></pre>
+                </div>
+            </section>
+
+            <section id="seo-pwa" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">7. SEO Metadata &amp; Progressive Web App (PWA)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Pass metadata directly into <code>View::render()</code> options to automatically generate canonical links, meta tags, and structured JSON-LD data:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">View::render('article', ['post' => $post], [
+    'title'       => $post['title'] . ' — My Blog',
+    'description' => $post['summary'],
+    'keywords'    => 'php, webdev, performance',
+    'canonical'   => 'https://example.com/blog/' . $post['slug'],
+    'jsonLD'      => [
+        '@context'      => 'https://schema.org',
+        '@type'         => 'Article',
+        'headline'      => $post['title'],
+        'datePublished' => $post['created_at'],
+    ],
+    'pwa'         => true,
+    'manifest'    => '/manifest.json'
+]);
+</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    When <code>pwa => true</code> is specified, the view automatically links <code>public/manifest.json</code> and injects the client-side install banner handler.
+                </p>
+            </section>
+
+            <section id="csrf" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">8. CSRF Protection in Views</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Every view and layout automatically receives CSRF helper variables in its scope:
+                </p>
+                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    <li><code>$csrf_input</code>: Renders <code>&lt;input type="hidden" id="_csrf" name="_csrf" value="..."&gt;</code>.</li>
+                    <li><code>$csrf_token</code>: Raw CSRF token string for JavaScript fetch/axios headers.</li>
+                    <li><code>$csrf_meta</code>: Renders <code>&lt;meta name="csrf-token" content="..."&gt;</code> for the document head.</li>
+                </ul>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;form method="POST" action="/contact"&gt;
+    &lt;?= $csrf_input ?&gt;
+    &lt;div class="form-group"&gt;
+        &lt;label for="email"&gt;Email Address&lt;/label&gt;
+        &lt;input type="email" id="email" name="email" required&gt;
+    &lt;/div&gt;
+    &lt;button type="submit" class="btn primary"&gt;Send Message&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+                </div>
+            </section>
+
+            <section id="caching" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">9. Tiered View Caching</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Pass the <code>cache</code> option with a TTL in seconds to enable automated multi-driver view caching:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">View::render('home', $data, [
+    'cache' => 600
+]);
+</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    The engine computes an SHA-256 fingerprint of the view name, route, language, and serialized dataset. It attempts resolution in order:
+                </p>
+                <ol class="list-decimal pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    <li><strong>APCu Shared Memory:</strong> Sub-millisecond RAM retrieval with zero network latency.</li>
+                    <li><strong>Redis Memory Cluster:</strong> Shared distributed cache across multiple web workers.</li>
+                    <li><strong>File System Cache:</strong> Atomic disk storage under <code>_core/cache/views/</code>.</li>
+                </ol>
+            </section>
+
+            <section id="hotreload" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">10. Development Hot Reload</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    When <code>APP_DEBUG=true</code> is set in <code>.env</code>, LilaPHP automatically injects a lightweight background poll client in views. It monitors file modifications across <code>app/views/</code> and <code>public/css/</code>, automatically reloading the browser when files change.
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash">php cli.php dev 8080
+</code></pre>
+                </div>
+            </section>
+
+            <section id="bluebird" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">11. Bluebird CSS Micro-Framework</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    LilaPHP includes <code>public/css/bluebird.css</code>, a semantic zero-dependency CSS micro-framework providing responsive layouts, dark/light theme switching, cards, forms, tables, modals, and toasts:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-html">&lt;div class="grid grid-cols-2 gap-4"&gt;
+    &lt;div class="card"&gt;
+        &lt;h3&gt;Card Title&lt;/h3&gt;
+        &lt;p&gt;Card content styled automatically.&lt;/p&gt;
+        &lt;button class="btn primary"&gt;Action&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Toggle themes by setting the <code>data-theme</code> attribute on the <code>&lt;html&gt;</code> element:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-javascript">document.documentElement.setAttribute('data-theme', 'dark');
+</code></pre>
+                </div>
+            </section>
         </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ["Inter", "sans-serif"],
-                    },
-                    colors: {
-                        primary: {
-                            50: "#eef2ff",
-                            100: "#e0e7ff",
-                            200: "#c7d2fe",
-                            300: "#a5b4fc",
-                            400: "#818cf8",
-                            500: "#6366f1",
-                            600: "#4f46e5",
-                            700: "#4338ca",
-                            800: "#3730a3",
-                            900: "#312e81",
-                        },
-                    },
-                },
-            },
-        };
-    </script>
 </body>
-
 </html>

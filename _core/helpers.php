@@ -87,7 +87,48 @@ if (!function_exists('csrf_field')) {
     function csrf_field(): string
     {
         $token = htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8');
-        return '<input type="hidden" name="_csrf_token" value="' . $token . '">';
+        return '<input type="hidden" id="_csrf" name="_csrf" value="' . $token . '">';
+    }
+}
+
+if (!function_exists('view')) {
+    /**
+     * Render a view template.
+     * 
+     * @param string $view View template name
+     * @param array<string, mixed> $data Variables exposed to the view
+     * @param array<string, mixed> $options Rendering and layout options
+     * @return void
+     */
+    function view(string $view, array $data = [], array $options = []): void
+    {
+        \Core\View::render($view, $data, $options);
+    }
+}
+
+if (!function_exists('asset')) {
+    /**
+     * Return a cache-busted public asset URL.
+     * 
+     * @param string $path Asset path relative to public/
+     * @return string
+     */
+    function asset(string $path): string
+    {
+        return \Core\View::asset($path);
+    }
+}
+
+if (!function_exists('e')) {
+    /**
+     * Escape a value safely for HTML output.
+     * 
+     * @param mixed $value
+     * @return string
+     */
+    function e(mixed $value): string
+    {
+        return \Core\View::escape($value);
     }
 }
 

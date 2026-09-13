@@ -278,11 +278,10 @@
                             </svg>
                         </div>
                         <h3 class="font-semibold text-lg text-slate-900 dark:text-white mb-2">
-                            API-Only Routing
+                            Dual Routing &amp; Views
                         </h3>
                         <p class="text-slate-600 dark:text-slate-400">
-                            Direct physical file-based execution in `backend/routes/`. Zero regex routing loops or
-                            complex middleware overhead.
+                            Direct physical file-based execution in `app/routes/` for web views and `app/routes/api/` for REST APIs. Zero regex routing loops or complex middleware overhead.
                         </p>
                     </div>
                     <div
@@ -321,8 +320,7 @@
                             CLI
                         </h3>
                         <p class="text-slate-600 dark:text-slate-400">
-                            Orchestrate Docker clusters (`php cli.php docker dev`), run database migrations, and manage
-                            workers directly from the console.
+                            Orchestrate Docker clusters (`php cli.php docker dev`), run dev hot reload (`php cli.php dev`), and manage database migrations directly from the console.
                         </p>
                     </div>
                 </div>
@@ -338,8 +336,8 @@
                                 One-Command Installation
                             </h3>
                             <p class="text-sm text-slate-600 dark:text-slate-400">
-                                Install via Composer in seconds. Scaffolds a clean `_core/`, `backend/`, `docker/`, and
-                                `frontend/` directory structure.
+                                Install via Composer in seconds. Scaffolds a clean `_core/`, `app/`, `docker/`, and
+                                `public/` directory structure.
                             </p>
                         </div>
                         <div>
@@ -347,17 +345,16 @@
                                 Native Docker & Nginx
                             </h3>
                             <p class="text-sm text-slate-600 dark:text-slate-400">
-                                Pre-configured Docker Compose cluster (`nginx:alpine` + `php:8.4-fpm` + `mysql:8.0` +
+                                Pre-configured Docker Compose cluster (`nginx:alpine` + `php:8.4-fpm` + `mysql:8.0` / `sqlite` +
                                 `redis:7`) optimized for production.
                             </p>
                         </div>
                         <div>
                             <h3 class="font-semibold text-slate-900 dark:text-white mb-1">
-                                API-First Microservices
+                                Dual Routing Architecture
                             </h3>
                             <p class="text-sm text-slate-600 dark:text-slate-400">
-                                Decoupled architecture serving pure JSON APIs from `backend/` and static HTML/Astro/JS
-                                frontends from `frontend/`.
+                                Unified architecture serving pure JSON APIs from `app/routes/api/`, native server views from `app/routes/`, and static assets from `public/`.
                             </p>
                         </div>
                         <div>
@@ -401,18 +398,18 @@
                         Traditional PHP frameworks load massive global state dictionaries, ORM layers, and template
                         compilation pipelines on every HTTP request.
                         LilaPHP takes a strict <strong>Performance First</strong> approach: physical file-based routing
-                        (`backend/routes/*.php`) combined with Nginx FastCGI direct dispatch.
-                        <strong>No heavy middleware overhead</strong>—just pure API execution.
+                        (`app/routes/` and `app/routes/api/`) combined with Nginx FastCGI direct dispatch.
+                        <strong>No heavy middleware overhead</strong>—just pure API and view execution.
                     </p>
                     <p class="mb-4">
-                        All core classes (`Database`, `Cache`, `Response`, `Http`, `Upload`, `Task`) are pinned directly
+                        All core classes (`Database`, `Cache`, `Response`, `Http`, `Upload`, `Task`, `View`) are pinned directly
                         into RAM via OPcache preloading (`preload.php`).
                         When an API worker boots up under PHP-FPM, memory allocation is near-zero and cold starts are
                         eliminated.
                     </p>
                     <p class="mb-6">
                         <strong>Docker & Cloud Native:</strong> Pre-scaffolded with Docker Compose (`nginx:alpine`,
-                        `php:8.4-fpm`, `mysql:8.0`, `redis:7-alpine`) and fully manageable via our master console tool
+                        `php:8.4-fpm`, `mysql:8.0` / `sqlite`, `redis:7-alpine`) and fully manageable via our master console tool
                         (`php cli.php`).
                     </p>
 
@@ -423,26 +420,25 @@
                                 <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
                                 <div class="w-3 h-3 rounded-full bg-green-500"></div>
                             </div>
-                            <span class="text-xs text-slate-400 font-mono">backend/routes/users/profile.php</span>
+                            <span class="text-xs text-slate-400 font-mono">app/routes/api/users.php</span>
                         </div>
                         <pre class="p-4 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
-/**
- * Direct file-based API route (`/api/users/profile`)
- */
 use Core\Response;
 use Core\Database;
 use Core\Cache;
+use Core\Request;
 
-$pdo = Database::getInstance();
+Request::GET(function () {
+    $pdo = Database::getInstance();
+    $user = Cache::api('user_profile_123', function() use ($pdo) {
+        $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ?");
+        $stmt->execute([123]);
+        return $stmt->fetch();
+    }, 60);
 
-// Instant 60s APCu RAM cached query execution
-$user = Cache::api('user_profile_123', function() use ($pdo) {
-    $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ?");
-    $stmt->execute([123]);
-    return $stmt->fetch();
-}, 60);
-
-Response::json(['status' => 'ok', 'data' => $user]);</code></pre>
+    return Response::json(['status' => 'ok', 'data' => $user]);
+});
+</code></pre>
                     </div>
                 </div>
             </section>
@@ -466,8 +462,8 @@ Response::json(['status' => 'ok', 'data' => $user]);</code></pre>
                             </h3>
                         </div>
                         <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
-                            Scaffold the official LilaPHP project skeleton with its clean `_core/`, `backend/`, and
-                            `frontend/` directories:
+                            Scaffold the official LilaPHP project skeleton with its clean `_core/`, `app/`, `docker/`, and
+                            `public/` directories:
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash">composer create-project seip25/lila-php LilaPHP
 cd LilaPHP</code></pre>
@@ -483,10 +479,10 @@ cd LilaPHP</code></pre>
                                 Security Key</h3>
                         </div>
                         <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">
-                            Copy the example configuration to `backend/.env` and generate a cryptographically random
+                            Copy the example configuration to `.env` and generate a cryptographically random
                             APP_KEY:
                         </p>
-                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash">cp backend/.env.example backend/.env
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-bash">cp .env.example .env
 php cli.php key:generate</code></pre>
                     </div>
 

@@ -32,7 +32,6 @@ class Doctor extends Command
         $issues = 0;
         $warnings = 0;
 
-        // 1. PHP Runtime
         $this->info("1. PHP Runtime Environment");
         $phpVer = PHP_VERSION;
         if (version_compare($phpVer, '8.2.0', '>=')) {
@@ -42,7 +41,6 @@ class Doctor extends Command
             $issues++;
         }
 
-        // 2. Essential & Recommended Extensions
         $this->info(PHP_EOL . "2. Core & Extension Dependencies");
         $requiredExtensions = [
             'pdo' => 'Database abstraction layer',
@@ -79,8 +77,7 @@ class Doctor extends Command
             }
         }
 
-        // 3. Dynamic .env Port Availability Pre-Flight Check (Multi-VPS Safe)
-        $this->info(PHP_EOL . "3. Network & Dynamic Port Diagnostics (from backend/.env)");
+        $this->info(PHP_EOL . "3. Network & Dynamic Port Diagnostics (from .env)");
         
         $envHttpPort = Config::$HTTP_PORT;
         $envProdPort = Config::$PROD_HTTP_PORT;
@@ -105,41 +102,34 @@ class Doctor extends Command
             }
         }
 
-        // 4. Complete Filesystem & Directory Permissions Check
         $this->info(PHP_EOL . "4. Filesystem, Assets & Permission Diagnostics");
 
-        // Check backend/.env
-        $envPath = Config::$DIR_BACKEND . '/.env';
+        $envPath = Config::$DIR_PROJECT . '/.env';
         if (file_exists($envPath)) {
             if (is_readable($envPath)) {
-                $this->success("  ✔ Environment file `backend/.env` exists and is readable.");
+                $this->success("  ✔ Environment file `.env` exists and is readable.");
             } else {
-                $this->error("  ✖ `backend/.env` is NOT readable by PHP. Check permissions (chmod 640).");
+                $this->error("  ✖ `.env` is NOT readable by PHP. Check permissions.");
                 $issues++;
             }
         } else {
-            $this->error("  ✖ Missing `backend/.env` file! Copy from `backend/.env_example`.");
+            $this->error("  ✖ Missing `.env` file at project root! Copy from `.env_example`.");
             $issues++;
         }
 
-        // Check Frontend Files & Permissions
-        $frontendChecks = [
-            'Frontend Root Directory' => Config::$DIR_FRONTEND,
-            'Frontend Index SPA (`frontend/index.html`)' => Config::$DIR_FRONTEND . '/index.html',
-            'Frontend Dashboard (`frontend/dashboard.html`)' => Config::$DIR_FRONTEND . '/dashboard.html',
-            'Frontend About (`frontend/about.html`)' => Config::$DIR_FRONTEND . '/about.html',
-            'Bluebird CSS (`frontend/css/bluebird.css`)' => Config::$DIR_FRONTEND . '/css/bluebird.css',
-            'Lila.js Engine (`frontend/js/lila.js`)' => Config::$DIR_FRONTEND . '/js/lila.js',
-            'Lila TypeScript Source (`frontend/js/lila.ts`)' => Config::$DIR_FRONTEND . '/js/lila.ts',
-            'Lila TypeScript Types (`frontend/js/lila.d.ts`)' => Config::$DIR_FRONTEND . '/js/lila.d.ts',
+        $publicChecks = [
+            'Public Directory (`public/`)'                 => Config::$DIR_PUBLIC,
+            'Bluebird CSS (`public/css/bluebird.css`)'     => Config::$DIR_PUBLIC . '/css/bluebird.css',
+            'Bluebird JS Suite (`public/js/bluebird.js`)'  => Config::$DIR_PUBLIC . '/js/bluebird.js',
+            'Favicon (`public/favicon.ico`)'               => Config::$DIR_PUBLIC . '/favicon.ico',
         ];
 
-        foreach ($frontendChecks as $label => $path) {
+        foreach ($publicChecks as $label => $path) {
             if (file_exists($path)) {
                 if (is_readable($path)) {
                     $this->success("  ✔ {$label} is accessible.");
                 } else {
-                    $this->error("  ✖ {$label} is NOT readable (Check chmod permissions).");
+                    $this->error("  ✖ {$label} is NOT readable.");
                     $issues++;
                 }
             } else {
@@ -148,11 +138,10 @@ class Doctor extends Command
             }
         }
 
-        // Check Writable Directories
         $writableDirs = [
-            'Core Cache Directory'    => Config::$DIR_CORE . '/cache',
-            'Core Logs Directory'     => Config::$DIR_CORE . '/logs',
-            'Database Storage (SQLite)' => Config::$DIR_BACKEND . '/database',
+            'Core Cache Directory'      => Config::$DIR_CORE . '/cache',
+            'Core Logs Directory'       => Config::$DIR_CORE . '/logs',
+            'Database Storage (SQLite)' => Config::$DIR_APP . '/database',
         ];
 
         foreach ($writableDirs as $label => $path) {
@@ -162,18 +151,19 @@ class Doctor extends Command
             if (is_writable($path)) {
                 $this->success("  ✔ Directory `{$label}` is writable ({$path})");
             } else {
-                $this->error("  ✖ Directory `{$label}` is NOT writable ({$path}). Run chmod 775/777.");
+                $this->error("  ✖ Directory `{$label}` is NOT writable ({$path}).");
                 $issues++;
             }
         }
 
-        // Check Backend Core Directories
-        $backendDirs = [
-            'Backend Routes (`backend/routes/`)' => Config::$DIR_BACKEND . '/routes',
-            'Backend Models (`backend/models/`)' => Config::$DIR_BACKEND . '/models',
+        $appDirs = [
+            'App Views (`app/views/`)'            => Config::$DIR_APP . '/views',
+            'App Web Routes (`app/routes/`)'       => Config::$DIR_APP . '/routes',
+            'App REST API (`app/routes/api/`)'     => Config::$DIR_APP . '/routes/api',
+            'App Models (`app/models/`)'           => Config::$DIR_APP . '/models',
         ];
 
-        foreach ($backendDirs as $label => $path) {
+        foreach ($appDirs as $label => $path) {
             if (is_dir($path) && is_readable($path)) {
                 $this->success("  ✔ {$label} is readable.");
             } else {
@@ -182,16 +172,42 @@ class Doctor extends Command
             }
         }
 
-        // 5. Security & Cryptographic Key
+        $routesDir = Config::$DIR_APP . '/routes';
+        if (is_dir($routesDir)) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($routesDir, \FilesystemIterator::SKIP_DOTS)
+            );
+
+            $missingViews = 0;
+            foreach ($iterator as $item) {
+                if ($item->isFile() && $item->getExtension() === 'php') {
+                    $content = (string)file_get_contents($item->getPathname());
+                    if (preg_match_all('/View::render\s*\(\s*[\'"]([^\'"]+)[\'"]/i', $content, $matches)) {
+                        foreach ($matches[1] as $viewName) {
+                            $v1 = Config::$DIR_APP . "/views/{$viewName}.php";
+                            $v2 = Config::$DIR_APP . "/views/{$viewName}/index.php";
+                            if (!file_exists($v1) && !file_exists($v2)) {
+                                $this->error("  ✖ Route `{$item->getFilename()}` references missing view `{$viewName}`.");
+                                $missingViews++;
+                                $issues++;
+                            }
+                        }
+                    }
+                }
+            }
+            if ($missingViews === 0) {
+                $this->success("  ✔ All views referenced in routes exist.");
+            }
+        }
+
         $this->info(PHP_EOL . "5. Security & Encryption Key");
         if (!empty(Config::$APP_KEY)) {
             $this->success("  ✔ APP_KEY configured properly.");
         } else {
-            $this->error("  ✖ APP_KEY is missing in backend/.env. Run `php cli.php key:generate`.");
+            $this->error("  ✖ APP_KEY is missing in `.env`. Run `php cli.php key:generate`.");
             $issues++;
         }
 
-        // 6. Universal AI Engine Setup
         $this->info(PHP_EOL . "6. Universal AI Engine Setup");
         $this->info("  - Default AI Provider: " . Config::$AI_PROVIDER);
         $resolvedKey = \Core\AI::resolveKey(Config::$AI_PROVIDER);
@@ -202,7 +218,6 @@ class Doctor extends Command
             $this->warning("  ⚠️  No API key configured for `" . Config::$AI_PROVIDER . "` (Set `API_IA_KEY` or `DEEPSEEK_API_KEY` / `GEMINI_API_KEY` in .env if using AI).");
         }
 
-        // 7. Live Database & Cache Ping
         $this->info(PHP_EOL . "7. Live Connectivity Checks");
         try {
             $pdo = Database::getInstance();
@@ -229,7 +244,6 @@ class Doctor extends Command
             $this->warning("  ⚠️  Redis offline or unconfigured.");
         }
 
-        // Summary
         echo PHP_EOL;
         $this->banner("Doctor Diagnostic Summary");
         if ($issues === 0 && $warnings === 0) {

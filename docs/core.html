@@ -61,12 +61,12 @@
             <!-- Config -->
             <section id="config" class="scroll-mt-24 mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                    Configuration &amp; Environment (`backend/.env`)
+                    Configuration &amp; Environment (`.env`)
                 </h2>
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
                     <p class="text-slate-600 dark:text-slate-400 mb-4">
-                        Settings in <code>backend/.env</code> control the framework's behavior globally. Under our
-                        API-first architecture, no monolithic <code>App</code> instantiation is required—all
+                        Settings in the root <code>.env</code> file control the framework's behavior globally. Under our
+                        architecture, no monolithic <code>App</code> instantiation is required—all
                         configuration properties are parsed into static memory upon boot via <code>Core\Config</code> (`_core/Config.php`).
                         In production, running <code>php cli.php optimize</code> pre-compiles these settings directly into an OPcache-ready PHP array (`_core/cache/env.php`) for zero runtime parsing overhead.
                     </p>
@@ -78,7 +78,7 @@ APP_URL=http://localhost:8080
 HTTP_PORT=8080
 PROD_HTTP_PORT=80
 
-# Multi-Driver Database (Default: MySQL | Optional: SQLite / PostgreSQL)
+# Multi-Driver Database (Default: MySQL | Optional: SQLite)
 DB_TYPE=mysql
 DB_HOST=mysql
 DB_PORT=3306
@@ -87,20 +87,19 @@ DB_USER=root
 DB_PASSWORD=secret
 # For SQLite:
 # DB_TYPE=sqlite
-# DB_FILE=backend/database/app.sqlite
+# DB_FILE=app/database/app.sqlite
 
 # Dual-Tier Cache & Redis
 REDIS_HOST=redis
 REDIS_PORT=6379
 REDIS_PASSWORD=
-CACHE_DRIVER=apcu          # Fast in-memory RAM cache (APCu)
-DB_CACHE_DRIVER=file       # Fallback or Redis persistence
+CACHE_DRIVER=auto          # Tiered: APCu -> Redis -> File
+DB_CACHE_DRIVER=file
 
 # Universal AI Engine Configuration
-# Supported: 'deepseek', 'gemini', 'openai', 'anthropic', 'ollama', 'custom'
 AI_PROVIDER=deepseek
-API_IA_KEY=                # Generic key fallback
-OPENAI_API_KEY=            # Provider-specific key overrides
+API_IA_KEY=
+OPENAI_API_KEY=
 GEMINI_API_KEY=
 DEEPSEEK_API_KEY=
 ANTHROPIC_API_KEY=
@@ -109,9 +108,9 @@ OLLAMA_BASE_URL=http://localhost:11434
 # Security & DDoS Protection
 APP_KEY="base64:..."       # Generated via: php cli.php key:generate
 CORS_ALLOWED_ORIGINS=*
-RATE_LIMIT=200             # Max requests per window (0 or false to disable)
-RATE_LIMIT_WINDOW=60       # Window size in seconds
-LOG_ENABLED=false          # Minimal I/O for max concurrency
+RATE_LIMIT=200
+RATE_LIMIT_WINDOW=60
+LOG_ENABLED=false
 DEBUG_LOGGING_ENABLED=false</code></pre>
                 </div>
             </section>
@@ -119,33 +118,31 @@ DEBUG_LOGGING_ENABLED=false</code></pre>
             <!-- Architectural Paradigm Shift -->
             <section id="coreapp" class="scroll-mt-24 mb-20">
                 <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                    Direct API Execution (Why No `new App()`?)
+                    Direct Execution Architecture
                 </h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    In previous versions, developers had to instantiate a monolithic object like
-                    <code>new App(['security' => ...])</code> on every single HTTP request. This approach created
+                    In traditional PHP frameworks, developers instantiate a monolithic object like
+                    <code>new App(['security' => ...])</code> on every single HTTP request. This approach creates
                     unnecessary CPU allocation, redundant configuration parsing, and dependency injection overhead.
                 </p>
                 <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    <strong>LilaPHP's API-First Paradigm:</strong> When Nginx dispatches a request (`/api/ping`) to
-                    `/var/www/html/index.php`, our ultra-lightweight bootstrap (`_core/bootstrap.php`) instantly wires
-                    all static helpers (`Response`, `Cache`, `Database`, `Validate`) into shared process memory via
-                    OPcache preloading (`preload.php`). Your physical endpoint (`backend/routes/ping.php`) executes
+                    <strong>LilaPHP's Paradigm:</strong> When Nginx dispatches a request (`/api/ping` or `/about`) to
+                    `public/index.php`, our ultra-lightweight bootstrap (`_core/bootstrap.php`) instantly wires
+                    all static helpers (`Response`, `View`, `Cache`, `Database`, `Validate`) into shared process memory via
+                    OPcache preloading (`app/preload.php`). Your physical endpoint (`app/routes/about.php` or `app/routes/api/ping.php`) executes
                     immediately without class instantiation wrappers or middleware loops.
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg">
                     <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
-                        <span class="text-xs text-slate-400 font-mono">index.php -> backend/routes/*.php</span>
+                        <span class="text-xs text-slate-400 font-mono">index.php -> app/routes/*.php</span>
                     </div>
                     <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
-/** Direct physical execution */
 use Core\Response;
 use Core\Validate;
 
-// Zero setup or constructor calls needed:
 $clean = Validate::assert($_REQUEST, ['email' => 'required|email']);
-
-Response::json(['status' => 'success', 'data' => $clean]);</code></pre>
+Response::json(['status' => 'success', 'data' => $clean]);
+</code></pre>
                 </div>
             </section>
 
@@ -177,14 +174,34 @@ Response::json(['status' => 'success', 'data' => $clean]);</code></pre>
 use Core\Cache;
 use Core\Response;
 
-// Cached query inside process RAM for 60 seconds
 $items = Cache::api('active_items', function() {
     $pdo = Database::getInstance();
     $stmt = $pdo->query("SELECT * FROM items WHERE status = 'active'");
     return $stmt->fetchAll();
 }, 60);
 
-Response::json(['items' => $items]);</code></pre>
+Response::json(['items' => $items]);
+</code></pre>
+                    </div>
+
+                    <!-- View Engine -->
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">
+                            `Core\View`
+                        </h3>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            <code>View::render()</code> provides native PHP template rendering with layout wrapping (<code>app/views/layout.php</code>), partial components, tiered multi-driver caching, SEO metadata injection, and development hot reload.
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\View;
+
+View::render('about', [
+    'team' => $teamMembers
+], [
+    'title' => 'About Us — LilaPHP',
+    'cache' => 300
+]);
+</code></pre>
                     </div>
 
                     <!-- Validate & Response -->
@@ -202,14 +219,13 @@ Response::json(['items' => $items]);</code></pre>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Validate;
 use Core\Response;
 
-// Validate payload with rules
 $data = Validate::assert($_REQUEST, [
     'username' => 'required|min:3',
     'age' => 'required|numeric'
 ]);
 
-// Return JSON response with HTTP 201 Created
-Response::json(['status' => 'created', 'user' => $data], 201);</code></pre>
+Response::json(['status' => 'created', 'user' => $data], 201);
+</code></pre>
                     </div>
 
                     <!-- Upload & Task -->
@@ -226,13 +242,11 @@ Response::json(['status' => 'created', 'user' => $data], 201);</code></pre>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-php">use Core\Upload;
 use Core\Task;
 
-// Handle safe file upload
 $savedFile = Upload::save($_FILES['document'], null, ['application/pdf' => 'pdf']);
-
 if ($savedFile) {
-    // Offload heavy text extraction to background CLI worker
     Task::dispatch('process_pdf_document', ['filename' => $savedFile]);
-}</code></pre>
+}
+</code></pre>
                     </div>
                 </div>
             </section>

@@ -104,9 +104,49 @@ class Cache
      * @param string $driver Target driver ('apcu' or 'redis')
      * @return bool
      */
-    public static function set(string $key, mixed $value, int $ttl = 300, string $driver = 'apcu'): bool
+    public static function fileSet(string $key, mixed $value, int $ttl = 300): bool
     {
-        if ($driver === 'redis') {
+        $dir = Config::$DIR_CORE . '/cache/data';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        $file = $dir . '/' . md5($key) . '.cache';
+        $data = [
+            'expire'  => $ttl === 0 ? 0 : time() + $ttl,
+            'payload' => $value
+        ];
+        return @file_put_contents($file, serialize($data), LOCK_EX) !== false;
+    }
+
+    public static function fileGet(string $key, mixed $default = null): mixed
+    {
+        $dir = Config::$DIR_CORE . '/cache/data';
+        $file = $dir . '/' . md5($key) . '.cache';
+        if (!file_exists($file)) {
+            return $default;
+        }
+        $content = @file_get_contents($file);
+        if ($content === false) {
+            return $default;
+        }
+        $data = @unserialize($content);
+        if (!is_array($data) || !isset($data['expire'], $data['payload'])) {
+            return $default;
+        }
+        if ($data['expire'] !== 0 && $data['expire'] < time()) {
+            @unlink($file);
+            return $default;
+        }
+        return $data['payload'];
+    }
+
+    public static function set(string $key, mixed $value, int $ttl = 300, string $driver = 'auto'): bool
+    {
+        if ($driver === 'file') {
+            return self::fileSet($key, $value, $ttl);
+        }
+
+        if ($driver === 'redis' || $driver === 'auto') {
             $redis = self::getRedis();
             if ($redis !== null) {
                 try {
@@ -116,13 +156,20 @@ class Cache
                     }
                     return $redis->setex($key, $ttl, $serialized);
                 } catch (RedisException $e) {
-                    Logger::warning("Redis store failure, falling back to APCu: " . $e->getMessage());
+                    Logger::warning("Redis store failure, falling back to next tier: " . $e->getMessage());
                 }
+            }
+            if ($driver === 'redis') {
+                return false;
             }
         }
 
         if (function_exists('apcu_enabled') && apcu_enabled()) {
             return apcu_store($key, $value, $ttl);
+        }
+
+        if ($driver === 'auto') {
+            return self::fileSet($key, $value, $ttl);
         }
 
         self::$memoryFallback[$key] = [
@@ -132,17 +179,13 @@ class Cache
         return true;
     }
 
-    /**
-     * Retrieves a value directly from the specified cache tier.
-     * 
-     * @param string $key Cache key identifier
-     * @param mixed $default Default return value if not found
-     * @param string $driver Target driver ('apcu' or 'redis')
-     * @return mixed
-     */
-    public static function get(string $key, mixed $default = null, string $driver = 'apcu'): mixed
+    public static function get(string $key, mixed $default = null, string $driver = 'auto'): mixed
     {
-        if ($driver === 'redis') {
+        if ($driver === 'file') {
+            return self::fileGet($key, $default);
+        }
+
+        if ($driver === 'redis' || $driver === 'auto') {
             $redis = self::getRedis();
             if ($redis !== null) {
                 try {
@@ -154,16 +197,27 @@ class Cache
                         }
                         return $val;
                     }
-                    return $default;
+                    if ($driver === 'redis') {
+                        return $default;
+                    }
                 } catch (RedisException $e) {
-                    Logger::warning("Redis get failure, falling back to APCu: " . $e->getMessage());
+                    Logger::warning("Redis get failure, falling back to next tier: " . $e->getMessage());
                 }
             }
         }
 
         if (function_exists('apcu_enabled') && apcu_enabled()) {
             $val = apcu_fetch($key, $success);
-            return $success ? $val : $default;
+            if ($success) {
+                return $val;
+            }
+            if ($driver === 'apcu') {
+                return $default;
+            }
+        }
+
+        if ($driver === 'auto') {
+            return self::fileGet($key, $default);
         }
 
         if (isset(self::$memoryFallback[$key])) {

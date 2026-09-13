@@ -1,36 +1,19 @@
-# LilaPHP Root Apache Configuration
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
 
-    # Prevent direct access to sensitive directories and files
-    RewriteRule ^(_core|backend|docker|app|vendor|node_modules|k6_.*\.js|cli\.php|composer\.json|package\.json|package-lock\.json|vite\.config\.js|\.env|\.gitignore|README\.md|LICENSE|composer\.lock) - [F,L]
+    RewriteRule ^(_core|app|docker|vendor|node_modules|cli\.php|composer\.json|\.env|\.gitignore|README\.md|LICENSE|composer\.lock) - [F,L]
 
-    # Strip trailing slashes (except for directories)
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} ^/(.+)/$
     RewriteRule ^ /%1 [L,R=301]
 
-    # Match and internally strip language prefixes (e.g., /es/login -> login, /pt-br/api/test -> api/test)
-    RewriteRule ^([a-z]{2,3}(?:-[a-z]{2})?)/(.*)$ $2 [QSA,DPI]
-
-    # Allow direct access to actual existing files or directories (like frontend CSS/JS)
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Check for extensionless HTML file inside frontend or root: e.g., /login -> /login.html
-    RewriteCond %{DOCUMENT_ROOT}/frontend/$1.html -f
-    RewriteRule ^([^/]+|.+/.+)$ frontend/$1.html [L]
+    RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+    RewriteRule ^(.*)$ public/$1 [L]
 
-    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
-    RewriteRule ^([^/]+|.+/.+)$ $1.html [L]
-
-    # Forward all API requests directly to index.php front controller
-    RewriteRule ^api/(.*)$ index.php [QSA,L]
-
-    # Fallback to index.php for any other non-existent route (SPA & framework routes)
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [QSA,L]
 </IfModule>

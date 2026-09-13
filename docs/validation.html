@@ -64,7 +64,7 @@
                     API Payload Validation (`Core\Validate`)
                 </h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    In LilaPHP's API-first engine, payload validation is rapid, stateless, and declarative. Instead of creating heavy DTO/Model classes for simple request validation, you can use `Core\Validate::assert()` directly inside your physical route endpoints (`backend/routes/*.php`).
+                    In LilaPHP's engine, payload validation is rapid, stateless, and declarative. Instead of creating heavy DTO/Model classes for simple request validation, you can use `Core\Validate::assert()` directly inside your physical route endpoints (`app/routes/*.php` and `app/routes/api/*.php`).
                 </p>
 
                 <div class="space-y-6">
@@ -78,13 +78,9 @@
                             Inspects your incoming `$_REQUEST` or array data against strict rule definitions. If any field fails validation, `Validate::assert()` immediately throws a `ValidationException` which outputs a clean JSON <code class="text-rose-500">422 Unprocessable Entity</code> response and stops execution (`exit;`). If valid, it returns the sanitized payload array.
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-6 rounded-xl overflow-hidden"><code class="language-php">&lt;?php
-/**
- * API Endpoint: /api/users/register
- */
 use Core\Response;
 use Core\Validate;
 
-// Sanitize and assert payload structure immediately:
 $cleanData = Validate::assert($_REQUEST, [
     'username' => 'required|min:4|max:30',
     'email'    => 'required|email',
@@ -92,8 +88,8 @@ $cleanData = Validate::assert($_REQUEST, [
     'role'     => 'in:admin,editor,subscriber'
 ]);
 
-// If we reach this line, $cleanData is 100% valid and sanitized!
-Response::json(['status' => 'registered', 'user' => $cleanData], 201);</code></pre>
+Response::json(['status' => 'registered', 'user' => $cleanData], 201);
+</code></pre>
                     </div>
 
                     <!-- Stateless Localization via $_REQUEST['lang'] -->
@@ -107,7 +103,7 @@ Response::json(['status' => 'registered', 'user' => $cleanData], 201);</code></p
                                 class="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs font-semibold rounded-full uppercase tracking-wide">Performance First</span>
                         </div>
                         <p class="text-slate-600 dark:text-slate-400 mb-4">
-                            To maintain zero session overhead while supporting multilingual APIs, `Core\Validate` reads the `$_REQUEST['lang']` parameter directly (or defaults to `APP_LANG` in `backend/.env`). Error messages are automatically localized from `backend/locales/validation_{lang}.php`.
+                            To maintain zero session overhead while supporting multilingual APIs, `Core\Validate` reads the `$_REQUEST['lang']` parameter directly (or defaults to `APP_LANG` in `.env`). Error messages are automatically localized from `_core/locales/validation_{lang}.php`.
                         </p>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-bash"># Requesting in Spanish:
 curl -X POST "http://localhost:8080/api/users/register" \

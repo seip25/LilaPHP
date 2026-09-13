@@ -1,7 +1,7 @@
 <p align="center">
-  <h1 align="center">⚡ LilaPHP — High-Performance Decoupled Micro-API Framework</h1>
+  <h1 align="center">⚡ LilaPHP — High-Performance Full-Stack &amp; Micro-API Framework</h1>
   <p align="center">
-    <strong>KISS Architecture (Zero Heavy Dependencies) with Pure Static Frontend (Lila.js SPA &amp; Bluebird CSS) &amp; Ultra-Fast PHP 8.x REST Backend.</strong>
+    <strong>Zero-Dependency PHP 8.4+ Architecture with Native View Engine, Dual REST/Web Routing, Tiered Caching, and Bluebird CSS.</strong>
   </p>
 </p>
 
@@ -9,7 +9,7 @@
   <a href="https://seip25.github.io/LilaPHP/"><img src="https://img.shields.io/badge/docs-online-blue.svg" alt="Documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
   <a href="#"><img src="https://img.shields.io/badge/PHP-8.4+-777bb4.svg" alt="PHP 8.4+"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Frontend-Lila.js_%26_Bluebird_CSS-38bdf8.svg" alt="Lila.js"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Frontend-Bluebird_CSS_%26_JS-38bdf8.svg" alt="Bluebird CSS"></a>
   <a href="#"><img src="https://img.shields.io/badge/Database-MySQL_%7C_SQLite_%7C_PostgreSQL-f59e0b.svg" alt="Database"></a>
 </p>
 
@@ -21,78 +21,106 @@
 
 ---
 
-## 🏗️ 100% Decoupled Architecture (KISS Principle)
+## 🏗️ Architecture & Core Philosophy (KISS)
 
-LilaPHP strictly separates the **Frontend User Interface** and the **Backend REST API**:
+LilaPHP unifies web page rendering and JSON micro-APIs into a clean, lightning-fast architecture with **zero external composer dependencies**:
 
-1. **Frontend (`frontend/`):**
-   - Pure static assets (`.html`, `.css`, `.js`, `.ts`, images, fonts) served directly by **Nginx** at maximum raw speed.
-   - Styled with the **Bluebird CSS** micro-framework (semantic HTML tags, native CSS variables, auto/manual dark/light mode).
-   - Powered by **Lila.js** (Vanilla reactive SPA engine with `html` tagged templates, client routing, route guards, and signals) with complete **TypeScript** definitions (`lila.ts` & `lila.d.ts`) for flawless IDE IntelliSense.
-   - **Framework Freedom:** Use Astro, React, Vue, Svelte, or static HTML as you like; `Lila.js` is the default zero-dependency solution.
-2. **Backend API (`backend/` under `/api/`):**
-   - Every request under `/api/*` is dispatched to the lightweight PHP 8.x REST engine via FastCGI.
-   - REST endpoints with dynamic parameter mapping (e.g. `/api/users/{id}`), zero-dependency PSR-4 autoloader, and global helpers.
-3. **Plug & Play Multi-Database:**
-   - Out-of-the-box support for **MySQL** (default), portable **SQLite (WAL mode)**, and **PostgreSQL** via unified `Core\Database` and `DB::*` static helpers with automated schema indexing.
+1. **Public Webroot (`public/`):**
+   - High-speed static delivery (`.css`, `.js`, images, icons, fonts, `manifest.json`).
+   - Served directly by **Nginx** in production with raw sendfile speed, or through the front controller in development.
+   - Powered by the **Bluebird CSS** micro-framework with native dark/light modes (`[data-theme="dark"]`) and the **Bluebird JS** suite.
+2. **Dual Route Dispatcher (`_core/Dispatcher.php`):**
+   - **Web View Routes (`app/routes/*.php`):** Handle front-end URLs (e.g. `GET /`, `GET /about`) and render responsive HTML views with layout inheritance.
+   - **REST API Endpoints (`app/routes/api/*.php`):** Handle JSON endpoints (e.g. `/api/health`, `/api/users/{id}`) with automated CORS headers.
+   - **Automatic 405 Method Not Allowed:** When a request reaches a route file without matching the HTTP verb, the framework responds automatically with a standardized 405 status code and `Allow` header.
+3. **Native View Engine (`_core/View.php`):**
+   - Master layout wrapping (`app/views/layout.php`) with per-route layout overrides or embed mode (`['layout' => false]`).
+   - Scoped heredoc components via `View::html(fn() => <<<HTML ... HTML)`.
+   - Automatic CSRF protection (`csrf_token`, `csrf_input`, `csrf_meta`).
+   - Automated SEO metadata (`title`, `description`, `keywords`, `canonical`, `jsonLD`) and PWA web app manifest integration.
+   - Built-in live Hot Reload watcher in development mode.
+4. **Tiered Caching Hierarchy (`_core/Cache.php`):**
+   - Multi-layer caching prioritizing **APCu RAM** &rarr; **Redis cluster** &rarr; **Persistent File Cache**.
+5. **Multi-Driver Database (`Core\Database` / `DB::*`):**
+   - Out-of-the-box support for **MySQL** (default) and portable standalone **SQLite (WAL mode)**.
+   - Switch drivers instantly via CLI: `php cli.php db:switch sqlite` or `php cli.php db:switch mysql`.
+   - Dedicated Docker Compose standalone SQLite profile (`docker-compose.sqlite.yml`).
 
 ```text
 LilaPHP/
-├── nginx.conf                 # ⚡ Nginx Decoupled Configuration (Frontend root + /api/ pass)
-├── index.php                  # 🎯 Unified Front Controller & Development Server Router
-├── cli.php                    # 🛠️ Master CLI Dispatcher (Migrate, Seed, Optimize, Make, KeyGen)
-├── docker-compose.yml         # 🐳 Docker Compose (Nginx, PHP 8.4-FPM, low-RAM MySQL 8.0, Redis 7)
-├── frontend/                  # 🌐 Pure Static Frontend
-│   ├── index.html             # Application home & interactive API playground
-│   ├── dashboard.html         # Interactive SPA dashboard with Lila.js
-│   ├── about.html             # Static sub-page example
+├── .env                       # Root environment configuration
+├── .env_example               # Environment variables template
+├── .htaccess                  # Apache rules & public asset routing
+├── index.php                  # Unified front controller & static router
+├── cli.php                    # Master CLI command dispatcher
+├── docker-compose.yml         # Container stack (Nginx, PHP 8.4, MySQL 8, Redis 7)
+├── docker-compose.sqlite.yml  # Standalone SQLite override profile
+├── public/                    # Static Webroot
+│   ├── favicon.ico            # Favicon
+│   ├── manifest.json          # PWA Web App Manifest
 │   ├── css/
-│   │   └── bluebird.css       # Semantic CSS micro-framework with native dark/light mode
-│   └── js/
-│       ├── lila.js            # Reactive SPA engine, HTTP client & Bluebird UI suite
-│       ├── lila.ts            # Strict TypeScript source & interfaces
-│       └── lila.d.ts          # TypeScript declarations for VS Code & PhpStorm
-├── backend/                   # 🖥️ Lightweight PHP 8.x REST API
-│   ├── index.php              # FastCGI API entry point
-│   ├── routes/                # File-based REST endpoints (/api/health, /api/users, etc.)
-│   ├── models/                # Micro-models & ORM entities (User.php, Product.php)
+│   │   └── bluebird.css       # Semantic CSS framework
+│   ├── js/
+│   │   └── bluebird.js        # Bluebird UI & client library
+│   └── images/                # Static brand assets
+├── app/                       # Application Source
+│   ├── index.php              # FastCGI entry point
+│   ├── preload.php            # OPcache preloading script
+│   ├── routes/                # Web View Routes
+│   │   ├── index.php          # GET /
+│   │   ├── about.php          # GET /about
+│   │   └── api/               # REST API Routes
+│   │       ├── index.php      # GET /api
+│   │       ├── health.php     # GET /api/health
+│   │       └── users.php      # /api/users CRUD resource
+│   ├── views/                 # View Templates
+│   │   ├── layout.php         # Master HTML5 layout
+│   │   ├── index.php          # Home view template
+│   │   ├── about.php          # About view template
+│   │   ├── 404.php            # Not Found error template
+│   │   └── 405.php            # Method Not Allowed template
+│   ├── models/                # ORM Models (BaseModel.php, User.php)
 │   ├── database/              # SQLite database storage (app.sqlite)
-│   ├── .env                   # Environment configuration (DB_TYPE=mysql, APP_KEY, etc.)
-│   └── .env_example           # Configuration template
-├── _core/                     # ⚡ Zero-Dependency Core Engine
-│   ├── bootstrap.php          # PSR-4 Autoloader, Exception Handler & Session Manager
-│   ├── helpers.php            # Global helpers (json_response, sanitize, input, csrf_*, abort)
-│   ├── Config.php             # .env parser with OPcache array caching
-│   ├── Dispatcher.php         # REST Router & Dynamic Parameter Resolver
-│   ├── Database.php           # PDO Multi-Driver DB Wrapper & Schema Indexer
-│   ├── Request.php            # Static O(1) HTTP method checks, headers & memoized JSON body
-│   ├── Response.php           # JSON response emitter with CORS & status handling
-│   ├── Security.php           # CSRF tokens, rate limiting, AES-256-GCM encryption & XSS filters
-│   ├── Cache.php              # Dual-tier cache (APCu RAM + Redis cluster)
-│   └── Validate.php           # Multi-language validation engine (i18n)
-├── docs/                      # 📚 Complete HTML Documentation (GitHub Pages)
-└── tests/                     # 🧪 Automated Test Suites (PHP Runner, Live HTTP, Chrome CDP)
+│   ├── services/              # Business logic services
+│   └── sockets/               # WebSocket handler scripts
+├── _core/                     # Framework Core Engine
+│   ├── bootstrap.php          # PSR-4 autoloader, exception handler & compression
+│   ├── helpers.php            # Global helpers (view, asset, e, csrf_field, json_response)
+│   ├── Config.php             # Environment configuration & OPcache caching
+│   ├── Dispatcher.php         # Dual Route Dispatcher & Auto 405 Engine
+│   ├── View.php               # Native View Engine with tiered cache & layouts
+│   ├── Database.php           # PDO multi-driver wrapper & schema indexer
+│   ├── Cache.php              # Multi-tier cache manager (APCu, Redis, FileCache)
+│   ├── Request.php            # HTTP request methods, JSON parsing & route matchers
+│   ├── Response.php           # JSON, streaming, and CORS emitters
+│   ├── Security.php           # CSRF protection, rate limiting, AES-256 encryption
+│   ├── Validate.php           # Validation engine with i18n support
+│   ├── AI.php                 # Universal LLM Client
+│   └── cli/                   # CLI Command implementations
+├── docker/                    # Docker infrastructure configs
+└── docs/                      # Complete HTML Documentation (GitHub Pages)
 ```
 
 ---
 
 ## 🚀 Quick Start in 30 Seconds
 
-### Option A: Local Development (PHP Built-in Server)
+### Option A: Local Development Server (with Hot Reload)
 
-No Docker or Composer required!
+Zero container or composer installation required:
 
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/seip25/LilaPHP.git
 cd LilaPHP
 
-# 2. Copy the environment file
-cp backend/.env_example backend/.env
+# 2. Copy root environment file
+cp .env_example .env
 
-# 3. Start the built-in development server
-php -S localhost:8080 index.php
+# 3. Launch dev server with Hot Reload
+php cli.php dev
 ```
+
 Open [http://localhost:8080](http://localhost:8080) in your browser.
 
 ---
@@ -100,195 +128,141 @@ Open [http://localhost:8080](http://localhost:8080) in your browser.
 ### Option B: Docker Orchestration (Production Ready)
 
 ```bash
-# 1. Build and start containers (Nginx + PHP 8.4-FPM + MySQL + Redis)
-docker compose --env-file ./backend/.env up -d --build
+# 1. Build and start full stack (Nginx + PHP 8.4-FPM + MySQL + Redis)
+php cli.php docker dev
 
-# 2. Check container status
-docker compose ps
+# Or start standalone SQLite mode (excludes MySQL container):
+php cli.php docker sqlite
 
-# 3. Open application
-# Frontend: http://localhost:8080
-# SPA Dashboard: http://localhost:8080/dashboard.html
-# Health API: http://localhost:8080/api/health
+# 2. Check cluster status
+php cli.php docker ps
 ```
 
 ---
 
-## 🎨 Frontend: Lila.js SPA & Bluebird CSS
+## 🎨 Web Views & Native View Engine
 
-### 1. Declarative SPA Routing & Tagged Templates
-
-```html
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-    <link rel="stylesheet" href="/css/bluebird.css" />
-    <script src="/js/lila.js"></script>
-</head>
-<body>
-    <nav>
-        <a href="#/" data-link>Overview</a>
-        <a href="#/users" data-link>Users</a>
-    </nav>
-
-    <div id="app"></div>
-
-    <script>
-        const { html, route, start, beforeRoute, fetch: http, escapeHtml } = Lila;
-
-        // Session & Route Guard
-        beforeRoute(async (path) => {
-            const auth = await http('/api/auth');
-            if (auth.authenticated) return true;
-            window.location.href = '/login';
-            return false;
-        });
-
-        // Overview Route
-        route('/', {
-            state: () => ({ usersCount: 0 }),
-            template: (s) => html`
-                <article>
-                    <h2>Dashboard</h2>
-                    <p>Total Users: ${s.usersCount}</p>
-                </article>
-            `,
-            onMount: async (state) => {
-                const res = await http('/api/users');
-                state.usersCount = res.data.length;
-            }
-        });
-
-        start('#app');
-    </script>
-</body>
-</html>
-```
-
-### 2. UI Components & Reactive Signals
-
-```javascript
-// 1. Reactive State Signals
-const counter = Lila.state(0);
-counter.subscribe(val => {
-    document.getElementById('counter-display').textContent = val;
-});
-counter.set(c => c + 1);
-
-// 2. UI Component Helpers
-Lila.toast({ title: 'Success', description: 'User saved!', type: 'success' });
-Lila.modal('my-modal', 'open');
-Lila.drawer('my-drawer', 'toggle');
-Lila.theme('toggle');
-```
-
----
-
-## ⚙️ Backend: REST API Development
-
-### 1. Physical REST Routing (`backend/routes/*.php`)
+### 1. Defining a View Route (`app/routes/about.php`)
 
 ```php
 <?php
+
 use Core\Request;
-use Core\Response;
+use Core\View;
 
-$method = Request::getMethod();
-$id = $_GET['id'] ?? null;
-
-switch ($method) {
-    case 'GET':
-        if ($id) {
-            $user = DB::fetch("SELECT * FROM users WHERE id = :id", ['id' => $id]);
-            if (!$user) abort(404, 'User not found');
-            json_response(['data' => $user]);
-        }
-        json_response(['data' => DB::fetchAll("SELECT * FROM users ORDER BY id DESC")]);
-        break;
-
-    case 'POST':
-        $data = Request::json();
-        $newId = DB::insert('users', [
-            'name'  => sanitize($data['name'] ?? ''),
-            'email' => sanitize($data['email'] ?? ''),
-            'role'  => sanitize($data['role'] ?? 'user'),
-        ]);
-        json_response(['status' => 'success', 'id' => $newId], 201);
-        break;
-
-    case 'DELETE':
-        DB::delete('users', 'id = :id', ['id' => $id]);
-        json_response(['status' => 'success', 'message' => 'Deleted']);
-        break;
-}
-```
-
-### 2. Multi-Driver Database Helpers (`DB::*`)
-
-```php
-// MySQL (default), SQLite, or PostgreSQL
-$userId = DB::insert('users', ['name' => 'John Doe', 'email' => 'john@example.com']);
-$user = DB::fetch("SELECT * FROM users WHERE id = :id", ['id' => $userId]);
-$allUsers = DB::fetchAll("SELECT * FROM users ORDER BY id DESC");
-DB::update('users', ['name' => 'Jane Doe'], 'id = :id', ['id' => $userId]);
-DB::delete('users', 'id = :id', ['id' => $userId]);
-
-// Atomic Transactions
-DB::transaction(function($pdo) {
-    DB::insert('accounts', ['balance' => 1000]);
-    DB::insert('logs', ['action' => 'account_created']);
+Request::GET(function () {
+    View::render('about', [
+        'title'       => 'About LilaPHP',
+        'description' => 'Learn about our architecture.',
+        'keywords'    => 'lilaphp, php framework',
+    ]);
 });
 ```
 
-### 3. Universal AI Engine (`Core\AI` & `ai()`)
+### 2. View Template with Heredoc & Context (`app/views/about.php`)
 
 ```php
-use Core\AI;
+<?php
 
-// 1. Quick text generation (DeepSeek, Gemini, OpenAI, Claude, Ollama)
-$reply = AI::text("Explain quantum computing in one sentence.");
+use Core\View;
 
-// 2. Global helper shortcut
-$haiku = ai("Write a haiku about high-performance PHP APIs.");
+$title = View::escape($title ?? 'About LilaPHP');
+$csrfField = $csrf_input ?? '';
 
-// 3. DeepSeek with automated model fallback
-$deepseekRes = AI::deepseek("Explain Object Oriented PHP.", [
-    'model' => 'deepseek-v4-flash',
-    'fallback_model' => 'deepseek-chat',
-    'system' => 'You are an expert PHP programmer.'
-]);
-
-// 4. Structured JSON extraction
-$profile = AI::json("Generate user data with name, email, and role.");
-// Output: ['name' => 'Ada Lovelace', 'email' => 'ada@computing.org', 'role' => 'Admin']
-
-// 5. Built-in Rate Limiter for AI endpoints
-$limit = AI::checkRateLimit(Request::ip(), limitPerMinute: 6, limitPerDay: 30);
-if (!$limit['allowed']) {
-    abort(429, $limit['error']);
-}
+echo View::html(function () use ($title, $csrfField) {
+    return <<<HTML
+<div class="container">
+    <h1>{$title}</h1>
+    <p>Rendered natively with zero dependencies.</p>
+    <form method="POST" action="/submit">
+        {$csrfField}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+HTML;
+});
 ```
 
-### 4. System Doctor & Pre-Flight Diagnostics
+### 3. Reusable Partials & Asset Cache Busting
 
-```bash
-# Verify ports, extensions, APP_KEY, permissions, DB, and Redis
-php cli.php doctor
+```php
+// In any template:
+<?= View::partial('header', ['user' => $currentUser]) ?>
+
+// Version-fingerprinted asset URL:
+<link rel="stylesheet" href="<?= View::asset('/css/bluebird.css') ?>">
+// Outputs: /css/bluebird.css?v=214c4952
 ```
 
 ---
 
-## 🧪 Automated Testing Suite
+## ⚙️ REST API Development
+
+### 1. Physical REST Routing (`app/routes/api/users.php`)
+
+```php
+<?php
+
+use Core\Request;
+use Core\Response;
+use Core\Validate;
+
+$id = $_GET['id'] ?? null;
+
+Request::GET(function () use ($id) {
+    if ($id !== null) {
+        $user = DB::fetch("SELECT * FROM users WHERE id = :id", ['id' => $id]);
+        if (!$user) abort(404, 'User not found');
+        Response::json(['data' => $user]);
+    }
+    Response::json(['data' => DB::fetchAll("SELECT * FROM users ORDER BY id DESC")]);
+});
+
+Request::POST(function () {
+    $body = Request::json();
+    $errors = Validate::check($body, [
+        'name'  => 'required|min_length:2',
+        'email' => 'required|email'
+    ]);
+    if (!empty($errors)) Response::error('Validation failed', 422, $errors);
+
+    $id = DB::insert('users', $body);
+    Response::json(['status' => 'success', 'id' => $id], 201);
+});
+
+Request::DELETE(function () use ($id) {
+    DB::delete('users', 'id = :id', ['id' => $id]);
+    Response::json(['status' => 'success', 'message' => 'Deleted']);
+});
+```
+
+---
+
+## 🛠️ Master CLI Dispatcher Reference
+
+LilaPHP includes an extensive suite of CLI developer tools:
 
 ```bash
-# 1. PHP Core Unit Tests
-php tests/Runner.php
+# Development server with live browser hot reload:
+php cli.php dev [port]
 
-# 2. Live HTTP Server Integration Tests
-node tests/BrowserIntegrationTest.mjs
+# Switch active database engine (updates .env & refreshes OPcache):
+php cli.php db:switch sqlite
+php cli.php db:switch mysql
 
-# 3. Headless Chrome CDP & DOM Tests
-node tests/ComprehensiveSuite.mjs
+# Generate search engine files:
+php cli.php sitemap   # Generates public/sitemap.xml
+php cli.php robots    # Generates public/robots.txt
+
+# Code scaffolding generators:
+php cli.php make:model <Name>          # Generates model in app/models/
+php cli.php make:route <path>          # Generates web route in app/routes/
+php cli.php make:api <Name>            # Generates complete REST resource in app/routes/api/
+php cli.php make:crud <Name> [--embed] # Generates DataTable CRUD view & route
+
+# Diagnostics & Health:
+php cli.php doctor    # Pre-flight environment, routes, and views check
+php cli.php health    # Live database, Redis, and memory diagnostics
 ```
 
 ---

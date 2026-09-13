@@ -96,7 +96,7 @@ class Health extends Command
             $this->info("💡 Tip: You are running `php cli.php health` from the host machine.");
             $this->info("   Container names (`mysql`, `redis`) resolve automatically inside the Docker network.");
             $this->info("   - Run inside Docker container: docker compose exec php php cli.php health");
-            $this->info("   - Or for host CLI access: set DB_HOST=127.0.0.1 and REDIS_HOST=127.0.0.1 in backend/.env");
+            $this->info("   - Or for host CLI access: set DB_HOST=127.0.0.1 and REDIS_HOST=127.0.0.1 in .env");
             echo PHP_EOL;
         }
 

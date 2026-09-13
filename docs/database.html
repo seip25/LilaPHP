@@ -64,8 +64,24 @@
                     Database Connection Pool (`Core\Database`)
                 </h2>
                 <p class="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                    To maintain maximum throughput under heavy API loads (`Performance First`), LilaPHP avoids heavy ORM abstraction layers. Instead, `Core\Database` manages a persistent singleton PDO connection pool configured via `backend/.env`, with automatic reconnection retries and full support for <strong>MySQL/MariaDB</strong> (`3306`) and <strong>SQLite</strong>.
+                    To maintain maximum throughput under heavy API loads (`Performance First`), LilaPHP avoids heavy ORM abstraction layers. Instead, `Core\Database` manages a persistent singleton PDO connection pool configured via `.env` at the root, with automatic reconnection retries and full support for <strong>MySQL/MariaDB</strong> (`3306`) and <strong>SQLite</strong>.
                 </p>
+
+                <!-- Switching Databases -->
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl border border-indigo-200 dark:border-indigo-800 mb-8">
+                    <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
+                        Switching Databases via CLI (`php cli.php db:switch`)
+                    </h3>
+                    <p class="text-sm text-indigo-800 dark:text-indigo-300 mb-3">
+                        LilaPHP makes switching between MySQL and SQLite instantaneous with the <code>db:switch</code> CLI command:
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Switch to SQLite standalone mode
+php cli.php db:switch sqlite
+
+# Switch back to MySQL
+php cli.php db:switch mysql
+</code></pre>
+                </div>
 
                 <!-- PDO Pool -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-8">
@@ -76,23 +92,19 @@
                         `Database::getInstance()` returns a ready-to-use, pre-configured `\PDO` object (`PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION`, `PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC`).
                     </p>
                     <pre class="bg-slate-900 text-slate-300 p-6 rounded-xl overflow-hidden"><code class="language-php">&lt;?php
-/**
- * API Endpoint: /api/items
- */
 use Core\Response;
 use Core\Database;
 use Core\Validate;
 
 $clean = Validate::assert($_REQUEST, ['status' => 'required|in:active,pending']);
-
-// Acquire PDO from singleton pool:
 $pdo = Database::getInstance();
 
 $stmt = $pdo->prepare("SELECT id, title, price, created_at FROM items WHERE status = ? ORDER BY id DESC LIMIT 50");
 $stmt->execute([$clean['status']]);
 $items = $stmt->fetchAll();
 
-Response::json(['status' => 'success', 'count' => count($items), 'data' => $items]);</code></pre>
+Response::json(['status' => 'success', 'count' => count($items), 'data' => $items]);
+</code></pre>
                 </div>
 
                 <!-- Distributed Cache & Queues -->
@@ -157,7 +169,7 @@ try {
                         All models in LilaPHP extend <code>Models\BaseModel</code>. They combine high-speed PDO interaction, automatic soft deletes (via <code>deleted_at</code> timestamp), automatic JSON serialization, input validation via <code>Core\Validate</code>, and schema definition for CLI migrations (<code>php cli.php migrate</code>).
                     </p>
 
-                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">1. Model Definition (`backend/models/Product.php`)</h4>
+                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">1. Model Definition (`app/models/Product.php`)</h4>
                     <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-6"><code class="language-php">&lt;?php
 
 namespace Models;
@@ -288,33 +300,22 @@ $product->forceDelete(); // or $product->delete(true);</code></pre>
                             </ul>
                         </div>
 
-                        <h5 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Example: Paginated Route (`backend/routes/products.php`)</h5>
+                        <h5 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Example: Paginated Route (`app/routes/api/products.php`)</h5>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">&lt;?php
-
 use Core\Request;
 use Core\Response;
 use Models\Product;
 
-// GET /api/products?page=1&per_page=10&sort=price&order=asc&start_date=2026-01-01
 Request::GET(function () {
-    // 🟢 1. Simple pagination with default filters
-    $result = Product::paginate();
-
-    // 🟢 2. Pagination with column equality filter (status = 'active')
     $result = Product::paginate(['status' => 'active']);
-
-    // 🟢 3. Pagination with IN (?, ?) array filters
-    $result = Product::paginate(['status' => ['active', 'pending']]);
-
-    // 🟢 4. Pagination with 60-second Redis RAM caching (`Cache::db`)
-    $result = Product::paginate(['category_id' => 4], 60);
 
     return [
         'status' => 'success',
-        'data' => $result['data'],   // Array of Product model instances
-        'meta' => $result['meta']    // Pagination metadata payload
+        'data' => $result['data'],
+        'meta' => $result['meta']
     ];
-});</code></pre>
+});
+</code></pre>
 
                         <h5 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Standard JSON Response Structure:</h5>
                         <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto"><code class="language-json">{

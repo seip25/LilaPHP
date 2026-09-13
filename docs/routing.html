@@ -4,41 +4,25 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>LilaPHP — Lightweight Modern PHP Framework</title>
-
+    <title>Dual Routing &amp; REST Dispatcher — LilaPHP Documentation</title>
     <meta name="description"
-        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
-    <meta name="keywords"
-        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
-    <meta name="author" content="LilaPHP Project" />
-    <meta name="robots" content="index, follow" />
-
-    <!-- Canonical -->
-    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
-
-    <!-- Favicon -->
+        content="Guide to LilaPHP's file-based dual routing architecture for web views and REST APIs with automatic 405 Method Not Allowed handling." />
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/routing.html" />
     <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet" />
-    <!-- Syntax Highlighting -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
     <link rel="stylesheet" href="css/index.css" />
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/partial.js"></script>
 </head>
 
 <body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
-    <!-- Mobile Header -->
     <div
         class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
-        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+        <a href="index.html" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
             <span class="text-primary-600">Lila</span>PHP
         </a>
         <button id="menu-toggle"
@@ -51,145 +35,150 @@
     </div>
 
     <div class="flex max-w-8xl mx-auto min-h-screen">
-        <!-- Sidebar Navigation -->
         <aside id="sidebar"
             class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
-            <!-- Physical File Routing -->
-            <section id="routing" class="scroll-mt-24 mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                    Physical File-Based API Routing (`backend/routes/*.php`)
-                </h2>
-                <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    LilaPHP eliminates traditional routing regex loops, complex method annotations, and massive routing
-                    tables in memory. Instead, it takes inspiration from modern file-based routing systems , backed
-                    directly by Nginx FastCGI at C-level speed.
+            <header class="mb-10">
+                <p class="text-sm font-semibold text-primary-600 dark:text-primary-400 tracking-wide uppercase">
+                    Routing &amp; REST API
                 </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
-                    <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
-                        <span class="text-xs text-slate-400 font-mono">Directory to URI Mapping</span>
-                    </div>
-                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-plaintext">backend/routes/
-├── ping.php             => GET/POST /api/ping
-├── test.php             => GET/POST /api/test
-├── users/
-│   ├── index.php        => GET/POST /api/users
-│   └── profile.php      => GET/POST /api/users/profile
-└── auth/
-    └── login.php        => POST /api/auth/login</code></pre>
+                <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-2">
+                    Dual File-Based Routing &amp; Dispatcher
+                </h1>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
+                    LilaPHP eliminates complex routing regex tables and monolithic controller registration. Requests are directly mapped to physical endpoint scripts in <code>app/routes/</code> for web views and <code>app/routes/api/</code> for REST endpoints.
+                </p>
+            </header>
+
+            <section id="dual-routing" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">1. Dual Directory Architecture</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    The core dispatcher divides request handling into two distinct zones:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-plaintext">app/routes/
+├── index.php             => GET /           (Web View)
+├── about.php             => GET /about      (Web View)
+├── contact.php           => GET/POST /contact
+└── api/
+    ├── index.php         => GET /api        (JSON API)
+    ├── health.php        => GET /api/health (JSON API)
+    └── users.php         => GET/POST/DELETE /api/users
+</code></pre>
                 </div>
-                <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    When a request comes into your server (e.g., `http://localhost:8080/api/users/profile`), Nginx
-                    forwards it directly to our preloaded dispatcher (`index.php`), which locates and executes
-                    `backend/routes/users/profile.php` instantly.
-                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="font-bold text-slate-900 dark:text-white mb-2">Web View Routes (`/`)</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">
+                            Endpoints in <code>app/routes/*.php</code> handle browser page requests, rendering templates via <code>View::render()</code> with layouts, partials, and CSRF protection.
+                        </p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="font-bold text-slate-900 dark:text-white mb-2">REST API Routes (`/api/*`)</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">
+                            Endpoints in <code>app/routes/api/*.php</code> handle stateless API requests, returning structured JSON via <code>Response::json()</code> with CORS and rate limiting.
+                        </p>
+                    </div>
+                </div>
             </section>
 
-            <section id="endpoint-structure" class="scroll-mt-24 mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                    API-First Endpoint Structure (`Request::GET`, `Request::POST`, etc.)
-                </h2>
-                <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    Because physical route files define the target URI in LilaPHP, request method routing is cleanly handled directly inside each endpoint script using static helpers (`Request::GET()`, `Request::POST()`, `Request::PUT()`, `Request::DELETE()`, `Request::PATCH()`). Any code before the method blocks acts as global validation or middleware for all methods in that file.
+            <section id="verbs" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">2. HTTP Verbs &amp; Handlers</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Inside endpoint scripts, handle specific HTTP methods using static methods on <code>Core\Request</code>:
                 </p>
-                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-8">
-                    <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
-                        <span class="text-xs text-slate-400 font-mono">backend/routes/users/profile.php</span>
-                    </div>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
                     <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
-/**
- * API Endpoint: /api/users/profile
- */
-use Core\Response;
 use Core\Request;
-use Models\User;
+use Core\Response;
+use Core\View;
 
-// 1. Global Validations / Middlewares (Runs for ALL HTTP methods in this file)
-if (!Request::header('Authorization') && !Request::input('token')) {
-    Response::error('Unauthorized request', 401);
-}
-
-// 2. GET /api/users/profile
-Request::GET(function() {
-    $userId = Request::input('id', 1);
-    $user = User::find($userId);
-    if (!$user) {
-        Response::error('User not found', 404);
-    }
-    return ['status' => 'success', 'data' => $user];
+Request::GET(function () {
+    View::render('about', [
+        'version' => '1.0.0'
+    ], [
+        'title' => 'About Us — LilaPHP'
+    ]);
 });
 
-// 3. POST /api/users/profile (With Middlewares)
-Request::POST([AuthMiddleware::class], function() {
-    $user = new User(Request::json());
-    $user->assertValid(); // Emits HTTP 422 JSON response if invalid
-    $user->save();
-
-    return ['status' => 'created', 'data' => $user];
+Request::POST(function () {
+    $email = Request::input('email');
+    return Response::json(['status' => 'received', 'email' => $email]);
 });
-
-// 4. DELETE /api/users/profile
-Request::DELETE(AuthMiddleware::class, function() {
-    $user = User::find(Request::input('id'));
-    $user?->delete();
-    return ['status' => 'deleted'];
-});</code></pre>
+</code></pre>
                 </div>
+            </section>
 
-                <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl border border-indigo-100 dark:border-indigo-900 mb-8">
-                    <h3 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
-                        🔍 Why `Request::GET()` instead of `Route::get('/path')`?
-                    </h3>
-                    <p class="text-sm text-indigo-800 dark:text-indigo-300 mb-3">
-                        In traditional frameworks, every HTTP request must instantiate a monolithic `$app = new App()`, parse URI string arrays, match paths with regex, and execute a central router table.
-                        In <strong>LilaPHP</strong>, Nginx maps the request URI (`/api/users/profile`) directly to the exact file on disk (`backend/routes/users/profile.php`). Because the file path <em>is</em> the route, calling <code>Request::GET()</code> or <code>Request::POST()</code> inside the file executes the specific verb handler with zero routing table overhead!
+            <section id="automatic-405" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">3. Automatic 405 Method Not Allowed</h2>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                        In previous versions, endpoints required a manual <code>Request::any()</code> catch-all to reject unhandled HTTP methods. LilaPHP now tracks declared HTTP verbs automatically via <code>Request::route()</code>.
                     </p>
-                    <h4 class="text-sm font-bold text-indigo-900 dark:text-indigo-200 mt-4 mb-2">⚡ Key Capabilities of `Core\Request`:</h4>
-                    <ul class="list-disc list-inside text-sm text-indigo-800 dark:text-indigo-300 space-y-1">
-                        <li><strong>Static HTTP Verb Handlers:</strong> <code>Request::GET(...)</code>, <code>Request::POST(...)</code>, <code>Request::PUT(...)</code>, <code>Request::DELETE(...)</code>, <code>Request::PATCH(...)</code>.</li>
-                        <li><strong>Middleware Integration:</strong> Pass Closures, Class Names (e.g. <code>AuthMiddleware::class</code>), or arrays of middlewares directly as parameters.</li>
-                        <li><strong>Automatic JSON Response:</strong> Return an array or object from the route callback to emit a formatted JSON response automatically.</li>
-                        <li><strong>Retrieve Payload & Inputs:</strong> <code>$body = Request::json();</code> or <code>Request::input('email');</code> (`O(1)` memoized RAM lookup).</li>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                        If an endpoint only defines <code>Request::GET()</code> and an incoming request sends a <code>POST</code>:
+                    </p>
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                        <li>The framework sets HTTP response status <code>405 Method Not Allowed</code>.</li>
+                        <li>An <code>Allow: GET, HEAD</code> header is emitted automatically.</li>
+                        <li>For web requests, <code>app/views/405.php</code> is rendered.</li>
+                        <li>For REST API requests, JSON is returned: <code>{"error": "Method Not Allowed", "allowed": ["GET", "HEAD"]}</code>.</li>
                     </ul>
                 </div>
             </section>
 
-            <!-- Nginx C-Level 404 & 429 Handling -->
-            <section id="c-level-handling" class="scroll-mt-24 mb-20">
-                <div class="flex items-center gap-3 mb-6">
-                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
-                        Nginx C-Level Rate Limiting & 404 Protection
-                    </h2>
-                </div>
-                <p class="text-slate-600 dark:text-slate-400 mb-6">
-                    In traditional PHP frameworks, when a bot attempts to brute-force non-existent URLs or floods the
-                    API, PHP-FPM workers must boot up, load the router, check the routes array, and eventually throw a
-                    `RouteNotFoundException`. This consumes server RAM and CPU.
+            <section id="middlewares" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">4. Route Middlewares</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Attach middlewares directly to verb handlers. Middlewares can be closures, class names, or arrays:
                 </p>
-                <div
-                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-indigo-600 mb-6">
-                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                        Zero-PHP 404 & 429 Rate Limit Responses
-                    </h3>
-                    <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                        In LilaPHP's Docker setup (`docker/nginx/nginx.conf`), Nginx inspects the file system and
-                        traffic rate strictly at the C-programming layer before invoking PHP:
-                    </p>
-                    <ul class="list-disc list-inside text-sm text-slate-600 dark:text-slate-400 space-y-2">
-                        <li><strong>C-Level 404 Handling:</strong> If an endpoint file does not exist inside
-                            `backend/routes/`, Nginx instantly returns <code
-                                class="text-primary-500">{"error":"Endpoint not found","code":404}</code> without waking
-                            up any PHP-FPM worker.</li>
-                        <li><strong>C-Level Rate Limiting:</strong> Nginx enforces rate limits (<code
-                                class="text-primary-500">limit_req zone=api_limit rate=60r/s burst=30</code>). If an IP
-                            exceeds the threshold, Nginx returns <code
-                                class="text-primary-500">{"error":"Too Many Requests","code":429}</code> directly from C
-                            memory!</li>
-                    </ul>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+use Core\Request;
+use Core\Response;
+
+Request::POST([AuthMiddleware::class, RateLimitMiddleware::class], function () {
+    $payload = Request::json();
+    return Response::json(['status' => 'success', 'data' => $payload], 201);
+});
+</code></pre>
                 </div>
+            </section>
+
+            <section id="seo-flags" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">5. SEO &amp; Crawler Flags (`$noIndex`, `$protectedRoute`)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Declare route-level visibility flags to inform the automated sitemap and robots generator:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
+use Core\Request;
+use Core\View;
+
+$noIndex = true;
+$protectedRoute = true;
+
+Request::GET(function () {
+    View::render('admin/dashboard');
+});
+</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    When you run <code>php cli.php sitemap</code> or <code>php cli.php robots</code>, routes marked with <code>$noIndex = true</code> or <code>$protectedRoute = true</code> are automatically excluded from <code>public/sitemap.xml</code> and added to the <code>Disallow</code> list in <code>public/robots.txt</code>.
+                </p>
+            </section>
+
+            <section id="errors" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">6. Custom Error Views (404 &amp; 405)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    LilaPHP provides customizable template files in <code>app/views/</code> for HTTP errors:
+                </p>
+                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    <li><code>app/views/404.php</code>: Displayed when a web route does not exist.</li>
+                    <li><code>app/views/405.php</code>: Displayed when an unhandled HTTP method is requested.</li>
+                </ul>
             </section>
 
             <div class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -208,34 +197,5 @@ Request::DELETE(AuthMiddleware::class, function() {
             </div>
         </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ["Inter", "sans-serif"],
-                    },
-                    colors: {
-                        primary: {
-                            50: "#eef2ff",
-                            100: "#e0e7ff",
-                            200: "#c7d2fe",
-                            300: "#a5b4fc",
-                            400: "#818cf8",
-                            500: "#6366f1",
-                            600: "#4f46e5",
-                            700: "#4338ca",
-                            800: "#3730a3",
-                            900: "#312e81",
-                        },
-                    },
-                },
-            },
-        };
-    </script>
-
 </body>
-
 </html>

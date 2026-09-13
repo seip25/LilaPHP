@@ -15,7 +15,7 @@ use Core\Config;
  */
 class Docker extends Command
 {
-    private string $envFile = './backend/.env';
+    private string $envFile = './.env';
 
     /**
      * Executes Docker cluster management workflows.
@@ -30,6 +30,7 @@ class Docker extends Command
 
         return match ($action) {
             'dev' => $this->launchCluster('development'),
+            'sqlite' => $this->launchCluster('development', true),
             'prod', 'production' => $this->launchCluster('production'),
             'stop', 'down' => $this->execShell("docker compose --env-file {$this->envFile} down"),
             'ps', 'status' => $this->showStatus(),
@@ -353,21 +354,21 @@ class Docker extends Command
      * @param string $env Target environment ('development' or 'production')
      * @return int
      */
-    private function launchCluster(string $env): int
+    private function launchCluster(string $env, bool $sqlite = false): int
     {
         $shortEnv = $env === 'production' ? 'prod' : 'dev';
         
         if ($env === 'production') {
             if (Config::$DEBUG_LOGGING_ENABLED) {
                 echo PHP_EOL;
-                $this->warning("⚠️  WARNING: `DEBUG_LOGGING_ENABLED` is currently set to TRUE in backend/.env!");
+                $this->warning("⚠️  WARNING: `DEBUG_LOGGING_ENABLED` is currently set to TRUE in .env!");
                 $this->warning("   Debug logging will capture request metrics into Redis during production mode.");
                 echo "\033[1;33mDo you want to proceed with production deployment anyway? [y/N or s/n]: \033[0m";
                 $handle = fopen("php://stdin", "r");
                 $answer = trim(fgets($handle) ?: '');
                 $answerLower = strtolower($answer);
                 if (!in_array($answerLower, ['y', 'yes', 's', 'si'], true)) {
-                    $this->error("Deployment aborted by user. Disable `DEBUG_LOGGING_ENABLED=false` in backend/.env to remove this warning.");
+                    $this->error("Deployment aborted by user. Disable `DEBUG_LOGGING_ENABLED=false` in .env to remove this warning.");
                     return 1;
                 }
                 echo PHP_EOL;
@@ -375,34 +376,34 @@ class Docker extends Command
 
             $this->info("Optimizing environment configuration for production...");
             $this->execShell(PHP_BINARY . ' cli.php optimize');
-
-            $this->info("Building React frontend assets for production...");
-            $this->execShell("docker run --rm -v " . escapeshellarg(getcwd()) . ":/app -w /app node:20-alpine sh -c 'npm install && npm run build'");
-            $this->execShell(PHP_BINARY . ' cli.php build:react');
         }
 
-        $this->info("Starting cluster in `{$env}` mode using `docker/php/Dockerfile.{$shortEnv}`...");
-        $this->info("Dynamic Ports Assigned: HTTP=" . Config::$HTTP_PORT . " | MySQL=" . Config::$DB_PORT . " | Redis=" . Config::$REDIS_PORT);
+        $useSqlite = $sqlite || Config::$DB_TYPE === 'sqlite';
+        $composeFiles = $useSqlite ? "-f docker-compose.yml -f docker-compose.sqlite.yml" : "-f docker-compose.yml";
 
-        // Pre-Flight Port Conflict Verification
+        $this->info("Starting cluster in `{$env}` mode" . ($useSqlite ? " (SQLite Standalone)" : " (MySQL Cluster)") . "...");
+        $this->info("Dynamic Ports Assigned: HTTP=" . Config::$HTTP_PORT . ($useSqlite ? "" : " | MySQL=" . Config::$DB_PORT) . " | Redis=" . Config::$REDIS_PORT);
+
         $nullDev = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
         $runningContainers = trim((string) @shell_exec("docker compose --env-file {$this->envFile} ps -q 2>{$nullDev}"));
         if ($runningContainers === '') {
             $ports = [
                 'HTTP Web' => Config::$HTTP_PORT,
-                'MySQL Database' => Config::$DB_PORT,
                 'Redis Cache' => Config::$REDIS_PORT
             ];
+            if (!$useSqlite) {
+                $ports['MySQL Database'] = Config::$DB_PORT;
+            }
             foreach ($ports as $label => $port) {
                 if (Doctor::isPortOccupied($port)) {
                     $this->warning("⚠️  Pre-Flight Warning: Port {$port} ({$label}) is occupied on host!");
-                    $this->warning("   If this port is bound by a non-Docker service (e.g. Apache/local MySQL), container startup will fail.");
+                    $this->warning("   If this port is bound by a non-Docker service, container startup will fail.");
                 }
             }
         }
 
         putenv("APP_ENV={$shortEnv}");
-        $cmd = "docker compose --env-file {$this->envFile} up -d --build";
+        $cmd = "docker compose --env-file {$this->envFile} {$composeFiles} up -d --build";
         $status = $this->execShell($cmd);
 
         if ($status === 0) {

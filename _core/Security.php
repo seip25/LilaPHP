@@ -22,6 +22,10 @@ class Security
      */
     public static function applyGeneralSecurityHeaders(): void
     {
+        if (headers_sent()) {
+            return;
+        }
+
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
         header('X-XSS-Protection: 0');
@@ -73,7 +77,7 @@ class Security
         }
 
         if ($token === null) {
-            $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_SERVER['HTTP_X_XSRF_TOKEN'] ?? ($_POST['_csrf_token'] ?? ($_POST['csrf'] ?? '')));
+            $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_SERVER['HTTP_X_XSRF_TOKEN'] ?? ($_POST['_csrf'] ?? ($_POST['_csrf_token'] ?? ($_POST['csrf'] ?? ''))));
         }
 
         return hash_equals($expected, (string)$token);

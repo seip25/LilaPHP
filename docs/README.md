@@ -1,241 +1,200 @@
-# LilaPHP Official Technical Documentation (`Performance First`)
+# LilaPHP Technical Architecture & Reference Guide
 
-Welcome to the technical documentation for **LilaPHP**, an ultra-fast, API-First PHP 8.4+ framework engineered without template engines (`Twig`) or file-based session overhead.
+Welcome to the technical reference for **LilaPHP**, an ultra-fast, zero-dependency PHP 8.4+ full-stack framework engineered for high concurrency, unified server rendering, and high-throughput REST APIs.
 
 ---
 
 ## 🚀 Architectural Highlights
 
-### 1. Nginx File-Based Routing & Native C-Level Rate Limiting
+### 1. Dual File-Based Routing & Native Dispatcher
+- **Web Views**: Files in `app/routes/*.php` map directly to URI paths (e.g., `GET /` &rarr; `app/routes/index.php`, `GET /about` &rarr; `app/routes/about.php`), rendering templates via `Core\View`.
+- **REST APIs**: Files in `app/routes/api/*.php` map directly to `/api/*` endpoints (e.g., `GET /api/users` &rarr; `app/routes/api/users.php`), outputting pure JSON via `Core\Response`.
+- **Automatic 405 Method Not Allowed**: LilaPHP dynamically tracks declared HTTP verbs (`Request::GET`, `Request::POST`, etc.). If an unhandled method is requested, it automatically emits `405 Method Not Allowed` with an `Allow` header and renders `app/views/405.php` or JSON error response without requiring manual fallback routes.
 
-- **Routing Directive**: Nginx maps `/api/foo/bar` directly to the physical file `/var/www/html/backend/routes/foo/bar.php` via `try_files $uri $uri.php $uri/index.php @json_404;`.
-- **Zero-PHP 404 & 429 Responses**:
-  - If an endpoint file does not exist, Nginx returns `{"error":"Endpoint not found","code":404}` without spawning PHP workers.
-  - Rate limiting runs natively in C inside Nginx via `limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;`. When requests exceed `burst=30`, Nginx immediately returns `{"error":"Too Many Requests","code":429}`.
+### 2. Native View Engine (`Core\View`) & Bluebird CSS
+- **Zero-Compiler Overhead**: Native PHP templates in `app/views/` executed directly by OPcache with output buffering.
+- **Layout Inheritance**: Templates are wrapped in a shared layout (`app/views/layout.php`) or custom layouts per route. Embed mode (`['layout' => false]`) supports iframe integration.
+- **Heredoc Execution**: Render closures or heredoc templates with `View::html()`.
+- **Reusable Partials**: Component includes via `View::partial($name, $data)`.
+- **Tiered Multi-Driver Caching**: APCu RAM &rarr; Redis cluster &rarr; File system storage (`_core/cache/views/`).
+- **Asset Versioning**: Cache busting with automatic file modification fingerprinting via `View::asset('/css/bluebird.css')`.
+- **SEO & PWA**: Automated title, description, keywords, canonical tags, OpenGraph metadata, JSON-LD structured schemas, and PWA install manifests.
+- **Built-in CSRF**: Auto-injected `$csrf_input`, `$csrf_token`, and `$csrf_meta` in all templates.
+- **Development Hot Reload**: In-browser live refresh on view or style modifications in debug mode.
 
-### 2. Clean Composer Package Releases (`.gitattributes export-ignore`)
+### 3. Multi-Driver Database Pool & Switching
+- Supports **MySQL** and **SQLite** out of the box via `Core\Database` and `Core\DB`.
+- Instant CLI switching via `php cli.php db:switch <sqlite|mysql>`, which updates the root `.env` and clears cached configurations.
+- Standalone SQLite deployment profile: `docker-compose.sqlite.yml` runs without MySQL containers for minimal RAM footprint.
 
-To ensure clean package distribution when creating GitHub tags or running `composer install --prefer-dist`, the `.gitattributes` configuration excludes non-runtime assets:
-
-```gitattributes
-docs/ export-ignore
-docker/ export-ignore
-tests/ export-ignore
-.github/ export-ignore
-```
-
-Your deployment tarball contains strictly `_core/`, `backend/`, `index.php`, and `cli.php`!
-
-### 3. Permanent OPcache RAM Preloading
-
-In production (`docker/php/Dockerfile.prod`), `backend/preload.php` instructs PHP-FPM to compile all framework classes (`Config`, `Database`, `Response`, `Cache`, `Validate`, `Security`, `Logger`, `Dispatcher`, `Upload`, `Task`, `Http`) directly into shared worker RAM.
-
-### 4. Dual-Tier Caching (`APCu` + `Redis`) & Nginx Micro-Caching
-
-- **`Cache::api()`**: Caches data inside local process RAM (`APCu`) with 0 ms network latency.
-- **`Cache::db()`**: Distributed caching across your `Redis` cluster with graceful failover to `APCu` if Redis experiences a micro-outage.
-- **Nginx FastCGI Micro-Caching (5s TTL)**: Public GET API endpoints are cached directly in Nginx RAM (`LILA_API_CACHE`), allowing throughput to scale beyond 30,000+ RPS. Authenticated requests (`Authorization`, `X-API-Key`, session cookies) or private endpoints via `Response::setPrivateCache()` automatically bypass the cache.
+### 4. Zero-Dependency Core & OPcache Preloading
+- In production, `app/preload.php` compiles all framework classes (`Config`, `Database`, `Response`, `Cache`, `Validate`, `Security`, `Logger`, `Dispatcher`, `Upload`, `Task`, `Http`, `View`) directly into shared worker RAM.
+- No heavy third-party vendor dependencies required to boot or execute requests.
 
 ---
 
-## 🛠️ Core Components (`_core/`)
+## 📂 Repository Layout
 
-### 📦 `Core\Upload` (Anti-Malware File Upload Engine)
+```text
+LilaPHP/
+├── .env                       # Root environment configuration
+├── .env_example               # Environment configuration template
+├── index.php                  # Local development front controller & static router
+├── cli.php                    # Master CLI dispatcher
+├── docker-compose.yml         # Standard container stack (Nginx, PHP-FPM, MySQL, Redis)
+├── docker-compose.sqlite.yml  # Low-RAM SQLite standalone container stack
+├── public/                    # Static Webroot
+│   ├── css/
+│   │   └── bluebird.css       # Semantic CSS micro-framework
+│   ├── manifest.json          # PWA manifest
+│   ├── sitemap.xml            # Generated XML sitemap
+│   └── robots.txt             # Generated crawler directives
+├── app/                       # Application Core
+│   ├── index.php              # FastCGI entry point
+│   ├── preload.php            # OPcache preloading script
+│   ├── routes/                # Web view route handlers
+│   │   ├── index.php          # GET /
+│   │   ├── about.php          # GET /about
+│   │   └── api/               # REST API endpoints
+│   │       ├── index.php      # GET /api
+│   │       ├── health.php     # GET /api/health
+│   │       └── users.php      # /api/users
+│   ├── views/                 # Native PHP view templates
+│   │   ├── layout.php         # Default document layout
+│   │   ├── index.php          # Home view template
+│   │   ├── about.php          # About view template
+│   │   ├── 404.php            # Not Found error template
+│   │   └── 405.php            # Method Not Allowed error template
+│   ├── models/                # ORM entities and migration schemas
+│   └── database/              # SQLite database storage (app.sqlite)
+├── _core/                     # Zero-dependency Core Framework Engine
+│   ├── bootstrap.php          # PSR-4 autoloader and runtime initializer
+│   ├── helpers.php            # Global helper functions
+│   ├── Config.php             # Environment loader and static config cache
+│   ├── Dispatcher.php         # Dual route dispatcher and 404/405 handler
+│   ├── View.php               # Native template engine
+│   ├── Database.php           # PDO multi-driver connection pool
+│   ├── Request.php            # HTTP request inspector and method router
+│   ├── Response.php           # Response emitter with CORS and headers
+│   ├── Security.php           # CSRF, rate limiter, encryption
+│   ├── Validate.php           # Multilingual payload validation
+│   └── cli/                   # Modular CLI command implementations
+└── docs/                      # Technical GitHub Pages documentation
+```
 
-Handles `$_FILES` with strict `finfo` MIME verification, screens file bytes for embedded PHP/script execution blocks (`<?php`, `<?=`), enforces maximum file sizes, and assigns cryptographically randomized filenames:
+---
+
+## 🛠️ Key Components & Usage
+
+### 🎨 Rendering Views (`Core\View`)
 
 ```php
-use Core\Upload;
+use Core\Request;
+use Core\View;
 
-// Save verified upload to backend/uploads/
-$filename = Upload::save($_FILES['avatar'], null, ['image/webp' => 'webp', 'image/png' => 'png']);
-if ($filename) {
-    // Returns randomized filename (e.g. a1b2c3...webp)
-}
+Request::GET(function () {
+    View::render('about', [
+        'team' => ['Alice', 'Bob']
+    ], [
+        'title'       => 'About Us — LilaPHP',
+        'description' => 'Learn about our engineering philosophy.',
+        'keywords'    => 'php, framework, performance',
+        'canonical'   => 'https://example.com/about',
+        'cache'       => 300
+    ]);
+});
 ```
 
-### ⏳ `Core\Task` (Background Job Queues & Workers)
-
-Dispatches asynchronous tasks without blocking your API response. If Redis is active, jobs are pushed to `lilaphp:jobs`; otherwise, detached OS background processes (`proc_open`) execute the job:
-
-```php
-use Core\Task;
-
-// Dispatch background job
-Task::dispatch('example_mail_blast', ['batch_size' => 15000, 'campaign' => 'Promo 2026']);
-```
-
-**Running Background Workers via CLI**:
-
-```bash
-php cli.php task:work
-```
-
-### ⚡ `Cli\Benchmark` (Server-Side Concurrency Benchmark Engine)
-
-Executes real OS-level load testing using `curl_multi_exec` sockets. Calculates exact P50/P95/P99 latency percentiles and syncs live snapshots to Redis (`lilaphp:benchmark:{id}`) every ~500ms for `/debug.html` integration:
-
-```bash
-# Run 1,000 concurrent connection stress test for 30 seconds
-php cli.php benchmark --url=/api/init --concurrency=1000 --duration=30
-```
-
-### 🌐 `Core\Http` (Concurrent cURL Client)
-
-A high-performance cURL client supporting custom timeouts, JSON auto-serialization, and concurrent asynchronous multi-request execution (`curl_multi_*`):
-
-```php
-use Core\Http;
-
-// Simple GET request
-$res = Http::get('https://api.github.com/users/seip25', ['User-Agent: LilaPHP/1.0']);
-
-// Concurrent parallel requests
-$batch = Http::multi([
-    'req1' => ['url' => 'https://api.example.com/item/1'],
-    'req2' => ['url' => 'https://api.example.com/item/2']
-]);
-```
-
-### 📡 `Core\Request` (Static Route Method Handlers & Middlewares)
-
-Define HTTP verb handlers (`Request::GET`, `Request::POST`, `Request::PUT`, `Request::DELETE`, `Request::PATCH`) directly inside route files with middleware support:
+### 📡 API Route Handlers (`Core\Request`)
 
 ```php
 use Core\Request;
 use Core\Response;
 use Models\User;
 
-Request::GET(function() {
-    return ['users' => User::all()];
+Request::GET(function () {
+    return Response::json(['users' => User::all()]);
 });
 
-Request::POST([AuthMiddleware::class], function() {
+Request::POST([AuthMiddleware::class], function () {
     $user = new User(Request::json());
     $user->assertValid();
     $user->save();
-    return ['status' => 'created', 'data' => $user];
+    return Response::json(['status' => 'created', 'data' => $user], 201);
 });
 ```
 
-### 🧱 `Models\BaseModel` (Lightweight ORM)
-
-All models inherit from `Models\BaseModel`, supporting `find()`, `all()`, `withTrashed()`, `onlyTrashed()`, `fill()`, `save()`, `delete()`, `forceDelete()`, `restore()`, `validate()`, and `assertValid()`:
+### 🛡️ CSRF Form Protection in Views
 
 ```php
-use Models\Product;
-use Core\Database;
+<form method="POST" action="/contact">
+    <?= $csrf_input ?>
+    <input type="email" name="email" required>
+    <button type="submit">Submit</button>
+</form>
 
-// Find & Fetch (soft-deleted excluded by default)
-$product = Product::find(1);
-$products = Product::all("stock > 0 ORDER BY price DESC");
-$allProducts = Product::withTrashed();
-$trashedProducts = Product::onlyTrashed();
+<?php
+use Core\Request;
+use Core\Security;
 
-// Fill & Save
-$product = new Product();
-$product->fill(['name' => 'Wireless Keyboard', 'price' => 49.99])->save();
-
-// Soft Delete, Restore & Hard Delete
-$product->delete(); // Soft delete
-$product->restore(); // Restore
-$product->forceDelete(); // Hard delete
-
-// Database Transactions
-Database::transaction(function () use ($senderId, $receiverId) {
-    Database::update('accounts', ['balance' => 900], 'id = ?', [$senderId]);
-    Database::update('accounts', ['balance' => 1100], 'id = ?', [$receiverId]);
+Request::POST(function () {
+    if (!Security::csrfVerify(Request::input('_csrf'))) {
+        abort(403, 'Invalid CSRF token');
+    }
 });
 ```
 
-### 📢 `Core\Response` (High-Speed JSON & File Emitter)
+### 📦 Anti-Malware File Uploads (`Core\Upload`)
 
 ```php
+use Core\Upload;
 use Core\Response;
 
-Response::json(['status' => 'success', 'data' => $payload], 200);
-Response::error('Validation failure', 422, $errors);
-Response::file('/path/to/report.pdf', 'report.pdf');
-Response::stream(fn() => echo "chunk", 200);
-Response::redirect('/login');
+$saved = Upload::save($_FILES['avatar'], 5242880, [
+    'image/png'  => 'png',
+    'image/webp' => 'webp'
+]);
+
+if (!$saved) {
+    Response::error('Invalid file upload or malware detected', 422);
+}
+
+Response::json(['filename' => $saved]);
 ```
 
-### 🔒 `Services\AuthService` (Encrypted Session & Lockout Protection)
-
-Provides AES-256 encrypted session storage (`Core\Security::encrypt`) and brute-force attempt lockout:
+### ⏳ Asynchronous Background Tasks (`Core\Task`)
 
 ```php
-use Services\AuthService;
+use Core\Task;
 
-// Validate authenticated session
-$user = AuthService::validateAuth(true); // Auto-emits 401 if unauthenticated
-
-// Login credentials with brute-force throttling
-$result = AuthService::login($username, $password);
-
-// Destroy session
-AuthService::logout();
+Task::dispatch('send_invoice_email', [
+    'user_id' => 123,
+    'invoice_id' => 'INV-8891'
+]);
 ```
-
-### 🔇 Logging Disabled by Default (`Performance First`)
-
-To prevent disk I/O bottlenecks under high concurrency (thousands of req/s), file logging is disabled by default (`LOG_ENABLED=false` in `.env` and `Config::$LOG_ENABLED = false`). Log entries are only written to disk when explicitly enabled.
 
 ---
 
-## 🛠️ Built-in Debug & Performance Dashboard (`/debug`)
+## ⚡ Master CLI Command Reference (`cli.php`)
 
-LilaPHP includes an interactive, zero-overhead **Debug & Performance Monitoring Dashboard** accessible at `/debug` or `/debug.html`.
-
-- **Live Redis Request Stream**: Captures Method, URI, Query Params, Duration (ms), Memory Peak (MB), Status Code, and Client IP into Redis (`lilaphp:debug:requests`).
-- **System Health Profiler**: Real-time status checks for Redis, MySQL, PHP-FPM, CPU Load, RAM Usage, and Disk Free space.
-- **Interactive Concurrency Benchmark Tool**: Run browser-based client-side stress tests with concurrencies from **1 to 4,000** on any autodetected route.
-- **Filters & Search**: Filter logs by URI, Method (GET, POST, PUT, DELETE), Status (2xx, 3xx, 4xx, 5xx), or IP with client-side pagination.
-
-### ⚙️ Debug Environment Configuration (`backend/.env`)
-
-Controlled via `DEBUG_LOGGING_ENABLED` in `backend/.env`:
-
-```env
-# Enable/disable Redis request logging (default: false for zero overhead)
-DEBUG_LOGGING_ENABLED=false
-```
-
-When deploying to production via `php cli.php docker prod`, if `DEBUG_LOGGING_ENABLED` is `true`, the CLI will display an interactive warning asking for confirmation before proceeding.
-
-### 🚀 How to Run Unlimited Concurrency & Benchmark Tests (Disabling Rate Limits)
-
-To perform load testing or benchmark runs at maximum concurrencies (100, 1000, 2000, 3000, 4000) without hitting rate limiters, temporarily disable PHP and Nginx rate limits:
-
-1. **Disable PHP Rate Limiting in `backend/.env`**:
-   ```env
-   RATE_LIMIT=0
-   ```
-2. **Comment out Nginx C-Level Rate Limiting in `docker/nginx/nginx.conf`**:
-   ```nginx
-   # limit_req_zone $binary_remote_addr zone=api_limit:10m rate=60r/s;
-
-   location ^~ /api/ {
-       # limit_req zone=api_limit burst=30 nodelay;
-       # limit_req_status 429;
-
-       include fastcgi_params;
-       fastcgi_pass php:9000;
-       ...
-   }
-   ```
-3. Restart containers or reload Nginx (`docker compose exec nginx nginx -s reload` or `php cli.php docker dev`).
-
----
-
-## ⚡ Master CLI (`cli.php`)
-
-| Command                    | Description                                                                                |
-| :------------------------- | :----------------------------------------------------------------------------------------- | ---------------------------------------------- | ----- | ----------------------------------------------------------------------- |
-| `php cli.php optimize`     | Pre-compile `.env` settings to `_core/cache/env.php`, flush APCu/Redis, and reset OPcache. |
-| `php cli.php key:generate` | Generate secure 256-bit `APP_KEY` in `backend/.env`.                                       |
-| `php cli.php migrate`      | Scan models in `backend/models/` and synchronize MySQL schemas automatically.              |
-| `php cli.php seed`         | Populate initial database records and check default accounts (`admin@lilaphp.dev`).        |
-| `php cli.php task:work`    | Start continuous background worker consuming Redis job queues.                             |
-| `php cli.php docker [action]` | Orchestrate Nginx, PHP 8.4, MySQL, and Redis cluster (`dev`, `prod`, `stop`, `ps`, `stats`, `logs`, `clean`). Also provides container access (`exec-php`, `exec-mysql`, `exec-redis`) and smart query/command shortcuts (`docker mysql`, `docker redis`). |
-| `php cli.php make model \| route <Name>` | Scaffold API models and route files instantly. |
+| Command | Description |
+| :--- | :--- |
+| `php cli.php dev [port]` | Start local development server with live Hot Reload on views/css |
+| `php cli.php db:switch <sqlite\|mysql>` | Switch active database provider, update `.env`, and clear OPcache |
+| `php cli.php make:api <Name>` | Scaffold complete REST API resource controller in `app/routes/api/` |
+| `php cli.php make:crud <Name> [--embed]` | Scaffold Model, API route, View template, and Web route |
+| `php cli.php make:route <path>` | Scaffold new web route in `app/routes/` |
+| `php cli.php make:model <Name>` | Scaffold new database model in `app/models/` |
+| `php cli.php sitemap` | Generate `public/sitemap.xml` scanning routes (respects `$noIndex`) |
+| `php cli.php robots` | Generate `public/robots.txt` with Sitemap directive and Disallow paths |
+| `php cli.php doctor` | Run comprehensive pre-flight verification across views, config, and DB |
+| `php cli.php health` | Microsecond system health checks (DB, Redis, APCu, storage) |
+| `php cli.php migrate [--refresh]` | Synchronize database tables automatically from `app/models/` |
+| `php cli.php seed` | Execute database seeders |
+| `php cli.php task:work` | Run continuous background Redis queue worker |
+| `php cli.php optimize` | Pre-compile `.env` configuration to OPcache and flush cache pools |
+| `php cli.php key:generate` | Generate cryptographically secure 256-bit `APP_KEY` in `.env` |
+| `php cli.php docker dev` | Launch development Docker container cluster |
+| `php cli.php docker sqlite` | Launch low-RAM standalone SQLite Docker cluster |
+| `php cli.php docker prod` | Launch production Docker container cluster |
+| `php cli.php docker stats` | Stream live CPU and memory utilization of LilaPHP containers |

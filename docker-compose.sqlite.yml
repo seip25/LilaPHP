@@ -1,0 +1,17 @@
+name: ${APP_NAME:-lilaphp}
+
+services:
+  php:
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - DB_TYPE=sqlite
+      - DB_FILE=/var/www/html/app/database/app.sqlite
+      - REDIS_HOST=redis
+
+  mysql:
+    profiles:
+      - donotstart

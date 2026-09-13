@@ -1,0 +1,16 @@
+{
+  "name": "LilaPHP High-Performance Framework",
+  "short_name": "LilaPHP",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#38bdf8",
+  "description": "Ultra-fast PHP 8.4 Full-Stack Framework with zero external dependencies.",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

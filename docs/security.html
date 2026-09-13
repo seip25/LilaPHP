@@ -102,7 +102,6 @@ server {
                     <pre class="bg-slate-900 text-slate-300 p-6 rounded-xl overflow-hidden"><code class="language-php">use Core\Upload;
 use Core\Response;
 
-// Enforce strictly max 5MB and only PNG/WEBP/PDF MIME types
 $savedFile = Upload::save($_FILES['attachment'], 5242880, [
     'image/png' => 'png',
     'image/webp' => 'webp',
@@ -113,7 +112,8 @@ if (!$savedFile) {
     Response::json(['error' => 'Invalid file upload or embedded malware detected'], 422);
 }
 
-Response::json(['status' => 'uploaded', 'filename' => $savedFile]);</code></pre>
+Response::json(['status' => 'uploaded', 'filename' => $savedFile]);
+</code></pre>
                 </div>
 
                 <!-- Token Authentication -->
@@ -133,12 +133,11 @@ if (!$token) {
     Response::error('Missing Authorization Bearer token', 401);
 }
 
-// Check token in local RAM cache first (`APCu`), otherwise query database
 $user = Cache::api("auth_token_{$token}", fn() => User::all("api_token = ?", [$token])[0] ?? null, 120);
-
 if (!$user) {
     Response::error('Unauthorized or expired token', 401);
-}</code></pre>
+}
+</code></pre>
                 </div>
 
                 <!-- Core\Jwt Engine -->
@@ -153,7 +152,6 @@ if (!$user) {
 use Core\Request;
 use Core\Response;
 
-// 🟢 Generate JWT Token upon successful login (24-hour default TTL)
 $token = Jwt::encode([
     'user_id' => $user->id,
     'username' => $user->username,
@@ -166,15 +164,12 @@ Response::json([
     'token_type' => 'Bearer'
 ]);
 
-// 🟢 Verify JWT Token in API routes or middleware
 $token = Request::bearerToken();
 $claims = $token ? Jwt::decode($token) : false;
-
 if ($claims === false) {
     Response::error('Invalid or expired JWT token', 401);
 }
 
-// Access claims directly from $claims dictionary
 $userId = $claims['user_id'];
 $userRole = $claims['role'];</code></pre>
                 </div>
@@ -188,14 +183,12 @@ $userRole = $claims['role'];</code></pre>
                         For web applications, dashboards, or session-based APIs, LilaPHP provides <code>Services\AuthService</code>. It combines AES-256 encrypted session payloads (`Core\Security::encrypt`), HTTP-only cookie flags, and automated brute-force login attempt lockout throttling.
                     </p>
 
-                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Example: Session Auth Route (`backend/routes/auth.php`)</h4>
+                    <h4 class="text-md font-semibold text-slate-800 dark:text-slate-200 mb-2">Example: Session Auth Route (`app/routes/api/auth.php`)</h4>
                     <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">&lt;?php
-
 use Core\Request;
 use Core\Response;
 use Services\AuthService;
 
-// GET /api/auth -> Check current authentication state
 Request::GET(function () {
     $user = AuthService::validateAuth(false);
     return [
@@ -205,7 +198,6 @@ Request::GET(function () {
     ];
 });
 
-// POST /api/auth -> Login or Logout handler
 Request::POST(function () {
     $action = Request::input('action', 'login');
 
@@ -222,7 +214,6 @@ Request::POST(function () {
     }
 
     $result = AuthService::login($username, $password);
-
     if ($result['success']) {
         return ['status' => 'success', 'user' => $result['user']];
     }
@@ -235,7 +226,34 @@ Request::POST(function () {
             'remaining_seconds' => $result['remaining_seconds'] ?? 0
         ]
     );
-});</code></pre>
+});
+</code></pre>
+                </div>
+
+                <!-- CSRF Protection in Views -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm border-l-4 border-l-emerald-600 mt-8">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                        6. CSRF Protection in Web Forms &amp; Views
+                    </h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">
+                        LilaPHP automatically injects <code>$csrf_input</code>, <code>$csrf_token</code>, and <code>$csrf_meta</code> into all view and layout scopes. Form submissions can be validated using <code>Security::csrfVerify()</code>:
+                    </p>
+                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto mb-4"><code class="language-php">&lt;!-- Inside app/views/contact.php --&gt;
+&lt;form method="POST" action="/contact"&gt;
+    &lt;?= $csrf_input ?&gt;
+    &lt;input type="email" name="email" required&gt;
+    &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;?php
+// Inside app/routes/contact.php
+Request::POST(function () {
+    if (!Security::csrfVerify(Request::input('_csrf'))) {
+        abort(403, 'Invalid CSRF token');
+    }
+    // Process form
+});
+</code></pre>
                 </div>
             </section>
 
@@ -247,7 +265,7 @@ Request::POST(function () {
                     <span>Previous: <strong>Multi-Driver Database</strong></span>
                 </a>
                 <a href="views.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                    <span>Next: <strong>Frontend Views &amp; Lila.js SPA</strong></span>
+                    <span>Next: <strong>Native View Engine &amp; Bluebird</strong></span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                     </svg>

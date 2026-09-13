@@ -54,7 +54,7 @@ class Migrate extends Command
             }
         }
 
-        $modelsDir = dirname(__DIR__, 2) . '/backend/models';
+        $modelsDir = Config::$DIR_APP . '/models';
         if (!is_dir($modelsDir)) {
             $this->error("Models directory not found at: {$modelsDir}");
             return 1;

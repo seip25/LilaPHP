@@ -4,41 +4,25 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>LilaPHP — Lightweight Modern PHP Framework</title>
-
+    <title>CLI &amp; Code Generation Tools — LilaPHP Documentation</title>
     <meta name="description"
-        content="LilaPHP is a lightweight, modular, and modern PHP micro-framework focused on simplicity, flexibility, and security." />
-    <meta name="keywords"
-        content="LilaPHP, Lila PHP, LilaPHP framework, PHP microframework, lightweight PHP framework, modern PHP, minimal framework, PHP routing, Twig, Dotenv, PHP middleware" />
-    <meta name="author" content="LilaPHP Project" />
-    <meta name="robots" content="index, follow" />
-
-    <!-- Canonical -->
-    <link rel="canonical" href="https://seip25.github.io/LilaPHP/" />
-
-    <!-- Favicon -->
+        content="Comprehensive guide to LilaPHP CLI commands, dev server with hot reload, database switching, scaffolding generators, sitemap, robots, and Docker orchestration." />
+    <link rel="canonical" href="https://seip25.github.io/LilaPHP/cli.html" />
     <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet" />
-    <!-- Syntax Highlighting -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
     <link rel="stylesheet" href="css/index.css" />
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/partial.js"></script>
 </head>
 
 <body class="bg-gray-50 text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-300">
-    <!-- Mobile Header -->
     <div
         class="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
-        <a href="#" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
+        <a href="index.html" class="flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white">
             <span class="text-primary-600">Lila</span>PHP
         </a>
         <button id="menu-toggle"
@@ -51,307 +35,170 @@
     </div>
 
     <div class="flex max-w-8xl mx-auto min-h-screen">
-        <!-- Sidebar Navigation -->
         <aside id="sidebar"
             class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 w-full max-w-5xl mx-auto p-4 lg:p-10 lg:pl-16">
-
-            <!-- CLI -->
-            <section id="cli" class="scroll-mt-24 mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                    CLI & Migrations
-                </h2>
-
-                <p class="text-lg text-slate-600 dark:text-slate-400 mb-4">
-                    LilaPHP includes a powerful CLI tool for managing database
-                    migrations and seeders. Supports <strong>SQLite</strong>,
-                    <strong>MySQL</strong>, and <strong>PostgreSQL</strong> with
-                    automatic schema generation from model definitions.
+            <header class="mb-10">
+                <p class="text-sm font-semibold text-primary-600 dark:text-primary-400 tracking-wide uppercase">
+                    Operations &amp; Deploy
                 </p>
+                <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-2">
+                    CLI Engine &amp; Automation
+                </h1>
+                <p class="text-lg text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
+                    LilaPHP provides a zero-dependency command line interface in <code>cli.php</code> at the project root. It handles dev server execution with hot reload, database switching, automatic code scaffolding, sitemap/robots generation, migrations, health audits, and Docker orchestration.
+                </p>
+            </header>
 
-                <div class="bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-500 p-6 rounded-xl mb-12">
-                    <div class="flex items-center gap-3 mb-2">
-                        <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                            </path>
-                        </svg>
-                        <h3 class="text-lg font-bold text-amber-900 dark:text-amber-400 uppercase tracking-wide">
-                            Essential Command Rule</h3>
+            <section id="dev-server" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">1. Local Development Server (`dev`)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Boot the built-in development server targeting <code>public/</code> as the document root with live hot reload enabled:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash">php cli.php dev 8080
+</code></pre>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    This launches PHP's built-in web server with root router <code>index.php</code>. It enables automatic live reloading whenever files in <code>app/views/</code> or <code>public/css/</code> are modified.
+                </p>
+            </section>
+
+            <section id="db-switch" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">2. Database Provider Switcher (`db:switch`)</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    Switch between MySQL and SQLite with a single command. It updates your root <code>.env</code> file, flushes the OPcache environment cache, and verifies database connectivity:
+                </p>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Switch to SQLite standalone mode
+php cli.php db:switch sqlite
+
+# Switch back to MySQL
+php cli.php db:switch mysql
+</code></pre>
+                </div>
+            </section>
+
+            <section id="scaffolding" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">3. Scaffolding Generators (`make`)</h2>
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Create REST API Resource (`make:api`)</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Generates a complete REST API controller with GET (list &amp; single), POST (validation &amp; create), PUT (update), and DELETE endpoints:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php make:api Product
+</code></pre>
+                        <p class="text-xs text-slate-500 mt-2">Creates <code>app/routes/api/products.php</code> mapped to <code>/api/products</code>.</p>
                     </div>
-                    <p class="text-slate-700 dark:text-slate-300">
-                        The `cli.php` tool is located directly in the root directory alongside `index.php`. To execute
-                        CLI operations, run `cli.php` from your project root or via Docker.
-                    </p>
-                    <div class="mt-4 p-3 bg-white/50 dark:bg-black/20 rounded-lg font-mono text-sm">
-                        # Option A: Local PHP / Terminal<br>
-                        php cli.php [command]<br><br>
-                        # Option B: Docker dev container<br>
-                        docker exec -it lilaphp_dev_cli php /var/www/html/cli.php [command]
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Create Full CRUD Suite (`make:crud [--embed]`)</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Generates Model, REST API route, Web view template, and Web route in a single command:
+                        </p>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Standard CRUD with full layout
+php cli.php make:crud Order
+
+# Embeddable CRUD (standalone view with layout => false for iframe embedding)
+php cli.php make:crud Order --embed
+</code></pre>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Create Web Route (`make:route`)</h3>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php make:route contact
+</code></pre>
+                        <p class="text-xs text-slate-500 mt-2">Creates <code>app/routes/contact.php</code>.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Create Database Model (`make:model`)</h3>
+                        <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php make:model Customer
+</code></pre>
+                        <p class="text-xs text-slate-500 mt-2">Creates <code>app/models/Customer.php</code>.</p>
                     </div>
                 </div>
+            </section>
 
-                <!-- Database Configuration -->
-                <div
-                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-8">
-                    <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-                        Database Configuration
-                    </h3>
-                    <p class="text-slate-600 dark:text-slate-400 mb-4">
-                        Configure your database provider in <code>.env</code>:
-                    </p>
-                    <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-sm"><code class="language-ini"># SQLite (Default)
-DB_PROVIDER="sqlite"
-DB_NAME="lila"
-
-# MySQL
-DB_PROVIDER="mysql"
-DB_NAME="lila"
-DB_USER="root"
-DB_PASSWORD=""
-DB_HOST="localhost"
-DB_PORT="3306"
-
-# PostgreSQL
-DB_PROVIDER="pgsql"
-DB_NAME="lila"
-DB_USER="postgres"
-DB_PASSWORD=""
-DB_HOST="localhost"
-DB_PORT="5432"</code></pre>
-                </div>
-
-                <!-- Migration Commands -->
-                <div class="space-y-6 mb-8">
-                    <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
-                        Migration Commands
-                    </h3>
-
-                    <!-- migrate -->
-                    <div
-                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
-                        <div class="flex items-start gap-3 mb-3">
-                            <code
-                                class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">migrate [--refresh]</code>
-                            <span
-                                class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded">Primary
-                                Schema Sync</span>
-                        </div>
-                        <p class="text-slate-600 dark:text-slate-400 mb-3">
-                            Automatically inspects all database models (`backend/models/*.php`) and synchronizes
-                            MySQL/SQLite tables in real time based on model definitions. Use `--refresh` to drop
-                            existing tables and re-run migrations from scratch.
+            <section id="seo-tools" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">4. SEO Automation (`sitemap` &amp; `robots`)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="font-bold text-slate-900 dark:text-white mb-2">Generate Sitemap (`public/sitemap.xml`)</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Scans all web routes in <code>app/routes/</code>, checks for <code>$noIndex = true</code> or <code>$protectedRoute = true</code>, and compiles valid XML:
                         </p>
-                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash"># Synchronize database tables
-php cli.php migrate
-
-# Drop all tables and re-synchronize from scratch
-php cli.php migrate --refresh</code></pre>
+                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php sitemap
+</code></pre>
                     </div>
 
-                    <div
-                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 mb-6">
-                        <div class="flex items-start gap-3 mb-3">
-                            <code
-                                class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded text-sm font-mono">health</code>
-                            <span
-                                class="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs rounded">Microsecond
-                                System Diagnostics</span>
-                        </div>
-                        <p class="text-slate-600 dark:text-slate-400 mb-3">
-                            Runs microsecond system diagnostics inspecting MySQL connectivity, APCu RAM status, Redis
-                            cluster health, OPcache preloading, and disk storage space.
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                        <h3 class="font-bold text-slate-900 dark:text-white mb-2">Generate Robots (`public/robots.txt`)</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                            Generates <code>public/robots.txt</code> pointing to the sitemap and disallowing protected paths:
                         </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash">php cli.php health</code></pre>
+                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php robots
+</code></pre>
                     </div>
                 </div>
+            </section>
 
-                <!-- Seeder Commands -->
-                <div class="space-y-6 mb-8">
-                    <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
-                        Database Seeders
-                    </h3>
-
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <code
-                            class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">seed</code>
-                        <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Executes database seeding scripts located inside `backend/seeders/` to populate your API
-                            database with initial or test records (`O(1)` bulk insert).
-                        </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash">php cli.php seed</code></pre>
-                    </div>
+            <section id="doctor" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">5. System Diagnostics (`doctor` &amp; `health`)</h2>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash">php cli.php doctor
+php cli.php health
+</code></pre>
                 </div>
+                <p class="text-slate-600 dark:text-slate-400 mb-4">
+                    The <code>doctor</code> command verifies:
+                </p>
+                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    <li>PHP 8.2+ binary version and required extensions (PDO, OpenSSL, mbstring, cURL, etc.).</li>
+                    <li>Presence and permissions of root <code>.env</code>.</li>
+                    <li>Validity of public directory (<code>public/css/bluebird.css</code>, <code>public/manifest.json</code>).</li>
+                    <li>Verification that all views referenced in <code>app/routes/*.php</code> exist in <code>app/views/</code>.</li>
+                    <li>Database connectivity (MySQL or SQLite).</li>
+                </ul>
+            </section>
 
-                <!-- Route & Component Generators -->
-                <div class="space-y-6 mb-8 mt-8">
-                    <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
-                        Route & Component Generators
-                    </h3>
-
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <code
-                            class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">make route &lt;path&gt;</code>
-                        <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Generates a new file-based API route inside `backend/routes/` with standard GET/POST
-                            handling and JSON response scaffolding.
-                        </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php make route v1/checkout</code></pre>
-                        <p class="text-xs text-slate-500 mt-2">Creates `backend/routes/v1/checkout.php` automatically.
-                        </p>
-                    </div>
-
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <code
-                            class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm font-mono">make model &lt;Name&gt;</code>
-                        <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Generates a new API database Model inside `backend/models/` equipped with table schema
-                            attributes for `migrate` synchronization.
-                        </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php make model Invoice</code></pre>
-                    </div>
-                </div>
-
-                <!-- Workers & Docker Management -->
-                <div class="space-y-6 mb-8 mt-8">
-                    <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
-                        Background Workers & Docker Management
-                    </h3>
-
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <code
-                            class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-sm font-mono">task:work</code>
-                        <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Starts a continuous background worker daemon consuming asynchronous tasks from Redis
-                            (`lilaphp:jobs`). Ideal for running email queues and heavy background processing without
-                            blocking API routes.
-                        </p>
-                        <pre
-                            class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash">php cli.php task:work</code></pre>
-                    </div>
-
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <code
-                            class="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded text-sm font-mono">ws:serve &lt;port&gt; [-d|stop|status|restart]</code>
-                        <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Boots or controls the real-time Workerman WebSocket server daemon (`Socket.IO` style with
-                            Redis Pub/Sub). You can run it in background daemon mode (`-d`) or stop it cleanly (`stop`).
-                        </p>
-                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm"><code class="language-bash"># Start WebSocket server in background daemon mode (-d)
-php cli.php ws:serve 8001 -d
-
-# Stop the running background WebSocket daemon
-php cli.php ws:serve stop 8001
-
-# Check worker status and active connections
-php cli.php ws:serve status 8001</code></pre>
-                    </div>
-
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                        <code
-                            class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-sm font-mono">docker [action]</code>
-                        <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                            Orchestrates your Docker container cluster (<code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">Nginx</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">PHP-FPM</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">MySQL</code>, and <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">Redis</code>),
-                            provides interactive container access (<code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">exec-php</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">exec-mysql</code>, <code class="text-xs font-mono bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">exec-redis</code>), and includes smart CLI shortcuts for instant MySQL queries and Redis inspection without typing raw SQL or Redis protocol syntax.
-                        </p>
-                        <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-4"><code class="language-bash"># Launch development or production cluster
+            <section id="docker-cli" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">6. Docker Orchestration</h2>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Start standard dev cluster (Nginx, PHP-FPM, MySQL, Redis)
 php cli.php docker dev
+
+# Start low-RAM SQLite standalone cluster (exclusively Nginx, PHP-FPM, Redis)
+php cli.php docker sqlite
+
+# Start production cluster
 php cli.php docker prod
 
-# Stream real-time CPU & RAM stats filtered for LilaPHP containers
+# Inspect running container stats
 php cli.php docker stats
-
-# Interactive container execution
-php cli.php docker exec-php                  # Interactive bash in PHP container
-php cli.php docker exec-mysql                # Interactive MySQL console
-php cli.php docker exec-mysql "SELECT 1"     # Raw SQL execution
-php cli.php docker exec-redis                # Interactive redis-cli console
-php cli.php docker exec-redis PING           # Raw Redis command execution</code></pre>
-
-                        <h4 class="font-semibold text-slate-800 dark:text-slate-200 text-sm mt-4 mb-2">🗃️ Smart MySQL Shortcuts (<code class="text-xs font-mono">php cli.php docker mysql &lt;shortcut&gt;</code>)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono text-slate-600 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">tables</span> &rarr; Show all database tables</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">describe &lt;tbl&gt;</span> &rarr; Describe table schema</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">count &lt;tbl&gt;</span> &rarr; Count table rows</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">find &lt;tbl&gt; &lt;id&gt;</span> &rarr; Find record by ID</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">all &lt;tbl&gt; [limit]</span> &rarr; List records (default 25)</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">last &lt;tbl&gt; [n]</span> &rarr; Latest N records (by ID desc)</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">first &lt;tbl&gt; [n]</span> &rarr; First N records (by ID asc)</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">where &lt;tbl&gt; &lt;col&gt; &lt;val&gt;</span> &rarr; Filter by column value</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">delete &lt;tbl&gt; &lt;id&gt;</span> &rarr; Delete record by ID</div>
-                            <div><span class="text-indigo-600 dark:text-indigo-400 font-bold">truncate &lt;tbl&gt;</span> &rarr; Empty table</div>
-                        </div>
-
-                        <h4 class="font-semibold text-slate-800 dark:text-slate-200 text-sm mt-4 mb-2">🔴 Smart Redis Shortcuts (<code class="text-xs font-mono">php cli.php docker redis &lt;shortcut&gt;</code>)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">ping</span> &rarr; Test Redis connection</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">keys [pattern]</span> &rarr; List keys (default *)</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">get &lt;key&gt;</span> &rarr; Fetch value of key</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">set &lt;key&gt; &lt;val&gt;</span> &rarr; Set key-value pair</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">del &lt;key&gt;</span> &rarr; Delete key</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">ttl / type &lt;key&gt;</span> &rarr; Key metadata</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">info / dbsize</span> &rarr; Server stats & key count</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">logs [n]</span> &rarr; Tail app log queue</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">jobs [n]</span> &rarr; List pending Redis jobs</div>
-                            <div><span class="text-red-600 dark:text-red-400 font-bold">monitor / flush</span> &rarr; Live stream or purge DB</div>
-                        </div>
-                    </div>
+</code></pre>
                 </div>
+            </section>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                    <code
-                        class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-sm font-mono">benchmark [--url=] [--concurrency=] [--duration=]</code>
-                    <p class="text-slate-600 dark:text-slate-400 mt-3 mb-3">
-                        Runs real server-side OS-level load tests using asynchronous <code
-                            class="text-xs bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded">curl_multi</code>
-                        handles. Highly efficient and native approach to load testing endpoints. Includes live Redis
-                        synchronization to broadcast test progress to <code
-                            class="text-xs font-mono">/debug.html</code>.
-                    </p>
-                    <pre class="bg-slate-900 text-slate-300 p-3 rounded-lg overflow-x-auto text-sm mb-3"><code class="language-bash"># Run a 30-second load test with 1000 concurrent connections
-php cli.php benchmark --url=/api --concurrency=1000 --duration=30</code></pre>
+            <section id="migrations" class="mb-14 scroll-mt-24">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">7. Database Migrations &amp; Optimization</h2>
+                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
+                    <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-bash"># Auto-migrate database tables from app/models/
+php cli.php migrate
+
+# Fresh migration from scratch
+php cli.php migrate --refresh
+
+# Generate secure APP_KEY in root .env
+php cli.php key:generate
+
+# Pre-cache .env configuration to OPcache
+php cli.php optimize
+</code></pre>
                 </div>
-
-                <!-- Performance Optimization & Security -->
-                <div
-                    class="mt-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
-                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                        System Optimization & Security Commands
-                    </h3>
-                    <div class="space-y-4 text-sm">
-                        <div class="flex items-start gap-3">
-                            <code
-                                class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">optimize</code>
-                            <p class="text-slate-600 dark:text-slate-400">
-                                Pre-caches `.env` settings to `OPcache` memory and flushes APCu/Redis pools
-                                (`Performance First`). Run this after deploying updates to production.
-                            </p>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <code
-                                class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">key:generate</code>
-                            <p class="text-slate-600 dark:text-slate-400">
-                                Generates a cryptographically secure 256-bit `APP_KEY` inside `backend/.env` for AES
-                                token encryption and JWT signing.
-                            </p>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <code
-                                class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-mono text-xs">help</code>
-                            <p class="text-slate-600 dark:text-slate-400">
-                                Displays all available commands and syntax usage for `cli.php`.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
             </section>
 
             <div class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -368,37 +215,7 @@ php cli.php benchmark --url=/api --concurrency=1000 --duration=30</code></pre>
                     </svg>
                 </a>
             </div>
-
         </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ["Inter", "sans-serif"],
-                    },
-                    colors: {
-                        primary: {
-                            50: "#eef2ff",
-                            100: "#e0e7ff",
-                            200: "#c7d2fe",
-                            300: "#a5b4fc",
-                            400: "#818cf8",
-                            500: "#6366f1",
-                            600: "#4f46e5",
-                            700: "#4338ca",
-                            800: "#3730a3",
-                            900: "#312e81",
-                        },
-                    },
-                },
-            },
-        };
-    </script>
-
 </body>
-
 </html>

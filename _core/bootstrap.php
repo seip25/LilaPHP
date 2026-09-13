@@ -18,18 +18,13 @@ if (!defined('LILAPHP_START_TIME')) {
     define('LILAPHP_START_TIME', microtime(true));
 }
 
-// Load Core Config & Helpers
 require_once __DIR__ . '/Config.php';
 require_once __DIR__ . '/helpers.php';
 
-// Composer Autoloader compatibility
 if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
     require_once dirname(__DIR__) . '/vendor/autoload.php';
 }
 
-// --------------------------------------------------------------------------
-// PSR-4 Zero-Dependency Native Autoloader
-// --------------------------------------------------------------------------
 spl_autoload_register(function (string $class): void {
     $parts = explode('\\', $class);
     $namespace = strtolower($parts[0] ?? '');
@@ -42,15 +37,14 @@ spl_autoload_register(function (string $class): void {
             require_once $file;
             return;
         }
-    } elseif ($namespace === 'backend' || $namespace === 'controllers' || $namespace === 'models' || $namespace === 'services' || $namespace === 'sockets') {
-        $target = "{$baseDir}/backend/{$namespace}/{$className}.php";
+    } elseif ($namespace === 'app' || $namespace === 'backend' || $namespace === 'controllers' || $namespace === 'models' || $namespace === 'services' || $namespace === 'sockets') {
+        $target = "{$baseDir}/app/{$namespace}/{$className}.php";
         if (file_exists($target)) {
             require_once $target;
             return;
         }
 
-        // Direct backend/ class fallback
-        $directTarget = "{$baseDir}/backend/{$className}.php";
+        $directTarget = "{$baseDir}/app/{$className}.php";
         if (file_exists($directTarget)) {
             require_once $directTarget;
             return;
@@ -64,7 +58,12 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
-// Class Alias for ultra-clean DB queries (DB::query, DB::fetch, etc.)
+if (PHP_SAPI !== 'cli' && (!isset($_SERVER['SERVER_SOFTWARE']) || !str_contains(strtolower($_SERVER['SERVER_SOFTWARE']), 'nginx'))) {
+    if (extension_loaded('zlib') && !ob_get_level() && !headers_sent()) {
+        ob_start('ob_gzhandler');
+    }
+}
+
 if (!class_exists('DB', false)) {
     class_alias(\Core\Database::class, 'DB');
     class_alias(\Core\Database::class, 'Core\DB');
@@ -76,12 +75,8 @@ if (!class_exists('AI', false)) {
     class_alias(\Core\AI::class, 'LLM');
 }
 
-// Load Environment Configuration
 \Core\Config::load();
 
-// --------------------------------------------------------------------------
-// Global JSON Exception Handler
-// --------------------------------------------------------------------------
 set_exception_handler(function (\Throwable $exception): void {
     \Core\Logger::error('Uncaught Exception: ' . $exception->getMessage(), [
         'file' => $exception->getFile(),
@@ -100,6 +95,18 @@ set_exception_handler(function (\Throwable $exception): void {
         : ($exception instanceof \PDOException ? 500 : 500);
 
     http_response_code($statusCode);
+
+    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+    $isApi = str_starts_with($uri, '/api/') || $uri === '/api';
+
+    if (!$isApi && !empty($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'text/html')) {
+        header('Content-Type: text/html; charset=utf-8');
+        $msg = \Core\Config::$DEBUG ? htmlspecialchars($exception->getMessage()) : 'Internal Server Error';
+        $trace = \Core\Config::$DEBUG ? '<pre style="background:#111;color:#eee;padding:15px;border-radius:6px;overflow:auto;">' . htmlspecialchars($exception->getTraceAsString()) . '</pre>' : '';
+        echo "<!DOCTYPE html><html><head><title>Error {$statusCode}</title><style>body{font-family:sans-serif;padding:40px;background:#0d1117;color:#c9d1d9;}</style></head><body><h1>Server Error ({$statusCode})</h1><p>{$msg}</p>{$trace}</body></html>";
+        exit;
+    }
+
     header('Content-Type: application/json; charset=utf-8');
     \Core\Response::applyCorsHeaders();
 
@@ -121,9 +128,6 @@ set_exception_handler(function (\Throwable $exception): void {
     exit;
 });
 
-// --------------------------------------------------------------------------
-// Global Error Handler
-// --------------------------------------------------------------------------
 set_error_handler(function (int $level, string $message, string $file = '', int $line = 0): bool {
     if (!(error_reporting() & $level) || $level === E_DEPRECATED || $level === E_USER_DEPRECATED) {
         return false;
@@ -131,7 +135,6 @@ set_error_handler(function (int $level, string $message, string $file = '', int 
     throw new \ErrorException($message, 0, $level, $file, $line);
 });
 
-// Record request metrics only in development debug or when logging is explicitly enabled
 if (PHP_SAPI !== 'cli' && (\Core\Config::$DEBUG || \Core\Config::$LOG_ENABLED)) {
     register_shutdown_function([\Core\Debug::class, 'recordRequest']);
 }

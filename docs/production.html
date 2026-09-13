@@ -76,8 +76,8 @@
                     <ul class="list-disc list-inside text-blue-800 dark:text-blue-300 space-y-2">
                         <li>
                             <strong>OPcache RAM Preloading</strong> - Automatically pre-compiles and pins all engine
-                            classes (`_core/*.php`) and database models (`backend/models/*.php`) into RAM via
-                            `backend/preload.php`.
+                            classes (`_core/*.php`) and database models (`app/models/*.php`) into RAM via
+                            `app/preload.php`.
                         </li>
                         <li>
                             <strong>APCu In-Memory Caching</strong> - Direct RAM caching for API rate limits
@@ -94,7 +94,7 @@
                         </li>
                         <li>
                             <strong>Nginx C-Level Direct Routing & JSON 404</strong> - Direct physical file execution
-                            (`backend/routes/*.php`) with native C-level JSON `404` error responses (`@json_404`),
+                            (`app/routes/` and `app/routes/api/`) with native C-level JSON `404` error responses (`@json_404`),
                             eliminating PHP worker startup overhead for invalid routes.
                         </li>
                     </ul>
@@ -132,7 +132,7 @@ php cli.php docker prod</code></pre>
                     </h3>
                     <ul class="list-disc list-inside text-slate-600 dark:text-slate-400 space-y-2">
                         <li>Set <code>APP_ENV=production</code> and <code>APP_DEBUG=false</code> in
-                            <code>backend/.env</code>
+                            <code>.env</code> at the root directory
                         </li>
                         <li>Ensure external ports are protected by your firewall/load balancer (Nginx handles rate
                             limits via <code>limit_req zone=api_limit</code>)</li>
@@ -181,7 +181,7 @@ php cli.php docker stop</code></pre>
                                 (Redirecting port 80/443 to Docker)</h4>
                             <p class="text-xs text-slate-500 mb-4">
                                 By default, `docker-compose.yml` maps your HTTP service to `HTTP_PORT=8080` (configured
-                                in `backend/.env`). If you expose your app on standard ports (`80/443`), configure a
+                                in `.env`). If you expose your app on standard ports (`80/443`), configure a
                                 reverse proxy on your host server's Nginx pointing to `http://127.0.0.1:8080`:
                             </p>
                             <pre class="bg-slate-900 text-slate-300 p-4 rounded-lg overflow-x-auto text-xs"><code class="language-nginx">server {
@@ -335,29 +335,23 @@ server {
     # ssl_certificate /etc/nginx/ssl/your-domain.com/your-domain.com.crt;
     # ssl_certificate_key /etc/nginx/ssl/your-domain.com/your-domain.com.key;
 
-    root <span data-nginx-path>/var/www/your-project</span>/frontend;
-    index index.html;
+    root <span data-nginx-path>/var/www/your-project</span>/public;
+    index index.html index.php;
 
     location ~ /\.(env|git|htaccess) {
         deny all;
         return 403;
     }
 
-    # Static file resolution (exact file -> .html file -> directory -> directory index -> fallback SPA)
     location / {
-        try_files $uri $uri.html $uri/ $uri/index.html /index.html;
+        try_files $uri $uri/ @php;
     }
 
-    # API routing -> dispatch to Front Controller index.php with auto_prepend_file
-    location ^~ /api/ {
-        # Rate Limiting: Comment out both limit_req lines during load testing / benchmarking
-        # limit_req zone=api_limit burst=30 nodelay;
-        # limit_req_status 429;
-
+    location @php {
         include fastcgi_params;
         fastcgi_pass unix:/var/run/php/php<span data-nginx-php-version>8.4</span>-fpm.sock;
         fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME <span data-nginx-path>/var/www/your-project</span>/index.php;
+        fastcgi_param SCRIPT_FILENAME <span data-nginx-path>/var/www/your-project</span>/app/index.php;
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_param SCRIPT_NAME /index.php;
         fastcgi_param PHP_VALUE "auto_prepend_file=<span data-nginx-path>/var/www/your-project</span>/_core/bootstrap.php";

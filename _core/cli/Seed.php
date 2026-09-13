@@ -29,11 +29,11 @@ class Seed extends Command
             return 1;
         }
 
-        $baseBackend = dirname(__DIR__, 2) . '/backend';
+        $baseApp = \Core\Config::$DIR_APP;
         $seedDirs = array_filter([
-            $baseBackend . '/seed',
-            $baseBackend . '/seeds',
-            $baseBackend . '/seeders'
+            $baseApp . '/seed',
+            $baseApp . '/seeds',
+            $baseApp . '/seeders'
         ], 'is_dir');
 
         $executed = 0;
