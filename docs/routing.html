@@ -11,7 +11,9 @@
     <link rel="icon" type="image/png" href="https://seip25.github.io/LilaPHP/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css" />
     <link rel="stylesheet" href="css/index.css" />
@@ -48,7 +50,9 @@
                     Dual File-Based Routing &amp; Dispatcher
                 </h1>
                 <p class="text-lg text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
-                    LilaPHP eliminates complex routing regex tables and monolithic controller registration. Requests are directly mapped to physical endpoint scripts in <code>app/routes/</code> for web views and <code>app/routes/api/</code> for REST endpoints.
+                    LilaPHP eliminates complex routing regex tables and monolithic controller registration. Requests are
+                    directly mapped to physical endpoint scripts in <code>app/routes/</code> for web views and
+                    <code>app/routes/api/</code> for REST endpoints.
                 </p>
             </header>
 
@@ -69,16 +73,20 @@
 </code></pre>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
                         <h3 class="font-bold text-slate-900 dark:text-white mb-2">Web View Routes (`/`)</h3>
                         <p class="text-sm text-slate-600 dark:text-slate-400">
-                            Endpoints in <code>app/routes/*.php</code> handle browser page requests, rendering templates via <code>View::render()</code> with layouts, partials, and CSRF protection.
+                            Endpoints in <code>app/routes/*.php</code> handle browser page requests, rendering templates
+                            via <code>View::render()</code> with layouts, partials, and CSRF protection.
                         </p>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                    <div
+                        class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
                         <h3 class="font-bold text-slate-900 dark:text-white mb-2">REST API Routes (`/api/*`)</h3>
                         <p class="text-sm text-slate-600 dark:text-slate-400">
-                            Endpoints in <code>app/routes/api/*.php</code> handle stateless API requests, returning structured JSON via <code>Response::json()</code> with CORS and rate limiting.
+                            Endpoints in <code>app/routes/api/*.php</code> handle stateless API requests, returning
+                            structured JSON via <code>Response::json()</code> with CORS and rate limiting.
                         </p>
                     </div>
                 </div>
@@ -87,7 +95,8 @@
             <section id="verbs" class="mb-14 scroll-mt-24">
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">2. HTTP Verbs &amp; Handlers</h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    Inside endpoint scripts, handle specific HTTP methods using static methods on <code>Core\Request</code>:
+                    Inside endpoint scripts, handle specific HTTP methods using static methods on
+                    <code>Core\Request</code>:
                 </p>
                 <div class="bg-slate-900 rounded-xl overflow-hidden shadow-lg mb-6">
                     <pre class="p-6 text-sm font-mono text-slate-300 overflow-x-auto"><code class="language-php">&lt;?php
@@ -112,19 +121,25 @@ Request::POST(function () {
             </section>
 
             <section id="automatic-405" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">3. Automatic 405 Method Not Allowed</h2>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">3. Automatic 405 Method Not Allowed
+                </h2>
+                <div
+                    class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm mb-6">
                     <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                        In previous versions, endpoints required a manual <code>Request::any()</code> catch-all to reject unhandled HTTP methods. LilaPHP now tracks declared HTTP verbs automatically via <code>Request::route()</code>.
+                        In previous versions, endpoints required a manual <code>Request::any()</code> catch-all to
+                        reject unhandled HTTP methods. LilaPHP now tracks declared HTTP verbs automatically via
+                        <code>Request::route()</code>.
                     </p>
                     <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                        If an endpoint only defines <code>Request::GET()</code> and an incoming request sends a <code>POST</code>:
+                        If an endpoint only defines <code>Request::GET()</code> and an incoming request sends a
+                        <code>POST</code>:
                     </p>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                         <li>The framework sets HTTP response status <code>405 Method Not Allowed</code>.</li>
                         <li>An <code>Allow: GET, HEAD</code> header is emitted automatically.</li>
                         <li>For web requests, <code>app/views/405.php</code> is rendered.</li>
-                        <li>For REST API requests, JSON is returned: <code>{"error": "Method Not Allowed", "allowed": ["GET", "HEAD"]}</code>.</li>
+                        <li>For REST API requests, JSON is returned:
+                            <code>{"error": "Method Not Allowed", "allowed": ["GET", "HEAD"]}</code>.</li>
                     </ul>
                 </div>
             </section>
@@ -148,7 +163,8 @@ Request::POST([AuthMiddleware::class, RateLimitMiddleware::class], function () {
             </section>
 
             <section id="seo-flags" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">5. SEO &amp; Crawler Flags (`$noIndex`, `$protectedRoute`)</h2>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">5. SEO &amp; Crawler Flags
+                    (`$noIndex`, `$protectedRoute`)</h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
                     Declare route-level visibility flags to inform the automated sitemap and robots generator:
                 </p>
@@ -166,12 +182,16 @@ Request::GET(function () {
 </code></pre>
                 </div>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
-                    When you run <code>php cli.php sitemap</code> or <code>php cli.php robots</code>, routes marked with <code>$noIndex = true</code> or <code>$protectedRoute = true</code> are automatically excluded from <code>public/sitemap.xml</code> and added to the <code>Disallow</code> list in <code>public/robots.txt</code>.
+                    When you run <code>php cli.php sitemap</code> or <code>php cli.php robots</code>, routes marked with
+                    <code>$noIndex = true</code> or <code>$protectedRoute = true</code> are automatically excluded from
+                    <code>public/sitemap.xml</code> and added to the <code>Disallow</code> list in
+                    <code>public/robots.txt</code>.
                 </p>
             </section>
 
             <section id="errors" class="mb-14 scroll-mt-24">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">6. Custom Error Views (404 &amp; 405)</h2>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">6. Custom Error Views (404 &amp; 405)
+                </h2>
                 <p class="text-slate-600 dark:text-slate-400 mb-4">
                     LilaPHP provides customizable template files in <code>app/views/</code> for HTTP errors:
                 </p>
@@ -181,21 +201,54 @@ Request::GET(function () {
                 </ul>
             </section>
 
-            <div class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <a href="core.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium transition-all shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div
+                class="mt-16 pt-8 border-t border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <a href="core.html"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 text-sm font-medium transition-all shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                     </svg>
                     <span>Previous: <strong>Core Architecture</strong></span>
                 </a>
-                <a href="responses.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                <a href="responses.html"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
                     <span>Next: <strong>JSON Responses &amp; CORS</strong></span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                 </a>
             </div>
         </main>
     </div>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    colors: {
+                        primary: {
+                            50: "#eef2ff",
+                            100: "#e0e7ff",
+                            200: "#c7d2fe",
+                            300: "#a5b4fc",
+                            400: "#818cf8",
+                            500: "#6366f1",
+                            600: "#4f46e5",
+                            700: "#4338ca",
+                            800: "#3730a3",
+                            900: "#312e81",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
 </body>
+
 </html>
